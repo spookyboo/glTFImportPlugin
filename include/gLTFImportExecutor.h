@@ -28,7 +28,9 @@ THE SOFTWARE.
 #ifndef __gLTFImportExecutor_H__
 #define __gLTFImportExecutor_H__
 
+#include <map>
 #include "hlms_editor_plugin.h"
+#include "gLTFMaterial.h"
 #include "rapidjson/document.h"
 
 /** Class responsible for executing the import */
@@ -38,17 +40,44 @@ class gLTFImportExecutor
 		gLTFImportExecutor(void) {};
 		virtual ~gLTFImportExecutor(void) {};
 		
-		/** Performs the import */
+		// Perform the import
 		bool executeImport(Ogre::HlmsEditorPluginData* data);
 
 	protected:
-		bool parseMaterial (rapidjson::Value::ConstMemberIterator jsonIterator);
+		// Process the binary file / text file
 		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data);
 		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data);
+
+		// Parse level 1
+		bool parseMaterials (rapidjson::Value::ConstMemberIterator jsonIterator);
+		bool parseTextures(rapidjson::Value::ConstMemberIterator jsonIterator);
+		bool parseImages(rapidjson::Value::ConstMemberIterator jsonIterator);
+
+		// Parse level 2
+		PbrMetallicRoughness parsePbrMetallicRoughness (rapidjson::Value::ConstMemberIterator jsonIterator);
+		NormalTexture parseNormalTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
+		OcclusionTexture parseOcclusionTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
+		EmissiveTexture parseEmissiveTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
+
+		// Parse generic
+		MaterialGenericTexture parseMaterialGenericTexture (rapidjson::Value::ConstMemberIterator jsonIterator);
+		Color3 parseColor3 (rapidjson::Value::ConstMemberIterator jsonIterator);
+		Color4 parseColor4 (rapidjson::Value::ConstMemberIterator jsonIterator);
+
+		// Miscellanious
 		const std::string& getFileExtension (const std::string& fileName);
 
 	private:
 		std::string mFileExtension;
+		std::map<std::string, gLTFMaterial> mMaterialMap;
+		Devnull devnull;
+		PbrMetallicRoughness mPbrMetallicRoughness;
+		NormalTexture mNormalTexture;
+		OcclusionTexture mOcclusionTexture;
+		EmissiveTexture mEmissiveTexture;
+		MaterialGenericTexture mMaterialGenericTexture;
+		Color3 mColor3;
+		Color4 mColor4;
 };
 
 #endif

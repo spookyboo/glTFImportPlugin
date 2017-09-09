@@ -135,6 +135,7 @@
     <ClInclude Include="include\gLTFImportExecutor.h" />
     <ClInclude Include="include\gLTFImportPlugin.h" />
     <ClInclude Include="include\gLTFImportPrerequisites.h" />
+    <ClInclude Include="include\gLTFMaterial.h" />
     <ClInclude Include="include\rapidjson\allocators.h" />
     <ClInclude Include="include\rapidjson\document.h" />
     <ClInclude Include="include\rapidjson\encodedstream.h" />
@@ -175,6 +176,7 @@
     <ClCompile Include="src\gLTFImportDll.cpp" />
     <ClCompile Include="src\gLTFImportExecutor.cpp" />
     <ClCompile Include="src\gLTFImportPlugin.cpp" />
+    <ClCompile Include="src\gLTFMaterial.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\gLTFImportExecutor.cpp" />
+    <ClCompile Include="..\src\gLTFMaterial.cpp" />
     <ClCompile Include="gLTFTest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
