@@ -29,6 +29,7 @@ THE SOFTWARE.
 #define __gLTFImportExecutor_H__
 
 #include "hlms_editor_plugin.h"
+#include "rapidjson/document.h"
 
 /** Class responsible for executing the import */
 class gLTFImportExecutor
@@ -39,6 +40,15 @@ class gLTFImportExecutor
 		
 		/** Performs the import */
 		bool executeImport(Ogre::HlmsEditorPluginData* data);
+
+	protected:
+		bool parseMaterial (rapidjson::Value::ConstMemberIterator jsonIterator);
+		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data);
+		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data);
+		const std::string& getFileExtension (const std::string& fileName);
+
+	private:
+		std::string mFileExtension;
 };
 
 #endif
