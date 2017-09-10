@@ -29,14 +29,25 @@ Copyright (c) 2000-2014 Torus Knot Software Ltd
 #include "gLTFMaterial.h"
 
 //---------------------------------------------------------------------
+gLTFMaterial::gLTFMaterial(void) :
+	mAlphaCutoff(0.5f),
+	mDoubleSided(false)
+{
+	mAlphaMode = "OPAQUE";
+	mEmissiveFactor.mRed = 0.0f;
+	mEmissiveFactor.mGreen = 0.0f;
+	mEmissiveFactor.mBlue = 0.0f;
+}
+
+//---------------------------------------------------------------------
 void gLTFMaterial::out (void)
 {
-	OUT << "***************** gLTFMaterial *****************\n";
+	OUT << "***************** Debug: gLTFMaterial *****************\n";
 	mPbrMetallicRoughness.out();
 	mNormalTexture.out();
 	mOcclusionTexture.out();
 	mEmissiveTexture.out();
-	OUT << "***************** EmissiveFactor *****************\n";
+	OUT << "***************** Debug: EmissiveFactor *****************\n";
 	mEmissiveFactor.out();
 	OUT << "mAlphaMode = " << mAlphaMode << "\n";
 	OUT << "mAlphaCutoff = " << mAlphaCutoff << "\n";
@@ -44,43 +55,71 @@ void gLTFMaterial::out (void)
 }
 
 //---------------------------------------------------------------------
-void PbrMetallicRoughness::out(void)
+PbrMetallicRoughness::PbrMetallicRoughness (void) :
+	mMetallicFactor (1.0f),
+	mRoughnessFactor (1.0f)
 {
-	OUT << "***************** PbrMetallicRoughness *****************\n";
-	OUT << "***************** BaseColorFactor *****************\n";
+}
+
+//---------------------------------------------------------------------
+void PbrMetallicRoughness::out (void)
+{
+	OUT << "***************** Debug: PbrMetallicRoughness *****************\n";
+	OUT << "***************** Debug: BaseColorFactor *****************\n";
 	mBaseColorFactor.out();
-	OUT << "***************** BaseColorTexture *****************\n";
+	OUT << "***************** Debug: BaseColorTexture *****************\n";
 	mBaseColorTexture.out();
 	OUT << "mMetallicFactor = " << mMetallicFactor << "\n";
 	OUT << "mRoughnessFactor = " << mRoughnessFactor << "\n";
+	OUT << "***************** Debug: MetallicRoughnessTexture *****************\n";
 	mMetallicRoughnessTexture.out();
 }
 
 //---------------------------------------------------------------------
-void NormalTexture::out(void)
+NormalTexture::NormalTexture (void) :
+	MaterialGenericTexture (),
+	mScale (1.0f)
 {
-	OUT << "***************** NormalTexture *****************\n";
+}
+
+//---------------------------------------------------------------------
+void NormalTexture::out (void)
+{
+	OUT << "***************** Debug: NormalTexture *****************\n";
 	MaterialGenericTexture::out();
 	OUT << "mScale = " << mScale << "\n";
 }
 
 //---------------------------------------------------------------------
-void OcclusionTexture::out(void)
+OcclusionTexture::OcclusionTexture (void) :
+	MaterialGenericTexture (),
+	mStrength (1.0f)
 {
-	OUT << "***************** OcclusionTexture *****************\n";
+}
+
+//---------------------------------------------------------------------
+void OcclusionTexture::out (void)
+{
+	OUT << "***************** Debug: OcclusionTexture *****************\n";
 	MaterialGenericTexture::out();
 	OUT << "mStrength = " << mStrength << "\n";
 }
 
 //---------------------------------------------------------------------
-void EmissiveTexture::out(void)
+EmissiveTexture::EmissiveTexture (void) :
+	MaterialGenericTexture ()
 {
-	OUT << "***************** EmissiveTexture *****************\n";
+}
+
+//---------------------------------------------------------------------
+void EmissiveTexture::out (void)
+{
+	OUT << "***************** Debug: EmissiveTexture *****************\n";
 	MaterialGenericTexture::out();
 }
 
 //---------------------------------------------------------------------
-void Color3::out(void)
+void Color3::out (void)
 {
 	OUT << "mRed = " << mRed << "\n";
 	OUT << "mGreen = " << mGreen << "\n";
@@ -88,7 +127,24 @@ void Color3::out(void)
 }
 
 //---------------------------------------------------------------------
-void Color4::out(void)
+Color3::Color3 (void) :
+	mRed (1.0f),
+	mBlue (1.0f),
+	mGreen (1.0f)
+{
+}
+
+//---------------------------------------------------------------------
+Color4::Color4 (void) :
+	mRed (1.0f),
+	mBlue (1.0f),
+	mGreen (1.0f),
+	mAlpha (1.0f)
+{
+}
+	
+//---------------------------------------------------------------------
+void Color4::out (void)
 {
 	OUT << "mRed = " << mRed << "\n";
 	OUT << "mGreen = " << mGreen << "\n";
@@ -97,7 +153,20 @@ void Color4::out(void)
 }
 
 //---------------------------------------------------------------------
-void MaterialGenericTexture::out(void)
+MaterialGenericTexture::MaterialGenericTexture (void) :
+	mIndex (-1),
+	mTextCoord (0)
+{
+}
+
+//---------------------------------------------------------------------
+bool MaterialGenericTexture::isTextureAvailable (void) const
+{
+	return mIndex == -1;
+}
+
+//---------------------------------------------------------------------
+void MaterialGenericTexture::out (void)
 {
 	OUT << "mIndex = " << mIndex << "\n";
 	OUT << "mTextCoord = " << mTextCoord << "\n";

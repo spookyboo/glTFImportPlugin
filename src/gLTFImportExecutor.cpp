@@ -35,15 +35,21 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 {
 	OUT << "Perform gLTFImportExecutor::executeImport\n";
 
+	bool result = true;
+
 	// Determine type of file
 	std::string fileName = data->mInFileDialogPath + data->mInFileDialogName;
 	std::string extension = getFileExtension(fileName);
 	if (extension == "glb")
-		return executeBinary (fileName, data);
+		result = executeBinary (fileName, data);
 	else
-		return executeText(fileName, data);
+		result = executeText(fileName, data);
 
-	return true;
+	// Create Ogre Pbs material files if parsing was succesful
+	if (result)
+		result = createOgrePbsMaterialFiles(data);
+
+	return result;
 }
 
 //---------------------------------------------------------------------
@@ -97,12 +103,9 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 	OUT << "Perform gLTFImportExecutor::executeText\n";
 
 	// Assume a gltf json file; read the file and copy the content to a const char*
-	std::ostringstream sstream;
-	std::ifstream fs(fileName);
-	sstream << fs.rdbuf();
-	const std::string str(sstream.str());
-	const char* jsonChar = str.c_str();
-	OUT << "Json content: /n" << str << "/n";
+	std::string jsonString = getJsonAsString(fileName);
+	const char* jsonChar = jsonString.c_str();
+	OUT << "Json content: \n" << jsonString << "\n\n";
 
 	// Parse the json document
 	rapidjson::Document d;
@@ -137,6 +140,7 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 	std::map<std::string, gLTFMaterial>::iterator it;
 	for (it = mMaterialMap.begin(); it != mMaterialMap.end(); it++)
 	{
+		OUT << "\n***************** Debug: Material name = " << it->first << " *****************\n";
 		(it->second).out();
 	}
 
@@ -156,8 +160,8 @@ bool gLTFImportExecutor::parseMaterials (rapidjson::Value::ConstMemberIterator j
 {
 	OUT << "Perform gLTFImportExecutor::parseMaterials\n";
 
-	const rapidjson::Value& array = jsonIterator->value;
 	gLTFMaterial material;
+	const rapidjson::Value& array = jsonIterator->value;
 
 	OUT << "Loop through materials array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
@@ -167,52 +171,53 @@ bool gLTFImportExecutor::parseMaterials (rapidjson::Value::ConstMemberIterator j
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
 			OUT << "key ==> " << it->name.GetString() << "\n";
-			if (it->value.IsString() && std::string(it->name.GetString()) == "name")
+			std::string key = std::string(it->name.GetString());
+			if (it->value.IsString() && key == "name")
 			{
 				// ******** 1. name ********
 				mMaterialMap[it->value.GetString()] = material;
 			}
-			if (it->value.IsObject() && std::string(it->name.GetString()) == "pbrMetallicRoughness")
+			if (it->value.IsObject() && key == "pbrMetallicRoughness")
 			{
 				// ******** 2. pbrMetallicRoughness ********
 				PbrMetallicRoughness pbrMetallicRoughness = parsePbrMetallicRoughness(it);
 				material.mPbrMetallicRoughness = pbrMetallicRoughness;
 			}
-			if (it->value.IsObject() && std::string(it->name.GetString()) == "normalTexture")
+			if (it->value.IsObject() && key == "normalTexture")
 			{
 				// ******** 3. normalTexture ********
 				NormalTexture normalTexture = parseNormalTexture(it);
 				material.mNormalTexture = normalTexture;
 			}
-			if (it->value.IsObject() && std::string(it->name.GetString()) == "occlusionTexture")
+			if (it->value.IsObject() && key == "occlusionTexture")
 			{
 				// ******** 4. occlusionTexture ********
 				OcclusionTexture occlusionTexture = parseOcclusionTexture(it);
 				material.mOcclusionTexture = occlusionTexture;
 			}
-			if (it->value.IsObject() && std::string(it->name.GetString()) == "emissiveTexture")
+			if (it->value.IsObject() && key == "emissiveTexture")
 			{
 				// ******** 5. emissiveTexture ********
 				EmissiveTexture emissiveTexture = parseEmissiveTexture(it);
 				material.mEmissiveTexture = emissiveTexture;
 			}
-			if (it->value.IsArray() && std::string(it->name.GetString()) == "emissiveFactor")
+			if (it->value.IsArray() && key == "emissiveFactor")
 			{
 				// ******** 6. emissiveFactor ********
 				Color3 emissiveFactor = parseColor3(it);
 				material.mEmissiveFactor = emissiveFactor;
 			}
-			if (it->value.IsString() && std::string(it->name.GetString()) == "alphaMode")
+			if (it->value.IsString() && key == "alphaMode")
 			{
 				// ******** 7. alphaMode ********
 				material.mAlphaMode = it->value.GetString();
 			}
-			if (it->value.IsFloat() && std::string(it->name.GetString()) == "alphaCutoff")
+			if (it->value.IsFloat() && key == "alphaCutoff")
 			{
 				// ******** 8. alphaCutoff ********
 				material.mAlphaCutoff = it->value.GetFloat();
 			}
-			if (it->value.IsBool() && std::string(it->name.GetString()) == "doubleSided")
+			if (it->value.IsBool() && key == "doubleSided")
 			{
 				// ******** 9. doubleSided ********
 				material.mDoubleSided = it->value.GetBool();
@@ -249,29 +254,30 @@ PbrMetallicRoughness gLTFImportExecutor::parsePbrMetallicRoughness (rapidjson::V
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
 		OUT << "key ==> " << it->name.GetString() << "\n";
-		if (it->value.IsArray() && std::string(it->name.GetString()) == "baseColorFactor")
+		std::string key = std::string(it->name.GetString());
+		if (it->value.IsArray() && key == "baseColorFactor")
 		{
 			// ******** 2.1 baseColorFactor ********
 			Color4 baseColorFactor = parseColor4(it);
 			mPbrMetallicRoughness.mBaseColorFactor = baseColorFactor;
 		}
-		if (it->value.IsObject() && std::string(it->name.GetString()) == "baseColorTexture")
+		if (it->value.IsObject() && key == "baseColorTexture")
 		{
 			// ******** 2.2 baseColorTexture ********
 			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
 			mPbrMetallicRoughness.mBaseColorTexture = texture;
 		}
-		if (it->value.IsFloat() && std::string(it->name.GetString()) == "metallicFactor")
+		if (it->value.IsFloat() && key == "metallicFactor")
 		{
 			// ******** 2.3 metallicFactor ********
 			mPbrMetallicRoughness.mMetallicFactor = it->value.GetFloat();
 		}
-		if (it->value.IsFloat() && std::string(it->name.GetString()) == "roughnessFactor")
+		if (it->value.IsFloat() && key == "roughnessFactor")
 		{
 			// ******** 2.4 roughnessFactor ********
 			mPbrMetallicRoughness.mRoughnessFactor = it->value.GetFloat();
 		}
-		if (it->value.IsObject() && std::string(it->name.GetString()) == "metallicRoughnessTexture")
+		if (it->value.IsObject() && key == "metallicRoughnessTexture")
 		{
 			// ******** 2.5 metallicRoughnessTexture ********
 			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
@@ -286,6 +292,7 @@ PbrMetallicRoughness gLTFImportExecutor::parsePbrMetallicRoughness (rapidjson::V
 NormalTexture gLTFImportExecutor::parseNormalTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
 	OUT << "Perform gLTFImportExecutor::parseNormalTexture\n";
+
 	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
 	mNormalTexture.mIndex = texture.mIndex;
 	mNormalTexture.mTextCoord = texture.mTextCoord;
@@ -294,7 +301,8 @@ NormalTexture gLTFImportExecutor::parseNormalTexture (rapidjson::Value::ConstMem
 	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
-		if (it->value.IsFloat() && std::string(it->name.GetString()) == "scale")
+		std::string key = std::string(it->name.GetString());
+		if (it->value.IsFloat() && key == "scale")
 		{
 			// ******** 3.3 scale ********
 			OUT << "key ==> " << it->name.GetString() << "\n";
@@ -310,6 +318,7 @@ NormalTexture gLTFImportExecutor::parseNormalTexture (rapidjson::Value::ConstMem
 OcclusionTexture gLTFImportExecutor::parseOcclusionTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
 	OUT << "Perform gLTFImportExecutor::parseOcclusionTexture\n";
+
 	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
 	mOcclusionTexture.mIndex = texture.mIndex;
 	mOcclusionTexture.mTextCoord = texture.mTextCoord;
@@ -318,9 +327,10 @@ OcclusionTexture gLTFImportExecutor::parseOcclusionTexture (rapidjson::Value::Co
 	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
-		if (it->value.IsFloat() && std::string(it->name.GetString()) == "strength")
+		std::string key = std::string(it->name.GetString());
+		if (it->value.IsFloat() && key == "strength")
 		{
-			// ******** 4.3 scale ********
+			// ******** 4.3 strength ********
 			OUT << "key ==> " << it->name.GetString() << "\n";
 			mOcclusionTexture.mStrength = it->value.GetFloat();
 			OUT << "value ==> " << mOcclusionTexture.mStrength << "\n";
@@ -349,14 +359,15 @@ MaterialGenericTexture gLTFImportExecutor::parseMaterialGenericTexture (rapidjso
 	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
-		if (it->value.IsInt() && std::string(it->name.GetString()) == "index")
+		std::string key = std::string(it->name.GetString());
+		if (it->value.IsInt() && key == "index")
 		{
 			// ******** index ********
 			OUT << "key ==> " << it->name.GetString() << "\n";
 			mMaterialGenericTexture.mIndex = it->value.GetInt();
 			OUT << "value ==> " << mMaterialGenericTexture.mIndex << "\n";
 		}
-		if (it->value.IsInt() && std::string(it->name.GetString()) == "texCoord")
+		if (it->value.IsInt() && key == "texCoord")
 		{
 			// ******** texCoord ********
 			OUT << "key ==> " << it->name.GetString() << "\n";
@@ -373,9 +384,6 @@ Color3 gLTFImportExecutor::parseColor3 (rapidjson::Value::ConstMemberIterator js
 {
 	OUT << "Perform gLTFImportExecutor::parseColor3\n";
 
-	mColor3.mRed = 0.0f;
-	mColor3.mGreen = 0.0f;
-	mColor3.mBlue = 0.0f;
 	if (jsonIterator->value.IsArray())
 	{
 		const rapidjson::Value& array = jsonIterator->value;
@@ -397,10 +405,6 @@ Color4 gLTFImportExecutor::parseColor4 (rapidjson::Value::ConstMemberIterator js
 {
 	OUT << "Perform gLTFImportExecutor::parseColor4\n";
 
-	mColor4.mRed = 0.0f;
-	mColor4.mGreen = 0.0f;
-	mColor4.mBlue = 0.0f;
-	mColor4.mAlpha = 0.0f;
 	if (jsonIterator->value.IsArray())
 	{
 		const rapidjson::Value& array = jsonIterator->value;
@@ -419,6 +423,168 @@ Color4 gLTFImportExecutor::parseColor4 (rapidjson::Value::ConstMemberIterator js
 }
 
 //---------------------------------------------------------------------
+bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* data)
+{
+	OUT << "Perform gLTFImportExecutor::createOgrePbsMaterialFiles\n";
+
+	// Create the Ogre Pbs material files (*.material.json)
+	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
+
+
+	// Iterate through materials and create for each material an Ogre Pbs .material.json file
+	std::map<std::string, gLTFMaterial>::iterator it;
+	for (it = mMaterialMap.begin(); it != mMaterialMap.end(); it++)
+	{
+		std::string ogreFullyQualifiedMaterialFileName = fullyQualifiedImportPath + it->first + ".material.json";
+		OUT << "\nCreate: material file " << ogreFullyQualifiedMaterialFileName << "\n";
+
+		// Create the file
+		std::ofstream dst(ogreFullyQualifiedMaterialFileName);
+		dst << "{\n";
+
+		// ------------- SAMPLERS -------------
+		// TODO
+
+		// ------------- MACROBLOCKS -------------
+		// TODO
+
+		// ------------- BLENDBLOCKS -------------
+		// TODO
+
+		// ------------- PBS -------------
+		dst << TAB << "\"pbs\" :\n";
+		dst << TAB << "{\n";
+		dst << TABx2 << "\"" << it->first << "\" :\n";
+		dst << TABx2 << "{\n";
+		createDiffuseJsonBlock(&dst, it->second);
+		createSpecularJsonBlock(&dst, it->second);
+		createMetalnessJsonBlock(&dst, it->second);
+		createFresnelJsonBlock(&dst, it->second);
+		createNormalJsonBlock(&dst, it->second);
+		createRoughnessJsonBlock(&dst, it->second);
+		createReflectionJsonBlock(&dst, it->second);
+		dst << TABx3 << "\n";
+		dst << TABx2 << "}\n";
+		dst << TAB << "}\n";
+		dst << "}\n";
+		dst.close();
+
+		// Validate the file to see whether it is valid Json
+		std::string jsonString = getJsonAsString(ogreFullyQualifiedMaterialFileName);
+		const char* jsonChar = jsonString.c_str();
+		rapidjson::Document d;
+		d.Parse(jsonChar);
+		if (d.HasParseError())
+			OUT << "Error, file " << ogreFullyQualifiedMaterialFileName << " is not valid Json\n";
+		else
+			OUT << "Ok, file " << ogreFullyQualifiedMaterialFileName << " is valid Json\n";
+	}
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	*dst << TABx3 << "\"diffuse\" :\n";
+	*dst << TABx3 << "{\n";
+
+	// Diffuse color
+	*dst << TABx4 << "\"value\" : [" <<
+		material.mPbrMetallicRoughness.mBaseColorFactor.mRed <<
+		", " <<
+		material.mPbrMetallicRoughness.mBaseColorFactor.mGreen <<
+		", " <<
+		material.mPbrMetallicRoughness.mBaseColorFactor.mBlue <<
+		"]\n";
+
+	// Background colour
+	// TODO
+
+	// Diffuse texture
+	// TODO
+
+	// Sampler
+	// TODO
+
+	*dst << TABx3 << "}," << "\n";
+	
+	return true; // There is always a default value
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	std::string endWithChar = ",";
+	*dst << TABx3 << "\"specular\" :\n";
+	*dst << TABx3 << "{\n";
+	// TODO
+	*dst << TABx3 << "}";
+
+	return true; // There is always a default value
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createMetalnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	*dst << "," << "\n";
+	*dst << TABx3 << "\"metalness\" :\n";
+	*dst << TABx3 << "{\n";
+	// TODO
+	*dst << TABx3 << "}";
+	
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createFresnelJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	// Specular workflow is not supported in gLTF by default
+	
+	return false;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	if (material.mNormalTexture.isTextureAvailable())
+		return false;
+	else
+		*dst << "," << "\n";
+
+	*dst << TABx3 << "\"normal\" :\n";
+	*dst << TABx3 << "{\n";
+	// TODO
+	*dst << TABx3 << "}";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createRoughnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	if (material.mPbrMetallicRoughness.mMetallicRoughnessTexture.isTextureAvailable())
+		return false;
+	else
+		*dst << "," << "\n";
+
+	*dst << TABx3 << "\"roughness\" :\n";
+	*dst << TABx3 << "{\n";
+	// TODO
+	*dst << TABx3 << "}";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createReflectionJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
+{
+	// TODO
+	
+	return false;
+}
+
+//---------------------------------------------------------------------
 const std::string& gLTFImportExecutor::getFileExtension (const std::string& fileName)
 {
 	std::string::size_type idx;
@@ -431,4 +597,27 @@ const std::string& gLTFImportExecutor::getFileExtension (const std::string& file
 	}
 
 	return mFileExtension;
+}
+
+//---------------------------------------------------------------------
+void gLTFImportExecutor::copyFile (const std::string& fileNameSource, std::string& fileNameDestination)
+{
+	std::ifstream src(fileNameSource.c_str(), std::ios::binary);
+	std::ofstream dst(fileNameDestination.c_str(), std::ios::binary);
+	dst << src.rdbuf();
+	dst.close();
+	src.close();
+}
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::getJsonAsString(const std::string& jsonFileName)
+{
+	jsonString = "";
+	std::ostringstream sstream;
+	std::ifstream fs(jsonFileName);
+	sstream << fs.rdbuf();
+	jsonString = sstream.str();
+	return jsonString;
+	//const std::string str(sstream.str());
+	//return str.c_str();
 }

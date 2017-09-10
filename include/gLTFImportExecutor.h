@@ -33,6 +33,11 @@ THE SOFTWARE.
 #include "gLTFMaterial.h"
 #include "rapidjson/document.h"
 
+static const std::string TAB = "  ";
+static const std::string TABx2 = "    ";
+static const std::string TABx3 = "      ";
+static const std::string TABx4 = "        ";
+
 /** Class responsible for executing the import */
 class gLTFImportExecutor
 {
@@ -40,13 +45,23 @@ class gLTFImportExecutor
 		gLTFImportExecutor(void) {};
 		virtual ~gLTFImportExecutor(void) {};
 		
-		// Perform the import
+		// Perform the import (called by plugin)
 		bool executeImport(Ogre::HlmsEditorPluginData* data);
 
 	protected:
 		// Process the binary file / text file
-		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data);
-		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data);
+		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .glb (binary) file
+		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .gltf (json text) file
+
+		// Create the Ogre Pbs material files
+		bool createOgrePbsMaterialFiles (Ogre::HlmsEditorPluginData* data); // Create *.material.json file and copy images
+		bool createDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createMetalnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createFresnelJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createRoughnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createReflectionJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 
 		// Parse level 1
 		bool parseMaterials (rapidjson::Value::ConstMemberIterator jsonIterator);
@@ -66,6 +81,8 @@ class gLTFImportExecutor
 
 		// Miscellanious
 		const std::string& getFileExtension (const std::string& fileName);
+		void copyFile(const std::string& fileNameSource, std::string& fileNameDestination);
+		const std::string& getJsonAsString(const std::string& jsonFileName);
 
 	private:
 		std::string mFileExtension;
@@ -78,6 +95,7 @@ class gLTFImportExecutor
 		MaterialGenericTexture mMaterialGenericTexture;
 		Color3 mColor3;
 		Color4 mColor4;
+		std::string jsonString;
 };
 
 #endif

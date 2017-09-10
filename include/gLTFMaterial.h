@@ -51,7 +51,7 @@ struct Devnull : std::ostream, std::streambuf
 class Color3
 {
 public:
-	Color3(void) {};
+	Color3(void);
 	virtual ~Color3(void) {};
 	void out(void);
 
@@ -67,8 +67,8 @@ public:
 class Color4
 {
 public:
-	Color4(void) {};
-	virtual ~Color4(void) {};
+	Color4 (void);
+	virtual ~Color4 (void) {};
 	void out(void);
 
 	// Public member attributes
@@ -84,9 +84,10 @@ public:
 class MaterialGenericTexture
 {
 public:
-	MaterialGenericTexture(void) {};
-	virtual ~MaterialGenericTexture(void) {};
+	MaterialGenericTexture (void);
+	virtual ~MaterialGenericTexture (void) {};
 	void out(void);
+	bool isTextureAvailable (void) const;
 
 	// Public member attributes
 	int mIndex;
@@ -99,7 +100,7 @@ public:
 class PbrMetallicRoughness
 {
 	public:
-		PbrMetallicRoughness (void) {};
+		PbrMetallicRoughness (void);
 		virtual ~PbrMetallicRoughness (void) {};
 		void out(void);
 
@@ -117,7 +118,7 @@ class PbrMetallicRoughness
 class NormalTexture : public MaterialGenericTexture
 {
 	public:
-		NormalTexture (void) {};
+		NormalTexture (void);
 		virtual ~NormalTexture (void) {};
 		void out(void);
 
@@ -131,7 +132,7 @@ class NormalTexture : public MaterialGenericTexture
 class OcclusionTexture : public MaterialGenericTexture
 {
 	public:
-		OcclusionTexture (void) {};
+		OcclusionTexture (void);
 		virtual ~OcclusionTexture (void) {};
 		void out(void);
 
@@ -145,7 +146,7 @@ class OcclusionTexture : public MaterialGenericTexture
 class EmissiveTexture : public MaterialGenericTexture
 {
 	public:
-		EmissiveTexture (void) {};
+		EmissiveTexture (void);
 		virtual ~EmissiveTexture (void) {};
 		void out(void);
 
@@ -159,7 +160,7 @@ class EmissiveTexture : public MaterialGenericTexture
 class gLTFMaterial
 {
 	public:
-		gLTFMaterial (void) {};
+		gLTFMaterial (void);
 		virtual ~gLTFMaterial (void) {};
 		void out (void); // prints the content of the gLTFMaterial
 
