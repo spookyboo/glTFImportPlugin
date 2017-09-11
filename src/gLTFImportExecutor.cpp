@@ -212,7 +212,7 @@ bool gLTFImportExecutor::parseMaterials (rapidjson::Value::ConstMemberIterator j
 				// ******** 7. alphaMode ********
 				material.mAlphaMode = it->value.GetString();
 			}
-			if (it->value.IsFloat() && key == "alphaCutoff")
+			if (it->value.IsNumber() && key == "alphaCutoff")
 			{
 				// ******** 8. alphaCutoff ********
 				material.mAlphaCutoff = it->value.GetFloat();
@@ -267,12 +267,12 @@ PbrMetallicRoughness gLTFImportExecutor::parsePbrMetallicRoughness (rapidjson::V
 			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
 			mPbrMetallicRoughness.mBaseColorTexture = texture;
 		}
-		if (it->value.IsFloat() && key == "metallicFactor")
+		if (it->value.IsNumber() && key == "metallicFactor")
 		{
 			// ******** 2.3 metallicFactor ********
 			mPbrMetallicRoughness.mMetallicFactor = it->value.GetFloat();
 		}
-		if (it->value.IsFloat() && key == "roughnessFactor")
+		if (it->value.IsNumber() && key == "roughnessFactor")
 		{
 			// ******** 2.4 roughnessFactor ********
 			mPbrMetallicRoughness.mRoughnessFactor = it->value.GetFloat();
@@ -302,7 +302,8 @@ NormalTexture gLTFImportExecutor::parseNormalTexture (rapidjson::Value::ConstMem
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
 		std::string key = std::string(it->name.GetString());
-		if (it->value.IsFloat() && key == "scale")
+		OUT << "DEBUG key ==> " << key << "\n";
+		if (it->value.IsNumber() && key == "scale")
 		{
 			// ******** 3.3 scale ********
 			OUT << "key ==> " << it->name.GetString() << "\n";
@@ -328,7 +329,7 @@ OcclusionTexture gLTFImportExecutor::parseOcclusionTexture (rapidjson::Value::Co
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
 		std::string key = std::string(it->name.GetString());
-		if (it->value.IsFloat() && key == "strength")
+		if (it->value.IsNumber() && key == "strength")
 		{
 			// ******** 4.3 strength ********
 			OUT << "key ==> " << it->name.GetString() << "\n";
@@ -456,6 +457,7 @@ bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* 
 		dst << TAB << "{\n";
 		dst << TABx2 << "\"" << it->first << "\" :\n";
 		dst << TABx2 << "{\n";
+		dst << TABx3 << "\"workflow\" : \"metallic\",\n"; // Default workflow of gLTF is metallic
 		createDiffuseJsonBlock(&dst, it->second);
 		createSpecularJsonBlock(&dst, it->second);
 		createMetalnessJsonBlock(&dst, it->second);
@@ -463,6 +465,9 @@ bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* 
 		createNormalJsonBlock(&dst, it->second);
 		createRoughnessJsonBlock(&dst, it->second);
 		createReflectionJsonBlock(&dst, it->second);
+		createDetailDiffuseJsonBlock(&dst, it->second);
+		createDetailNormalJsonBlock(&dst, it->second);
+		createDetailWeightJsonBlock(&dst, it->second);
 		dst << TABx3 << "\n";
 		dst << TABx2 << "}\n";
 		dst << TAB << "}\n";
@@ -501,27 +506,28 @@ bool gLTFImportExecutor::createDiffuseJsonBlock (std::ofstream* dst, const gLTFM
 	// Background colour
 	// TODO
 
-	// Diffuse texture
-	// TODO
-
-	// Sampler
-	// TODO
+	/* The metallicRoughnessTexture becomes a diffuse texture in case there is NO occlusionTexture
+	*  present in the gLTF material.
+	*/
+	if (!material.mOcclusionTexture.isTextureAvailable())
+	{
+		// TODO: Add "texture" + add "sampler"
+	}
 
 	*dst << TABx3 << "}," << "\n";
 	
-	return true; // There is always a default value
+	return true; // There is always a default "value"
 }
 
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::createSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
-	std::string endWithChar = ",";
 	*dst << TABx3 << "\"specular\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO
+	*dst << TABx4 << "\"value\" : [1, 1, 1]\n"; // Default value of specular color
 	*dst << TABx3 << "}";
 
-	return true; // There is always a default value
+	return true;
 }
 
 //---------------------------------------------------------------------
@@ -547,11 +553,16 @@ bool gLTFImportExecutor::createFresnelJsonBlock (std::ofstream* dst, const gLTFM
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::createNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
-	if (material.mNormalTexture.isTextureAvailable())
+	// Return if there is no normal texture
+	if (!material.mNormalTexture.isTextureAvailable())
 		return false;
-	else
-		*dst << "," << "\n";
 
+	/* The normal texture becomes a detail normal texture in case the scale is <> 1
+	 */
+	if (material.mNormalTexture.mScale != 1.0f)
+		return false;
+
+	*dst << "," << "\n";
 	*dst << TABx3 << "\"normal\" :\n";
 	*dst << TABx3 << "{\n";
 	// TODO
@@ -563,11 +574,10 @@ bool gLTFImportExecutor::createNormalJsonBlock (std::ofstream* dst, const gLTFMa
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::createRoughnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
-	if (material.mPbrMetallicRoughness.mMetallicRoughnessTexture.isTextureAvailable())
+	if (!material.mPbrMetallicRoughness.mMetallicRoughnessTexture.isTextureAvailable())
 		return false;
-	else
-		*dst << "," << "\n";
 
+	*dst << "," << "\n";
 	*dst << TABx3 << "\"roughness\" :\n";
 	*dst << TABx3 << "{\n";
 	// TODO
@@ -577,11 +587,76 @@ bool gLTFImportExecutor::createRoughnessJsonBlock (std::ofstream* dst, const gLT
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::createReflectionJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
+bool gLTFImportExecutor::createReflectionJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
 	// TODO
 	
 	return false;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createDetailDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	/* The metallicRoughnessTexture becomes a detail diffuse texture in case there is also a occlusionTexture
+	 * present in the gLTF material. This means in practice that only 1 detail diffuse texture can be present.
+	 */
+	if (!material.mOcclusionTexture.isTextureAvailable())
+		return false;
+
+	*dst << "," << "\n";
+	*dst << TABx3 << "\"detail_diffuse0\" :\n";
+	*dst << TABx3 << "{\n";
+	// TODO
+	*dst << TABx3 << "}";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createDetailNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
+{
+	// Return if there is no normal texture
+	if (!material.mNormalTexture.isTextureAvailable())
+		return false;
+
+	/* The normal texture becomes a detail normal texture in case the scale is <> 1. This means also that
+	 * only 1 detail normal texture can be present.
+	 * @remark:
+	 * Unlike the the diffuse map, a normal mal will not become a detail normal map in case an occlusion texture
+	 * is present. The gLTF specification does not specify whether an occlusion texture also affects a normal map.
+	 */
+	if (material.mNormalTexture.mScale == 1.0f)
+		return false;
+
+	*dst << "," << "\n";
+	*dst << TABx3 << "\"detail_normal0\" :\n";
+	*dst << TABx3 << "{\n";
+	*dst << TABx4 << 
+		"\"scale\" : [" <<
+		material.mNormalTexture.mScale <<
+		", " << 
+		material.mNormalTexture.mScale << 
+		"]\n";
+	// TODO: Add value, texture and sampler (take the , into account)
+	*dst << TABx3 << "}";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createDetailWeightJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	// Return if there is no occlusion texture
+	if (!material.mOcclusionTexture.isTextureAvailable())
+		return false;
+
+	*dst << "," << "\n";
+	*dst << TABx3 << "\"detail_weight\" :\n";
+	*dst << TABx3 << "{\n";
+	// TODO: Add "texture" and "sampler"
+	*dst << TABx3 << "}";
+
+	return true;
 }
 
 //---------------------------------------------------------------------
@@ -618,6 +693,4 @@ const std::string& gLTFImportExecutor::getJsonAsString(const std::string& jsonFi
 	sstream << fs.rdbuf();
 	jsonString = sstream.str();
 	return jsonString;
-	//const std::string str(sstream.str());
-	//return str.c_str();
 }

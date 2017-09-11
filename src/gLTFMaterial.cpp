@@ -162,7 +162,7 @@ MaterialGenericTexture::MaterialGenericTexture (void) :
 //---------------------------------------------------------------------
 bool MaterialGenericTexture::isTextureAvailable (void) const
 {
-	return mIndex == -1;
+	return mIndex != -1;
 }
 
 //---------------------------------------------------------------------

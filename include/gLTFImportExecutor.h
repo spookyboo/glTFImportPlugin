@@ -62,6 +62,9 @@ class gLTFImportExecutor
 		bool createNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 		bool createRoughnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 		bool createReflectionJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailDiffuseJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailWeightJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 
 		// Parse level 1
 		bool parseMaterials (rapidjson::Value::ConstMemberIterator jsonIterator);
