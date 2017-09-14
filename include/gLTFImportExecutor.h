@@ -32,17 +32,17 @@ THE SOFTWARE.
 #include "hlms_editor_plugin.h"
 #include "gLTFImportConstants.h"
 #include "gLTFMaterial.h"
-#include "gLTFImportMaterialsExecutor.h"
-#include "gLTFImportTexturesExecutor.h"
-#include "gLTFImportImagesExecutor.h"
+#include "gLTFImportMaterialsParser.h"
+#include "gLTFImportTexturesParser.h"
+#include "gLTFImportImagesParser.h"
+#include "gLTFImportPbsMaterialsCreator.h"
 #include "rapidjson/document.h"
 
 /** Class responsible for executing the import */
 class gLTFImportExecutor
 {
 	public:
-		gLTFImportExecutor (void) :
-			mDetailedDiffuseMapCount(0) {};
+		gLTFImportExecutor (void) {};
 		virtual ~gLTFImportExecutor(void) {};
 		
 		// Perform the import (called by plugin)
@@ -53,27 +53,15 @@ class gLTFImportExecutor
 		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .glb (binary) file
 		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .gltf (json text) file
 
-		// Create the Ogre Pbs material files; add json blocks
-		bool createOgrePbsMaterialFiles (Ogre::HlmsEditorPluginData* data); // Create *.material.json files and copy images
-		bool createTransparencyJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createMetalnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createFresnelJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createRoughnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createReflectionJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailWeightJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createEmissiveJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 
 	private:
 		std::map<std::string, gLTFMaterial> mMaterialsMap;
-		unsigned short mDetailedDiffuseMapCount;
-		gLTFImportMaterialsExecutor mMaterialsExecutor;
-		gLTFImportTexturesExecutor mTexturesExecutor;
-		gLTFImportImagesExecutor mImagesExecutor;
+		std::map<std::string, gLTFTexture> mTexturesMap;
+		std::map<std::string, gLTFImage> mImagesMap;
+		gLTFImportMaterialsParser mMaterialsParser;
+		gLTFImportTexturesParser mTexturesParser;
+		gLTFImportImagesParser mImagesParser;
+		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;
 };
 
 #endif

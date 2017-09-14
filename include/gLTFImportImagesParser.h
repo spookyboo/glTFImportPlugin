@@ -25,27 +25,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFImportTexturesExecutor_H__
-#define __gLTFImportTexturesExecutor_H__
+#ifndef __gLTFImportImagesParser_H__
+#define __gLTFImportImagesParser_H__
 
 #include <map>
 #include "gLTFImportConstants.h"
-#include "gLTFTexture.h"
+#include "gLTFImage.h"
 #include "rapidjson/document.h"
 
-/** Class responsible for executing the import and transformation of gLTF Textures */
-class gLTFImportTexturesExecutor
+/** Class responsible for executing the import and transformation of gLTF Images */
+class gLTFImportImagesParser
 {
 	public:
-		gLTFImportTexturesExecutor(void) {};
-		virtual ~gLTFImportTexturesExecutor(void) {};
+		gLTFImportImagesParser (void) {};
+		virtual ~gLTFImportImagesParser (void) {};
 
-		// Parse the gLTF textures (level 1)
-		bool parseTextures (rapidjson::Value::ConstMemberIterator jsonIterator);
+		// Parse the gLTF images (level 1)
+		bool parseImages (rapidjson::Value::ConstMemberIterator jsonIterator);
+
+		// Returns the images structure
+		const std::map<std::string, gLTFImage> getParsedImages (void) const;
 
 	protected:
 
 	private:
+		std::map<std::string, gLTFImage> mImagesMap;
 };
 
 #endif

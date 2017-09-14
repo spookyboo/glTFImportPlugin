@@ -26,12 +26,19 @@
   -----------------------------------------------------------------------------
 */
 
-#include "gLTFImportImagesExecutor.h"
+#include "gLTFImportImagesParser.h"
 
 //---------------------------------------------------------------------
-bool gLTFImportImagesExecutor::parseImages (rapidjson::Value::ConstMemberIterator jsonIterator)
+bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportImagesExecutor::parseImages\n";
+	OUT << "Perform gLTFImportImagesParser::parseImages\n";
 
 	return true;
 }
+
+//---------------------------------------------------------------------
+const std::map<std::string, gLTFImage> gLTFImportImagesParser::getParsedImages(void) const
+{
+	return mImagesMap;
+}
+

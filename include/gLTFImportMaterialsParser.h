@@ -25,8 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFImportMaterialsExecutor_H__
-#define __gLTFImportMaterialsExecutor_H__
+#ifndef __gLTFImportMaterialsParser_H__
+#define __gLTFImportMaterialsParser_H__
 
 #include <map>
 #include "gLTFImportConstants.h"
@@ -34,11 +34,11 @@ THE SOFTWARE.
 #include "rapidjson/document.h"
 
 /** Class responsible for executing the import and transformation of gLTF Materials to Ogre PBS materials */
-class gLTFImportMaterialsExecutor
+class gLTFImportMaterialsParser
 {
 	public:
-		gLTFImportMaterialsExecutor (void) {};
-		virtual ~gLTFImportMaterialsExecutor (void) {};
+		gLTFImportMaterialsParser(void) {};
+		virtual ~gLTFImportMaterialsParser(void) {};
 
 		// Parse the gLTF materials (level 1)
 		bool parseMaterials(rapidjson::Value::ConstMemberIterator jsonIterator);

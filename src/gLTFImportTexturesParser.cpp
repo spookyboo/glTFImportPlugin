@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
-For the latest info, see http://www.ogre3d.org
+For the latest info, see http://www.ogre3d.org/
 
 Copyright (c) 2000-2014 Torus Knot Software Ltd
 
@@ -25,27 +25,19 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFImportImagesExecutor_H__
-#define __gLTFImportImagesExecutor_H__
 
-#include <map>
-#include "gLTFImportConstants.h"
-#include "gLTFMaterial.h"
-#include "rapidjson/document.h"
+#include "gLTFImportTexturesParser.h"
 
-/** Class responsible for executing the import and transformation of gLTF Images */
-class gLTFImportImagesExecutor
+//---------------------------------------------------------------------
+bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	public:
-		gLTFImportImagesExecutor (void) {};
-		virtual ~gLTFImportImagesExecutor (void) {};
+	OUT << "Perform gLTFImportTexturesParser::parseTextures\n";
 
-		// Parse the gLTF images (level 1)
-		bool parseImages (rapidjson::Value::ConstMemberIterator jsonIterator);
+	return true;
+}
 
-	protected:
-
-	private:
-};
-
-#endif
+//---------------------------------------------------------------------
+const std::map<std::string, gLTFTexture> gLTFImportTexturesParser::getParsedTextures (void) const
+{
+	return mTexturesMap;
+}

@@ -135,11 +135,12 @@
     <ClInclude Include="include\gLTFImage.h" />
     <ClInclude Include="include\gLTFImportConstants.h" />
     <ClInclude Include="include\gLTFImportExecutor.h" />
-    <ClInclude Include="include\gLTFImportImagesExecutor.h" />
-    <ClInclude Include="include\gLTFImportMaterialsExecutor.h" />
+    <ClInclude Include="include\gLTFImportImagesParser.h" />
+    <ClInclude Include="include\gLTFImportMaterialsParser.h" />
+    <ClInclude Include="include\gLTFImportPbsMaterialsCreator.h" />
     <ClInclude Include="include\gLTFImportPlugin.h" />
     <ClInclude Include="include\gLTFImportPrerequisites.h" />
-    <ClInclude Include="include\gLTFImportTexturesExecutor.h" />
+    <ClInclude Include="include\gLTFImportTexturesParser.h" />
     <ClInclude Include="include\gLTFMaterial.h" />
     <ClInclude Include="include\gLTFTexture.h" />
     <ClInclude Include="include\rapidjson\allocators.h" />
@@ -182,10 +183,11 @@
     <ClCompile Include="src\gLTFImage.cpp" />
     <ClCompile Include="src\gLTFImportDll.cpp" />
     <ClCompile Include="src\gLTFImportExecutor.cpp" />
-    <ClCompile Include="src\gLTFImportImagesExecutor.cpp" />
-    <ClCompile Include="src\gLTFImportMaterialsExecutor.cpp" />
+    <ClCompile Include="src\gLTFImportImagesParser.cpp" />
+    <ClCompile Include="src\gLTFImportMaterialsParser.cpp" />
+    <ClCompile Include="src\gLTFImportPbsMaterialsCreator.cpp" />
     <ClCompile Include="src\gLTFImportPlugin.cpp" />
-    <ClCompile Include="src\gLTFImportTexturesExecutor.cpp" />
+    <ClCompile Include="src\gLTFImportTexturesParser.cpp" />
     <ClCompile Include="src\gLTFMaterial.cpp" />
     <ClCompile Include="src\gLTFTexture.cpp" />
   </ItemGroup>
