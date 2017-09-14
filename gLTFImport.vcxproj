@@ -132,10 +132,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\gLTFImage.h" />
+    <ClInclude Include="include\gLTFImportConstants.h" />
     <ClInclude Include="include\gLTFImportExecutor.h" />
+    <ClInclude Include="include\gLTFImportImagesExecutor.h" />
+    <ClInclude Include="include\gLTFImportMaterialsExecutor.h" />
     <ClInclude Include="include\gLTFImportPlugin.h" />
     <ClInclude Include="include\gLTFImportPrerequisites.h" />
+    <ClInclude Include="include\gLTFImportTexturesExecutor.h" />
     <ClInclude Include="include\gLTFMaterial.h" />
+    <ClInclude Include="include\gLTFTexture.h" />
     <ClInclude Include="include\rapidjson\allocators.h" />
     <ClInclude Include="include\rapidjson\document.h" />
     <ClInclude Include="include\rapidjson\encodedstream.h" />
@@ -173,10 +179,15 @@
     <ClInclude Include="include\rapidjson\writer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\gLTFImage.cpp" />
     <ClCompile Include="src\gLTFImportDll.cpp" />
     <ClCompile Include="src\gLTFImportExecutor.cpp" />
+    <ClCompile Include="src\gLTFImportImagesExecutor.cpp" />
+    <ClCompile Include="src\gLTFImportMaterialsExecutor.cpp" />
     <ClCompile Include="src\gLTFImportPlugin.cpp" />
+    <ClCompile Include="src\gLTFImportTexturesExecutor.cpp" />
     <ClCompile Include="src\gLTFMaterial.cpp" />
+    <ClCompile Include="src\gLTFTexture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

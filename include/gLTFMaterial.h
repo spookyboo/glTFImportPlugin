@@ -36,24 +36,15 @@ THE SOFTWARE.
  used to generate an Ogre 3d material file.
 /************************************************************************************************/
 
-struct Devnull : std::ostream, std::streambuf
-{
-	Devnull() : std::ostream(this) {}
-};
-
-// (un)comment first/second line to enable/disable debug to screen
-#define OUT std::cout
-//#define OUT devnull
-
 /***********************************************/
 /** Class responsible that represents a Color3 */
 /***********************************************/
 class Color3
 {
 public:
-	Color3(void);
-	virtual ~Color3(void) {};
-	void out(void);
+	Color3 (void);
+	virtual ~Color3 (void) {};
+	void out (void);
 
 	// Public member attributes
 	float mRed;
@@ -69,7 +60,7 @@ class Color4
 public:
 	Color4 (void);
 	virtual ~Color4 (void) {};
-	void out(void);
+	void out (void);
 
 	// Public member attributes
 	float mRed;
@@ -86,7 +77,7 @@ class MaterialGenericTexture
 public:
 	MaterialGenericTexture (void);
 	virtual ~MaterialGenericTexture (void) {};
-	void out(void);
+	void out (void);
 	bool isTextureAvailable (void) const;
 
 	// Public member attributes
@@ -102,7 +93,7 @@ class PbrMetallicRoughness
 	public:
 		PbrMetallicRoughness (void);
 		virtual ~PbrMetallicRoughness (void) {};
-		void out(void);
+		void out (void);
 
 		// Public member attributes
 		Color4 mBaseColorFactor;
@@ -120,7 +111,7 @@ class NormalTexture : public MaterialGenericTexture
 	public:
 		NormalTexture (void);
 		virtual ~NormalTexture (void) {};
-		void out(void);
+		void out (void);
 
 		// Public member attributes
 		float mScale;
@@ -134,7 +125,7 @@ class OcclusionTexture : public MaterialGenericTexture
 	public:
 		OcclusionTexture (void);
 		virtual ~OcclusionTexture (void) {};
-		void out(void);
+		void out (void);
 
 		// Public member attributes
 		float mStrength;
@@ -148,7 +139,7 @@ class EmissiveTexture : public MaterialGenericTexture
 	public:
 		EmissiveTexture (void);
 		virtual ~EmissiveTexture (void) {};
-		void out(void);
+		void out (void);
 
 		// Public member attributes
 		// ?

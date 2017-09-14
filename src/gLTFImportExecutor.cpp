@@ -4,7 +4,7 @@
   (Object-oriented Graphics Rendering Engine)
   For the latest info, see http://www.ogre3d.org/
 
-Copyright (c) 2000-2014 Torus Knot Software Ltd
+  Copyright (c) 2000-2014 Torus Knot Software Ltd
 
   Permission is hereby granted, free of charge, to any person obtaining a copy
   of this software and associated documentation files (the "Software"), to deal
@@ -124,21 +124,24 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 		std::string name(it->name.GetString());
 		if (it->value.IsArray() && name == "materials")
 		{
-			parseMaterials(it);
+			mMaterialsExecutor.parseMaterials(it); // Create a gLTFImportMaterialsExecutor object and parse the materials
+			mMaterialsMap = mMaterialsExecutor.getParsedMaterials();
 		}
 		if (it->value.IsArray() && name == "textures")
 		{
-			parseTextures(it);
+			mTexturesExecutor.parseTextures(it); // Create a gLTFImportTexturesExecutor object and parse the textures
+			//mTexturesMap = mTexturesExecutor.getParsedTextures();
 		}
 		if (it->value.IsArray() && name == "images")
 		{
-			parseImages(it);
+			mImagesExecutor.parseImages(it); // Create a gLTFImportImagesExecutor object and parse the images
+			//mImagesMap = mImagesExecutor.getParsedImages();
 		}
 	}
 
 	// Debug
 	std::map<std::string, gLTFMaterial>::iterator it;
-	for (it = mMaterialMap.begin(); it != mMaterialMap.end(); it++)
+	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
 	{
 		OUT << "\n***************** Debug: Material name = " << it->first << " *****************\n";
 		(it->second).out();
@@ -150,280 +153,6 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 }
 
 //---------------------------------------------------------------------
-//bool gLTFImportExecutor::readGlb()
-//{
-	//return true;
-//}
-
-//---------------------------------------------------------------------
-bool gLTFImportExecutor::parseMaterials (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseMaterials\n";
-
-	gLTFMaterial material;
-	const rapidjson::Value& array = jsonIterator->value;
-
-	OUT << "Loop through materials array\n";
-	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
-	{
-		rapidjson::Value::ConstMemberIterator it;
-		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
-		for (it = array[i].MemberBegin(); it != itEnd; ++it)
-		{
-			OUT << "key ==> " << it->name.GetString() << "\n";
-			std::string key = std::string(it->name.GetString());
-			if (it->value.IsString() && key == "name")
-			{
-				// ******** 1. name ********
-				mMaterialMap[it->value.GetString()] = material;
-			}
-			if (it->value.IsObject() && key == "pbrMetallicRoughness")
-			{
-				// ******** 2. pbrMetallicRoughness ********
-				PbrMetallicRoughness pbrMetallicRoughness = parsePbrMetallicRoughness(it);
-				material.mPbrMetallicRoughness = pbrMetallicRoughness;
-			}
-			if (it->value.IsObject() && key == "normalTexture")
-			{
-				// ******** 3. normalTexture ********
-				NormalTexture normalTexture = parseNormalTexture(it);
-				material.mNormalTexture = normalTexture;
-			}
-			if (it->value.IsObject() && key == "occlusionTexture")
-			{
-				// ******** 4. occlusionTexture ********
-				OcclusionTexture occlusionTexture = parseOcclusionTexture(it);
-				material.mOcclusionTexture = occlusionTexture;
-			}
-			if (it->value.IsObject() && key == "emissiveTexture")
-			{
-				// ******** 5. emissiveTexture ********
-				EmissiveTexture emissiveTexture = parseEmissiveTexture(it);
-				material.mEmissiveTexture = emissiveTexture;
-			}
-			if (it->value.IsArray() && key == "emissiveFactor")
-			{
-				// ******** 6. emissiveFactor ********
-				Color3 emissiveFactor = parseColor3(it);
-				material.mEmissiveFactor = emissiveFactor;
-			}
-			if (it->value.IsString() && key == "alphaMode")
-			{
-				// ******** 7. alphaMode ********
-				material.mAlphaMode = it->value.GetString();
-			}
-			if (it->value.IsNumber() && key == "alphaCutoff")
-			{
-				// ******** 8. alphaCutoff ********
-				material.mAlphaCutoff = it->value.GetFloat();
-			}
-			if (it->value.IsBool() && key == "doubleSided")
-			{
-				// ******** 9. doubleSided ********
-				material.mDoubleSided = it->value.GetBool();
-			}
-		}
-	}
-
-	return true;
-}
-
-//---------------------------------------------------------------------
-bool gLTFImportExecutor::parseTextures (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseTextures\n";
-	// TODO
-	return true;
-}
-
-//---------------------------------------------------------------------
-bool gLTFImportExecutor::parseImages (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseImages\n";
-	// TODO
-	return true;
-}
-
-//---------------------------------------------------------------------
-PbrMetallicRoughness gLTFImportExecutor::parsePbrMetallicRoughness (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parsePbrMetallicRoughness\n";
-
-	rapidjson::Value::ConstMemberIterator it;
-	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
-	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
-	{
-		OUT << "key ==> " << it->name.GetString() << "\n";
-		std::string key = std::string(it->name.GetString());
-		if (it->value.IsArray() && key == "baseColorFactor")
-		{
-			// ******** 2.1 baseColorFactor ********
-			Color4 baseColorFactor = parseColor4(it);
-			mPbrMetallicRoughness.mBaseColorFactor = baseColorFactor;
-		}
-		if (it->value.IsObject() && key == "baseColorTexture")
-		{
-			// ******** 2.2 baseColorTexture ********
-			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
-			mPbrMetallicRoughness.mBaseColorTexture = texture;
-		}
-		if (it->value.IsNumber() && key == "metallicFactor")
-		{
-			// ******** 2.3 metallicFactor ********
-			mPbrMetallicRoughness.mMetallicFactor = it->value.GetFloat();
-		}
-		if (it->value.IsNumber() && key == "roughnessFactor")
-		{
-			// ******** 2.4 roughnessFactor ********
-			mPbrMetallicRoughness.mRoughnessFactor = it->value.GetFloat();
-		}
-		if (it->value.IsObject() && key == "metallicRoughnessTexture")
-		{
-			// ******** 2.5 metallicRoughnessTexture ********
-			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
-			mPbrMetallicRoughness.mMetallicRoughnessTexture = texture;
-		}
-	}
-
-	return mPbrMetallicRoughness;
-}
-
-//---------------------------------------------------------------------
-NormalTexture gLTFImportExecutor::parseNormalTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseNormalTexture\n";
-
-	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
-	mNormalTexture.mIndex = texture.mIndex;
-	mNormalTexture.mTextCoord = texture.mTextCoord;
-
-	rapidjson::Value::ConstMemberIterator it;
-	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
-	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
-	{
-		std::string key = std::string(it->name.GetString());
-		OUT << "DEBUG key ==> " << key << "\n";
-		if (it->value.IsNumber() && key == "scale")
-		{
-			// ******** 3.3 scale ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
-			mNormalTexture.mScale = it->value.GetFloat();
-			OUT << "value ==> " << mNormalTexture.mScale << "\n";
-		}
-	}
-
-	return mNormalTexture;
-}
-
-//---------------------------------------------------------------------
-OcclusionTexture gLTFImportExecutor::parseOcclusionTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseOcclusionTexture\n";
-
-	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
-	mOcclusionTexture.mIndex = texture.mIndex;
-	mOcclusionTexture.mTextCoord = texture.mTextCoord;
-
-	rapidjson::Value::ConstMemberIterator it;
-	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
-	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
-	{
-		std::string key = std::string(it->name.GetString());
-		if (it->value.IsNumber() && key == "strength")
-		{
-			// ******** 4.3 strength ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
-			mOcclusionTexture.mStrength = it->value.GetFloat();
-			OUT << "value ==> " << mOcclusionTexture.mStrength << "\n";
-		}
-	}
-
-	return mOcclusionTexture;
-}
-
-//---------------------------------------------------------------------
-EmissiveTexture gLTFImportExecutor::parseEmissiveTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseEmissiveTexture\n";
-	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
-	mEmissiveTexture.mIndex = texture.mIndex;
-	mEmissiveTexture.mTextCoord = texture.mTextCoord;
-	return mEmissiveTexture;
-}
-
-//---------------------------------------------------------------------
-MaterialGenericTexture gLTFImportExecutor::parseMaterialGenericTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseMaterialGenericTexture\n";
-
-	rapidjson::Value::ConstMemberIterator it;
-	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
-	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
-	{
-		std::string key = std::string(it->name.GetString());
-		if (it->value.IsInt() && key == "index")
-		{
-			// ******** index ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
-			mMaterialGenericTexture.mIndex = it->value.GetInt();
-			OUT << "value ==> " << mMaterialGenericTexture.mIndex << "\n";
-		}
-		if (it->value.IsInt() && key == "texCoord")
-		{
-			// ******** texCoord ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
-			mMaterialGenericTexture.mTextCoord = it->value.GetInt();
-			OUT << "value ==> " << mMaterialGenericTexture.mTextCoord << "\n";
-		}
-	}
-
-	return mMaterialGenericTexture;
-}
-
-//---------------------------------------------------------------------
-Color3 gLTFImportExecutor::parseColor3 (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseColor3\n";
-
-	if (jsonIterator->value.IsArray())
-	{
-		const rapidjson::Value& array = jsonIterator->value;
-		mColor3.mRed = array[0].GetFloat();
-		mColor3.mGreen = array[1].GetFloat();
-		mColor3.mBlue = array[2].GetFloat();
-
-		for (rapidjson::SizeType i = 0; i < array.Size(); i++)
-		{
-			OUT << "value ==> " << array[i].GetFloat() << "\n";
-		}
-	}
-
-	return mColor3;
-}
-
-//---------------------------------------------------------------------
-Color4 gLTFImportExecutor::parseColor4 (rapidjson::Value::ConstMemberIterator jsonIterator)
-{
-	OUT << "Perform gLTFImportExecutor::parseColor4\n";
-
-	if (jsonIterator->value.IsArray())
-	{
-		const rapidjson::Value& array = jsonIterator->value;
-		mColor4.mRed = array[0].GetFloat();
-		mColor4.mGreen = array[1].GetFloat();
-		mColor4.mBlue = array[2].GetFloat();
-		mColor4.mAlpha= array[3].GetFloat();
-
-		for (rapidjson::SizeType i = 0; i < array.Size(); i++)
-		{
-			OUT << "value ==> " << array[i].GetFloat() << "\n";
-		}
-	}
-
-	return mColor4;
-}
-
-//---------------------------------------------------------------------
 bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* data)
 {
 	OUT << "Perform gLTFImportExecutor::createOgrePbsMaterialFiles\n";
@@ -431,10 +160,9 @@ bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* 
 	// Create the Ogre Pbs material files (*.material.json)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
 
-
 	// Iterate through materials and create for each material an Ogre Pbs .material.json file
 	std::map<std::string, gLTFMaterial>::iterator it;
-	for (it = mMaterialMap.begin(); it != mMaterialMap.end(); it++)
+	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
 	{
 		std::string ogreFullyQualifiedMaterialFileName = fullyQualifiedImportPath + it->first + ".material.json";
 		OUT << "\nCreate: material file " << ogreFullyQualifiedMaterialFileName << "\n";
@@ -457,7 +185,21 @@ bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* 
 		dst << TAB << "{\n";
 		dst << TABx2 << "\"" << it->first << "\" :\n";
 		dst << TABx2 << "{\n";
+
+		// General Pbs datablock properties
+		const gLTFMaterial& material = it->second;
+		dst << TABx3 << "\"shadow_const_bias\" : \"0.01\",\n"; // Default value
 		dst << TABx3 << "\"workflow\" : \"metallic\",\n"; // Default workflow of gLTF is metallic
+		std::string doubleSidedValue = "false";
+		if (material.mDoubleSided)
+			doubleSidedValue = "true";
+		dst << TABx3 << "\"two_sided\" : " << doubleSidedValue << ",\n";
+		// TODO: mAlphaMode == "MASK" is similar to alpha test ("alpha_test") / alpha threshold ["less_equal", mAlphaCutoff],
+
+		// Transparency
+		createTransparencyJsonBlock(&dst, it->second);
+		
+		// 'textures'
 		createDiffuseJsonBlock(&dst, it->second);
 		createSpecularJsonBlock(&dst, it->second);
 		createMetalnessJsonBlock(&dst, it->second);
@@ -468,6 +210,8 @@ bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* 
 		createDetailDiffuseJsonBlock(&dst, it->second);
 		createDetailNormalJsonBlock(&dst, it->second);
 		createDetailWeightJsonBlock(&dst, it->second);
+		createEmissiveJsonBlock(&dst, it->second);
+		
 		dst << TABx3 << "\n";
 		dst << TABx2 << "}\n";
 		dst << TAB << "}\n";
@@ -485,6 +229,24 @@ bool gLTFImportExecutor::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* 
 			OUT << "Ok, file " << ogreFullyQualifiedMaterialFileName << " is valid Json\n";
 	}
 
+	// Copy all gLTF files (images)
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createTransparencyJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	return false;
+	if (material.mAlphaMode != "BLEND")
+		return false;
+		
+	*dst << TABx3 << "\"transparency\" :\n";
+	*dst << TABx3 << "{\n";
+	*dst << TABx4 << "\"value\" : " << material.mAlphaCutoff << "\n"; // TODO: No incorrect!!! mAlphaCutoff only used in case mAlphaMode == MASK
+	// TODO: How to make use "use_alpha_from_textures"
+	*dst << TABx3 << "}," << "\n";
+	
 	return true;
 }
 
@@ -501,19 +263,24 @@ bool gLTFImportExecutor::createDiffuseJsonBlock (std::ofstream* dst, const gLTFM
 		material.mPbrMetallicRoughness.mBaseColorFactor.mGreen <<
 		", " <<
 		material.mPbrMetallicRoughness.mBaseColorFactor.mBlue <<
-		"]\n";
+		"]";
 
-	// Background colour
-	// TODO
+	// Background colour (TODO: Check if supported in gLTF)
+	*dst << "," << "\n";
+	*dst << TABx4 << "\"background\" : [1, 1, 1, 1]";
 
-	/* The metallicRoughnessTexture becomes a diffuse texture in case there is NO occlusionTexture
+	/* The baseColorTexture becomes a diffuse texture in case there is NO occlusionTexture
 	*  present in the gLTF material.
 	*/
-	if (!material.mOcclusionTexture.isTextureAvailable())
+	if (material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable() &&
+		!material.mOcclusionTexture.isTextureAvailable())
 	{
 		// TODO: Add "texture" + add "sampler"
+		// TODO: "uv" is based on the texCoord of the gLTF texture
 	}
 
+
+	*dst << "\n";
 	*dst << TABx3 << "}," << "\n";
 	
 	return true; // There is always a default "value"
@@ -522,6 +289,7 @@ bool gLTFImportExecutor::createDiffuseJsonBlock (std::ofstream* dst, const gLTFM
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::createSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
+	// Because gTLF only uses metallic workflow, the specular block does not contain a texture or sampler
 	*dst << TABx3 << "\"specular\" :\n";
 	*dst << TABx3 << "{\n";
 	*dst << TABx4 << "\"value\" : [1, 1, 1]\n"; // Default value of specular color
@@ -536,7 +304,9 @@ bool gLTFImportExecutor::createMetalnessJsonBlock (std::ofstream* dst, const gLT
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"metalness\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO
+	*dst << TABx4 << "\"value\" : " << material.mPbrMetallicRoughness.mMetallicFactor << "\n";
+
+	// TODO: What is the texture?
 	*dst << TABx3 << "}";
 	
 	return true;
@@ -565,7 +335,8 @@ bool gLTFImportExecutor::createNormalJsonBlock (std::ofstream* dst, const gLTFMa
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"normal\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO
+	// TODO: Add "texture" + add "sampler"
+	// TODO: "uv" is based on the texCoord of the gLTF texture
 	*dst << TABx3 << "}";
 
 	return true;
@@ -580,7 +351,9 @@ bool gLTFImportExecutor::createRoughnessJsonBlock (std::ofstream* dst, const gLT
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"roughness\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO
+	*dst << TABx4 << "\"value\" : " << material.mPbrMetallicRoughness.mRoughnessFactor << "\n";
+	// TODO: Add "texture" + add "sampler"
+	// TODO: "uv" is based on the texCoord of the gLTF texture
 	*dst << TABx3 << "}";
 
 	return true;
@@ -597,23 +370,31 @@ bool gLTFImportExecutor::createReflectionJsonBlock (std::ofstream* dst, const gL
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::createDetailDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
-	/* The metallicRoughnessTexture becomes a detail diffuse texture in case there is also a occlusionTexture
+	// There must at least be a baseColorTexture
+	if (!material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable())
+		return false;
+
+	/* The baseColorTexture becomes a detail diffuse texture in case there is also a occlusionTexture
 	 * present in the gLTF material. This means in practice that only 1 detail diffuse texture can be present.
 	 */
 	if (!material.mOcclusionTexture.isTextureAvailable())
 		return false;
 
 	*dst << "," << "\n";
-	*dst << TABx3 << "\"detail_diffuse0\" :\n";
+	*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO
+	*dst << TABx4 << "\"value\" : " << material.mOcclusionTexture.mStrength << "\n"; // Use strength of the occlusionTexture as weight
+	// baseColorTexture does not support Scale and Offset in gLTF
+	// TODO: Add "texture" + add "sampler"
+	// TODO: "uv" is based on the texCoord of the gLTF texture
 	*dst << TABx3 << "}";
-
+	
+	++mDetailedDiffuseMapCount;
 	return true;
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::createDetailNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
+bool gLTFImportExecutor::createDetailNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
 	// Return if there is no normal texture
 	if (!material.mNormalTexture.isTextureAvailable())
@@ -624,6 +405,7 @@ bool gLTFImportExecutor::createDetailNormalJsonBlock(std::ofstream* dst, const g
 	 * @remark:
 	 * Unlike the the diffuse map, a normal mal will not become a detail normal map in case an occlusion texture
 	 * is present. The gLTF specification does not specify whether an occlusion texture also affects a normal map.
+	 * This means that property "value" (= weight) is always 1.0 (= the default, so it is omitted).
 	 */
 	if (material.mNormalTexture.mScale == 1.0f)
 		return false;
@@ -637,9 +419,29 @@ bool gLTFImportExecutor::createDetailNormalJsonBlock(std::ofstream* dst, const g
 		", " << 
 		material.mNormalTexture.mScale << 
 		"]\n";
-	// TODO: Add value, texture and sampler (take the , into account)
+	// TODO: Add texture and sampler (take the , into account)
 	*dst << TABx3 << "}";
 
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::createEmissiveJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	/* This function is a placeholder for the future when Ogre does support emissive textures in PBS materials.
+	 * Currently it does not, so an emissiveTexture shows up as an detailed diffuse map.
+	 */
+	if (!material.mEmissiveTexture.isTextureAvailable())
+		return false;
+
+	*dst << "," << "\n";
+	*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
+	*dst << TABx3 << "{\n";
+	// TODO: Add "texture" + add "sampler"
+	// TODO: "uv" is based on the texCoord of the gLTF texture
+	*dst << TABx3 << "}";
+	
+	++mDetailedDiffuseMapCount;
 	return true;
 }
 
@@ -657,40 +459,4 @@ bool gLTFImportExecutor::createDetailWeightJsonBlock (std::ofstream* dst, const 
 	*dst << TABx3 << "}";
 
 	return true;
-}
-
-//---------------------------------------------------------------------
-const std::string& gLTFImportExecutor::getFileExtension (const std::string& fileName)
-{
-	std::string::size_type idx;
-	idx = fileName.rfind('.');
-	mFileExtension = "";
-
-	if (idx != std::string::npos)
-	{
-		mFileExtension = fileName.substr(idx + 1);
-	}
-
-	return mFileExtension;
-}
-
-//---------------------------------------------------------------------
-void gLTFImportExecutor::copyFile (const std::string& fileNameSource, std::string& fileNameDestination)
-{
-	std::ifstream src(fileNameSource.c_str(), std::ios::binary);
-	std::ofstream dst(fileNameDestination.c_str(), std::ios::binary);
-	dst << src.rdbuf();
-	dst.close();
-	src.close();
-}
-
-//---------------------------------------------------------------------
-const std::string& gLTFImportExecutor::getJsonAsString(const std::string& jsonFileName)
-{
-	jsonString = "";
-	std::ostringstream sstream;
-	std::ifstream fs(jsonFileName);
-	sstream << fs.rdbuf();
-	jsonString = sstream.str();
-	return jsonString;
 }

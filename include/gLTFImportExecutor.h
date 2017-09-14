@@ -30,19 +30,19 @@ THE SOFTWARE.
 
 #include <map>
 #include "hlms_editor_plugin.h"
+#include "gLTFImportConstants.h"
 #include "gLTFMaterial.h"
+#include "gLTFImportMaterialsExecutor.h"
+#include "gLTFImportTexturesExecutor.h"
+#include "gLTFImportImagesExecutor.h"
 #include "rapidjson/document.h"
-
-static const std::string TAB = "  ";
-static const std::string TABx2 = "    ";
-static const std::string TABx3 = "      ";
-static const std::string TABx4 = "        ";
 
 /** Class responsible for executing the import */
 class gLTFImportExecutor
 {
 	public:
-		gLTFImportExecutor(void) {};
+		gLTFImportExecutor (void) :
+			mDetailedDiffuseMapCount(0) {};
 		virtual ~gLTFImportExecutor(void) {};
 		
 		// Perform the import (called by plugin)
@@ -53,8 +53,9 @@ class gLTFImportExecutor
 		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .glb (binary) file
 		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .gltf (json text) file
 
-		// Create the Ogre Pbs material files
-		bool createOgrePbsMaterialFiles (Ogre::HlmsEditorPluginData* data); // Create *.material.json file and copy images
+		// Create the Ogre Pbs material files; add json blocks
+		bool createOgrePbsMaterialFiles (Ogre::HlmsEditorPluginData* data); // Create *.material.json files and copy images
+		bool createTransparencyJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 		bool createDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 		bool createSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 		bool createMetalnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
@@ -62,43 +63,17 @@ class gLTFImportExecutor
 		bool createNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 		bool createRoughnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 		bool createReflectionJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailDiffuseJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailWeightJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-
-		// Parse level 1
-		bool parseMaterials (rapidjson::Value::ConstMemberIterator jsonIterator);
-		bool parseTextures(rapidjson::Value::ConstMemberIterator jsonIterator);
-		bool parseImages(rapidjson::Value::ConstMemberIterator jsonIterator);
-
-		// Parse level 2
-		PbrMetallicRoughness parsePbrMetallicRoughness (rapidjson::Value::ConstMemberIterator jsonIterator);
-		NormalTexture parseNormalTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
-		OcclusionTexture parseOcclusionTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
-		EmissiveTexture parseEmissiveTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
-
-		// Parse generic
-		MaterialGenericTexture parseMaterialGenericTexture (rapidjson::Value::ConstMemberIterator jsonIterator);
-		Color3 parseColor3 (rapidjson::Value::ConstMemberIterator jsonIterator);
-		Color4 parseColor4 (rapidjson::Value::ConstMemberIterator jsonIterator);
-
-		// Miscellanious
-		const std::string& getFileExtension (const std::string& fileName);
-		void copyFile(const std::string& fileNameSource, std::string& fileNameDestination);
-		const std::string& getJsonAsString(const std::string& jsonFileName);
+		bool createDetailDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailWeightJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createEmissiveJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 
 	private:
-		std::string mFileExtension;
-		std::map<std::string, gLTFMaterial> mMaterialMap;
-		Devnull devnull;
-		PbrMetallicRoughness mPbrMetallicRoughness;
-		NormalTexture mNormalTexture;
-		OcclusionTexture mOcclusionTexture;
-		EmissiveTexture mEmissiveTexture;
-		MaterialGenericTexture mMaterialGenericTexture;
-		Color3 mColor3;
-		Color4 mColor4;
-		std::string jsonString;
+		std::map<std::string, gLTFMaterial> mMaterialsMap;
+		unsigned short mDetailedDiffuseMapCount;
+		gLTFImportMaterialsExecutor mMaterialsExecutor;
+		gLTFImportTexturesExecutor mTexturesExecutor;
+		gLTFImportImagesExecutor mImagesExecutor;
 };
 
 #endif
