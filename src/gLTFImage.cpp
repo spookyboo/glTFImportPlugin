@@ -30,8 +30,11 @@
 #include "gLTFImage.h"
 
 //---------------------------------------------------------------------
-gLTFImage::gLTFImage(void)
+gLTFImage::gLTFImage(void) :
+	mBufferView (-1)
 {
+	mUri = "";
+	mMimeType = "mage/jpeg";
 }
 
 //---------------------------------------------------------------------

@@ -31,10 +31,38 @@ THE SOFTWARE.
 //---------------------------------------------------------------------
 bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportTexturesParser::parseTextures\n";
+	OUT << TAB << "Perform gLTFImportTexturesParser::parseTextures\n";
+
+	gLTFTexture texture;
+	const rapidjson::Value& array = jsonIterator->value;
+
+	OUT << TAB << "Loop through textures array\n";
+	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
+	{
+		rapidjson::Value::ConstMemberIterator it;
+		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
+		for (it = array[i].MemberBegin(); it != itEnd; ++it)
+		{
+			OUT << TABx2 << "key texture ==> " << it->name.GetString() << "\n";
+			std::string key = std::string(it->name.GetString());
+			if (it->value.IsInt() && key == "sampler")
+			{
+				// ******** 1. sampler ********
+				texture.mSampler = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << texture.mSampler << "\n";
+			}
+			if (it->value.IsInt() && key == "source")
+			{
+				// ******** 2. source ********
+				texture.mSource = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << texture.mSource << "\n";
+			}
+		}
+	}
 
 	return true;
 }
+
 
 //---------------------------------------------------------------------
 const std::map<std::string, gLTFTexture> gLTFImportTexturesParser::getParsedTextures (void) const

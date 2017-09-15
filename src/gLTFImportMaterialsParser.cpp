@@ -31,19 +31,19 @@
 //---------------------------------------------------------------------
 bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parseMaterials\n";
+	OUT << TAB << "Perform gLTFImportMaterialsParser::parseMaterials\n";
 
 	gLTFMaterial material;
 	const rapidjson::Value& array = jsonIterator->value;
 
-	OUT << "Loop through materials array\n";
+	OUT << TAB << "Loop through materials array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
-			OUT << "key ==> " << it->name.GetString() << "\n";
+			OUT << TABx2 << "key material ==> " << it->name.GetString() << "\n";
 			std::string key = std::string(it->name.GetString());
 			if (it->value.IsString() && key == "name")
 			{
@@ -110,13 +110,13 @@ const std::map<std::string, gLTFMaterial> gLTFImportMaterialsParser::getParsedMa
 //---------------------------------------------------------------------
 PbrMetallicRoughness gLTFImportMaterialsParser::parsePbrMetallicRoughness (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parsePbrMetallicRoughness\n";
+	OUT << TABx2 << "Perform gLTFImportMaterialsParser::parsePbrMetallicRoughness\n";
 
 	rapidjson::Value::ConstMemberIterator it;
 	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
-		OUT << "key ==> " << it->name.GetString() << "\n";
+		OUT << TABx3 << "key metallic roughness ==> " << it->name.GetString() << "\n";
 		std::string key = std::string(it->name.GetString());
 		if (it->value.IsArray() && key == "baseColorFactor")
 		{
@@ -154,7 +154,7 @@ PbrMetallicRoughness gLTFImportMaterialsParser::parsePbrMetallicRoughness (rapid
 //---------------------------------------------------------------------
 NormalTexture gLTFImportMaterialsParser::parseNormalTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parseNormalTexture\n";
+	OUT << TABx2 << "Perform gLTFImportMaterialsParser::parseNormalTexture\n";
 
 	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
 	mNormalTexture.mIndex = texture.mIndex;
@@ -165,13 +165,12 @@ NormalTexture gLTFImportMaterialsParser::parseNormalTexture (rapidjson::Value::C
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
 		std::string key = std::string(it->name.GetString());
-		OUT << "DEBUG key ==> " << key << "\n";
 		if (it->value.IsNumber() && key == "scale")
 		{
 			// ******** 3.3 scale ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
+			OUT << TABx4 << "key normal texture ==> " << it->name.GetString() << "\n";
 			mNormalTexture.mScale = it->value.GetFloat();
-			OUT << "value ==> " << mNormalTexture.mScale << "\n";
+			OUT << TABx4 << "value ==> " << mNormalTexture.mScale << "\n";
 		}
 	}
 
@@ -181,7 +180,7 @@ NormalTexture gLTFImportMaterialsParser::parseNormalTexture (rapidjson::Value::C
 //---------------------------------------------------------------------
 OcclusionTexture gLTFImportMaterialsParser::parseOcclusionTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parseOcclusionTexture\n";
+	OUT << TABx3 << "Perform gLTFImportMaterialsParser::parseOcclusionTexture\n";
 
 	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
 	mOcclusionTexture.mIndex = texture.mIndex;
@@ -195,9 +194,9 @@ OcclusionTexture gLTFImportMaterialsParser::parseOcclusionTexture (rapidjson::Va
 		if (it->value.IsNumber() && key == "strength")
 		{
 			// ******** 4.3 strength ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
+			OUT << TABx4 << "key occlusion texture ==> " << it->name.GetString() << "\n";
 			mOcclusionTexture.mStrength = it->value.GetFloat();
-			OUT << "value ==> " << mOcclusionTexture.mStrength << "\n";
+			OUT << TABx4 << "value ==> " << mOcclusionTexture.mStrength << "\n";
 		}
 	}
 
@@ -207,7 +206,7 @@ OcclusionTexture gLTFImportMaterialsParser::parseOcclusionTexture (rapidjson::Va
 //---------------------------------------------------------------------
 EmissiveTexture gLTFImportMaterialsParser::parseEmissiveTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parseEmissiveTexture\n";
+	OUT << TABx3 << "Perform gLTFImportMaterialsParser::parseEmissiveTexture\n";
 	MaterialGenericTexture texture = parseMaterialGenericTexture(jsonIterator);
 	mEmissiveTexture.mIndex = texture.mIndex;
 	mEmissiveTexture.mTextCoord = texture.mTextCoord;
@@ -217,7 +216,7 @@ EmissiveTexture gLTFImportMaterialsParser::parseEmissiveTexture (rapidjson::Valu
 //---------------------------------------------------------------------
 MaterialGenericTexture gLTFImportMaterialsParser::parseMaterialGenericTexture (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parseMaterialGenericTexture\n";
+	OUT << TABx3 << "Perform gLTFImportMaterialsParser::parseMaterialGenericTexture\n";
 
 	rapidjson::Value::ConstMemberIterator it;
 	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
@@ -227,16 +226,16 @@ MaterialGenericTexture gLTFImportMaterialsParser::parseMaterialGenericTexture (r
 		if (it->value.IsInt() && key == "index")
 		{
 			// ******** index ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
+			OUT << TABx4 << "key texture ==> " << it->name.GetString() << "\n";
 			mMaterialGenericTexture.mIndex = it->value.GetInt();
-			OUT << "value ==> " << mMaterialGenericTexture.mIndex << "\n";
+			OUT << TABx4 << "value ==> " << mMaterialGenericTexture.mIndex << "\n";
 		}
 		if (it->value.IsInt() && key == "texCoord")
 		{
 			// ******** texCoord ********
-			OUT << "key ==> " << it->name.GetString() << "\n";
+			OUT << TABx4 << "key texture ==> " << it->name.GetString() << "\n";
 			mMaterialGenericTexture.mTextCoord = it->value.GetInt();
-			OUT << "value ==> " << mMaterialGenericTexture.mTextCoord << "\n";
+			OUT << TABx4 << "value ==> " << mMaterialGenericTexture.mTextCoord << "\n";
 		}
 	}
 
@@ -246,7 +245,7 @@ MaterialGenericTexture gLTFImportMaterialsParser::parseMaterialGenericTexture (r
 //---------------------------------------------------------------------
 Color3 gLTFImportMaterialsParser::parseColor3 (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parseColor3\n";
+	OUT << TABx3 << "Perform gLTFImportMaterialsParser::parseColor3\n";
 
 	if (jsonIterator->value.IsArray())
 	{
@@ -257,7 +256,7 @@ Color3 gLTFImportMaterialsParser::parseColor3 (rapidjson::Value::ConstMemberIter
 
 		for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 		{
-			OUT << "value ==> " << array[i].GetFloat() << "\n";
+			OUT << TABx4 << "value ==> " << array[i].GetFloat() << "\n";
 		}
 	}
 
@@ -267,7 +266,7 @@ Color3 gLTFImportMaterialsParser::parseColor3 (rapidjson::Value::ConstMemberIter
 //---------------------------------------------------------------------
 Color4 gLTFImportMaterialsParser::parseColor4 (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportMaterialsParser::parseColor4\n";
+	OUT << TABx3 << "Perform gLTFImportMaterialsParser::parseColor4\n";
 
 	if (jsonIterator->value.IsArray())
 	{
@@ -279,7 +278,7 @@ Color4 gLTFImportMaterialsParser::parseColor4 (rapidjson::Value::ConstMemberIter
 
 		for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 		{
-			OUT << "value ==> " << array[i].GetFloat() << "\n";
+			OUT << TABx4 << "value ==> " << array[i].GetFloat() << "\n";
 		}
 	}
 

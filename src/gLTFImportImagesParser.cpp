@@ -31,7 +31,40 @@
 //---------------------------------------------------------------------
 bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << "Perform gLTFImportImagesParser::parseImages\n";
+	OUT << TAB << "Perform gLTFImportImagesParser::parseImages\n";
+
+	gLTFImage image;
+	const rapidjson::Value& array = jsonIterator->value;
+
+	OUT << TAB << "Loop through images array\n";
+	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
+	{
+		rapidjson::Value::ConstMemberIterator it;
+		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
+		for (it = array[i].MemberBegin(); it != itEnd; ++it)
+		{
+			OUT << TABx2 << "key image ==> " << it->name.GetString() << "\n";
+			std::string key = std::string(it->name.GetString());
+			if (it->value.IsString() && key == "uri")
+			{
+				// ******** 1. uri ********
+				image.mUri = it->value.GetString();
+				OUT << TABx2 << "value ==> " << image.mUri << "\n";
+			}
+			if (it->value.IsString() && key == "mimeType")
+			{
+				// ******** 2. mimeType ********
+				image.mMimeType = it->value.GetString();
+				OUT << TABx2 << "value ==> " << image.mMimeType << "\n";
+			}
+			if (it->value.IsInt() && key == "bufferView")
+			{
+				// ******** 3. bufferView ********
+				image.mBufferView = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << image.mBufferView << "\n";
+			}
+		}
+	}
 
 	return true;
 }
@@ -41,4 +74,6 @@ const std::map<std::string, gLTFImage> gLTFImportImagesParser::getParsedImages(v
 {
 	return mImagesMap;
 }
+
+
 

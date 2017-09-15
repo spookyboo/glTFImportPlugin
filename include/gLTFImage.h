@@ -46,6 +46,11 @@ class gLTFImage
 		gLTFImage (void);
 		virtual ~gLTFImage (void) {};
 		void out (void); // prints the content of the gLTFImage
+
+		// Public members
+		std::string mUri;
+		std::string mMimeType;
+		int mBufferView;
 };
 
 #endif

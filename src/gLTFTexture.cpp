@@ -30,8 +30,11 @@ THE SOFTWARE.
 #include "gLTFTexture.h"
 
 //---------------------------------------------------------------------
-gLTFTexture::gLTFTexture(void)
+gLTFTexture::gLTFTexture(void) :
+	mSampler (-1),
+	mSource (-1)
 {
+	mTImageLocation = "";
 }
 
 //---------------------------------------------------------------------

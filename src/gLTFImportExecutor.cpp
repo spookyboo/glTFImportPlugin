@@ -31,7 +31,7 @@
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 {
-	OUT << "Perform gLTFImportExecutor::executeImport\n";
+	OUT << "  Perform gLTFImportExecutor::executeImport\n";
 
 	bool result = true;
 
@@ -55,7 +55,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data)
 {
-	OUT << "Perform gLTFImportExecutor::executeBinary\n";
+	OUT << "    Perform gLTFImportExecutor::executeBinary\n";
 
 	std::streampos begin, end;
 	std::ifstream fs(fileName, std::ios::binary);
@@ -100,7 +100,7 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsE
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data)
 {
-	OUT << "Perform gLTFImportExecutor::executeText\n";
+	OUT << "    Perform gLTFImportExecutor::executeText\n";
 
 	// Assume a gltf json file; read the file and copy the content to a const char*
 	std::string jsonString = getJsonAsString(fileName);
@@ -120,7 +120,7 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 	rapidjson::Value::ConstMemberIterator itEnd = d.MemberEnd();
 	for (rapidjson::Value::ConstMemberIterator it = d.MemberBegin(); it != itEnd; ++it)
 	{
-		OUT << "key ==> " << it->name.GetString() << "\n";
+		OUT << "key gLTF ==> " << it->name.GetString() << "\n";
 		std::string name(it->name.GetString());
 		if (it->value.IsArray() && name == "materials")
 		{

@@ -45,6 +45,11 @@ public:
 	gLTFTexture (void);
 	virtual ~gLTFTexture (void) {};
 	void out (void); // prints the content of the gLTFTexture
+
+	// Public members
+	int mSampler;
+	int mSource;
+	std::string mTImageLocation;
 };
 
 #endif
