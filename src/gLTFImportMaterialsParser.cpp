@@ -34,6 +34,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 	OUT << TAB << "Perform gLTFImportMaterialsParser::parseMaterials\n";
 
 	gLTFMaterial material;
+	std::string name;
 	const rapidjson::Value& array = jsonIterator->value;
 
 	OUT << TAB << "Loop through materials array\n";
@@ -48,7 +49,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 			if (it->value.IsString() && key == "name")
 			{
 				// ******** 1. name ********
-				mMaterialsMap[it->value.GetString()] = material;
+				name = it->value.GetString();
 			}
 			if (it->value.IsObject() && key == "pbrMetallicRoughness")
 			{
@@ -95,6 +96,9 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 				// ******** 9. doubleSided ********
 				material.mDoubleSided = it->value.GetBool();
 			}
+
+			if (name != "")
+				mMaterialsMap[name] = material;
 		}
 	}
 

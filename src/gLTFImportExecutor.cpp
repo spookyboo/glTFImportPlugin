@@ -31,7 +31,7 @@
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 {
-	OUT << "  Perform gLTFImportExecutor::executeImport\n";
+	OUT << TAB<< "Perform gLTFImportExecutor::executeImport\n";
 
 	bool result = true;
 
@@ -43,10 +43,19 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	else
 		result = executeText(fileName, data);
 
+
 	// Create Ogre Pbs material files if parsing was succesful
 	if (result)
 	{
-		result = mPbsMaterialsCreator.createOgrePbsMaterialFiles(data, mMaterialsMap, mTexturesMap, mImagesMap);
+		// First enrich the data structures, so it can be easily used by the mPbsMaterialsCreator
+		enrichMaterialsTexturesAndImages();
+
+		// Create the Material files
+		result = mPbsMaterialsCreator.createOgrePbsMaterialFiles(data, 
+			mMaterialsMap, 
+			mTexturesMap, 
+			mImagesMap,
+			mSamplersMap);
 	}
 
 	return result;
@@ -55,7 +64,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data)
 {
-	OUT << "    Perform gLTFImportExecutor::executeBinary\n";
+	OUT << TABx2 << "Perform gLTFImportExecutor::executeBinary\n";
 
 	std::streampos begin, end;
 	std::ifstream fs(fileName, std::ios::binary);
@@ -100,7 +109,7 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsE
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data)
 {
-	OUT << "    Perform gLTFImportExecutor::executeText\n";
+	OUT << TABx2 << "Perform gLTFImportExecutor::executeText\n";
 
 	// Assume a gltf json file; read the file and copy the content to a const char*
 	std::string jsonString = getJsonAsString(fileName);
@@ -120,6 +129,9 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 	rapidjson::Value::ConstMemberIterator itEnd = d.MemberEnd();
 	for (rapidjson::Value::ConstMemberIterator it = d.MemberBegin(); it != itEnd; ++it)
 	{
+		// TODO: Parse bufferViews, buffers (needed for materials)
+		// TODO: Parse accessors, animations, asset, meshes, nodes, scene (?), skins, ... (needed for meshes and animations?
+
 		OUT << "key gLTF ==> " << it->name.GetString() << "\n";
 		std::string name(it->name.GetString());
 		if (it->value.IsArray() && name == "materials")
@@ -137,17 +149,103 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 			mImagesParser.parseImages(it); // Create a gLTFImportImagesParser object and parse the images
 			mImagesMap = mImagesParser.getParsedImages();
 		}
+		if (it->value.IsArray() && name == "samplers")
+		{
+			mSamplersParser.parseSamplers(it); // Create a gLTFImportSamplersParser object and parse the samplers
+			mSamplersMap = mSamplersParser.getParsedSamplers();
+		}
 	}
 
 	// Debug
+	/*
 	std::map<std::string, gLTFMaterial>::iterator it;
 	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
 	{
 		OUT << "\n***************** Debug: Material name = " << it->first << " *****************\n";
 		(it->second).out();
 	}
+	*/
 
 	data->mOutSuccessText = "gLTF file succesfully imported";
 
 	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::enrichMaterialsTexturesAndImages (void)
+{
+	OUT << "gLTFImportExecutor::enrichMaterialsTexturesAndImages\n";
+	std::map<std::string, gLTFMaterial>::iterator it;
+	gLTFMaterial material;
+	gLTFTexture texture;
+	gLTFImage image;
+	std::string uri;
+	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
+	{
+		// Add the uri's to the material
+		uri = getImageUriByTextureIndex((it->second).mEmissiveTexture.mIndex);
+		(it->second).mEmissiveTexture.mUri = uri;
+		uri = getImageUriByTextureIndex((it->second).mNormalTexture.mIndex);
+		(it->second).mNormalTexture.mUri = uri;
+		uri = getImageUriByTextureIndex((it->second).mOcclusionTexture.mIndex);
+		(it->second).mOcclusionTexture.mUri = uri;
+		uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
+		(it->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uri;
+		uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
+		(it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uri;
+
+		// Add the samplers to the material
+		int sampler = getSamplerByTextureIndex((it->second).mEmissiveTexture.mIndex);
+		(it->second).mEmissiveTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((it->second).mNormalTexture.mIndex);
+		(it->second).mNormalTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((it->second).mOcclusionTexture.mIndex);
+		(it->second).mOcclusionTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
+		(it->second).mPbrMetallicRoughness.mBaseColorTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
+		(it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler = sampler;
+	}
+}
+
+//---------------------------------------------------------------------
+const gLTFImage& gLTFImportExecutor::getImageByTextureIndex (int index)
+{
+	OUT << TABx3 << "gLTFImportExecutor::getImageByTextureIndex\n";
+
+	mHelperImage = gLTFImage(); // Rest values
+
+	if (index < 0 || index > mTexturesMap.size() - 1)
+		return mHelperImage;
+
+	gLTFTexture texture = mTexturesMap[index];
+	int source = texture.mSource;
+
+	if (source < 0 || source > mImagesMap.size() - 1)
+		return mHelperImage;
+
+	mHelperImage = mImagesMap[source];
+	return mHelperImage;
+}
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::getImageUriByTextureIndex (int index)
+{
+	OUT << TABx2 << "gLTFImportExecutor::getImageUriByTextureIndex\n";
+
+	gLTFImage image = getImageByTextureIndex(index);
+	mHelperString = image.mUri; // The Uri is empty if the image could not be found
+	return mHelperString;
+}
+
+//---------------------------------------------------------------------
+int gLTFImportExecutor::getSamplerByTextureIndex (int index)
+{
+	OUT << TABx2 << "gLTFImportExecutor::getSamplerByTextureIndex\n";
+
+	if (index < 0 || index > mTexturesMap.size() - 1)
+		return 0;
+
+	gLTFTexture texture = mTexturesMap[index];
+	return texture.mSampler;
 }

@@ -44,12 +44,12 @@ class gLTFImportImagesParser
 		bool parseImages (rapidjson::Value::ConstMemberIterator jsonIterator);
 
 		// Returns the images structure
-		const std::map<std::string, gLTFImage> getParsedImages (void) const;
+		const std::map<int, gLTFImage> getParsedImages (void) const;
 
 	protected:
 
 	private:
-		std::map<std::string, gLTFImage> mImagesMap;
+		std::map<int, gLTFImage> mImagesMap;
 };
 
 #endif

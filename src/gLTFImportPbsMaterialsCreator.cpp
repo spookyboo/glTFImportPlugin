@@ -32,8 +32,9 @@
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* data,
 	std::map<std::string, gLTFMaterial> materialsMap,
-	std::map<std::string, gLTFTexture> texturesMap,
-	std::map<std::string, gLTFImage> imagesMap)
+	std::map<int, gLTFTexture> texturesMap,
+	std::map<int, gLTFImage> imagesMap,
+	std::map<int, gLTFSampler> samplersMap)
 {
 	OUT << "Perform gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles\n";
 
@@ -52,13 +53,22 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		dst << "{\n";
 
 		// ------------- SAMPLERS -------------
-		// TODO
+		dst << TAB << "\"samplers\" :\n";
+		dst << TAB << "{\n";
+		createSamplerJsonBlock(&dst, it->second, samplersMap);
+		dst << TAB << "},\n";
 
 		// ------------- MACROBLOCKS -------------
-		// TODO
+		dst << TAB << "\"macroblocks\" :\n";
+		dst << TAB << "{\n";
+		createMacroJsonBlock(&dst, it->second); // TODO: Pass extra arguments?
+		dst << TAB << "},\n";
 
 		// ------------- BLENDBLOCKS -------------
-		// TODO
+		dst << TAB << "\"blendblocks\" :\n";
+		dst << TAB << "{\n";
+		createBlendJsonBlock(&dst, it->second); // TODO: Pass extra arguments?
+		dst << TAB << "},\n";
 
 		// ------------- PBS -------------
 		dst << TAB << "\"pbs\" :\n";
@@ -70,6 +80,10 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		const gLTFMaterial& material = it->second;
 		dst << TABx3 << "\"shadow_const_bias\" : \"0.01\",\n"; // Default value
 		dst << TABx3 << "\"workflow\" : \"metallic\",\n"; // Default workflow of gLTF is metallic
+
+		dst << TABx3 << "\"macroblock\" : \"Macroblock_0\",\n"; // Use a default macroblock
+		dst << TABx3 << "\"blendblock\" : \"Blendblock_0\",\n"; // Use a default blendblock
+
 		std::string doubleSidedValue = "false";
 		if (material.mDoubleSided)
 			doubleSidedValue = "true";
@@ -92,7 +106,7 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		createDetailWeightJsonBlock(&dst, it->second);
 		createEmissiveJsonBlock(&dst, it->second);
 
-		dst << TABx3 << "\n";
+		dst << "\n";
 		dst << TABx2 << "}\n";
 		dst << TAB << "}\n";
 		dst << "}\n";
@@ -110,12 +124,80 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 	}
 
 	// Copy all gLTF files (images)
+	copyImageFiles(data, imagesMap);
 
 	return true;
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportPbsMaterialsCreator::createTransparencyJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
+bool gLTFImportPbsMaterialsCreator::createSamplerJsonBlock (std::ofstream* dst, 
+	const gLTFMaterial& material,
+	std::map<int, gLTFSampler> samplersMap)
+{
+	if (samplersMap.size() > 0)
+	{
+		// TODO: Create Samplerblocks, based on the samplersMap
+	}
+	else
+	{
+		// There are no gLTF texture samplers; use a default
+		*dst << TABx2 << "\"Sampler_0\" :\n";
+		*dst << TABx2 << "{\n";
+		*dst << TABx3 << "\"min\" : \"anisotropic\",\n";
+		*dst << TABx3 << "\"mag\" : \"anisotropic\",\n";
+		*dst << TABx3 << "\"mip\" : \"anisotropic\",\n";
+		*dst << TABx3 << "\"u\" : \"wrap\",\n";
+		*dst << TABx3 << "\"v\" : \"wrap\",\n";
+		*dst << TABx3 << "\"w\" : \"wrap\",\n";
+		*dst << TABx3 << "\"miplodbias\" : 0,\n";
+		*dst << TABx3 << "\"max_anisotropic\" : 1,\n";
+		*dst << TABx3 << "\"compare_function\" : \"disabled\",\n";
+		*dst << TABx3 << "\"border\" : [1, 1, 1, 1],\n";
+		*dst << TABx3 << "\"min_lod\" : -3.40282e+38,\n";
+		*dst << TABx3 << "\"max_lod\" : 3.40282e+38\n";
+		*dst << TABx2 << "}\n";
+	}
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::createMacroJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	// Use a default
+	*dst << TABx2 << "\"Macroblock_0\" :\n";
+	*dst << TABx2 << "{\n";
+	*dst << TABx2 << "\"scissor_test\" : false,\n";
+	*dst << TABx3 << "\"depth_check\" : true,\n";
+	*dst << TABx3 << "\"depth_write\" : true,\n";
+	*dst << TABx3 << "\"depth_function\" : \"less_equal\",\n";
+	*dst << TABx3 << "\"depth_bias_constant\" : 0,\n";
+	*dst << TABx3 << "\"depth_bias_slope_scale\" : 0,\n";
+	*dst << TABx3 << "\"cull_mode\" : \"clockwise\",\n";
+	*dst << TABx3 << "\"polygon_mode\" : \"solid\"\n";
+	*dst << TABx2 << "}\n";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::createBlendJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	// Use a default
+	*dst << TABx2 << "\"Blendblock_0\" :\n";
+	*dst << TABx2 << "{\n";
+	*dst << TABx3 << "\"alpha_to_coverage\" : false,\n";
+	*dst << TABx3 << "\"blendmask\" : \"rgba\",\n";
+	*dst << TABx3 << "\"separate_blend\" : false,\n";
+	*dst << TABx3 << "\"src_blend_factor\" : \"one\",\n";
+	*dst << TABx3 << "\"dst_blend_factor\" : \"zero\",\n";
+	*dst << TABx3 << "\"blend_operation\" : \"add\"\n";
+	*dst << TABx2 << "}\n";
+
+	return true;
+}
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::createTransparencyJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
 	return false;
 	if (material.mAlphaMode != "BLEND")
@@ -155,7 +237,9 @@ bool gLTFImportPbsMaterialsCreator::createDiffuseJsonBlock(std::ofstream* dst, c
 	if (material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable() &&
 		!material.mOcclusionTexture.isTextureAvailable())
 	{
-		// TODO: Add "texture" + add "sampler"
+		*dst << ",\n";
+		*dst << TABx4 << "\"texture\" : \"" << material.mPbrMetallicRoughness.mBaseColorTexture.mUri << "\",\n";
+		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"\n";
 		// TODO: "uv" is based on the texCoord of the gLTF texture
 	}
 
@@ -215,7 +299,8 @@ bool gLTFImportPbsMaterialsCreator::createNormalJsonBlock(std::ofstream* dst, co
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"normal\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO: Add "texture" + add "sampler"
+	*dst << TABx4 << "\"texture\" : \"" << material.mNormalTexture.mUri << "\",\n";
+	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mNormalTexture.mSampler << "\"\n";
 	// TODO: "uv" is based on the texCoord of the gLTF texture
 	*dst << TABx3 << "}";
 
@@ -231,8 +316,9 @@ bool gLTFImportPbsMaterialsCreator::createRoughnessJsonBlock(std::ofstream* dst,
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"roughness\" :\n";
 	*dst << TABx3 << "{\n";
-	*dst << TABx4 << "\"value\" : " << material.mPbrMetallicRoughness.mRoughnessFactor << "\n";
-	// TODO: Add "texture" + add "sampler"
+	*dst << TABx4 << "\"value\" : " << material.mPbrMetallicRoughness.mRoughnessFactor << ",\n";
+	*dst << TABx4 << "\"texture\" : \"" << material.mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri << "\",\n";
+	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler << "\"\n";
 	// TODO: "uv" is based on the texCoord of the gLTF texture
 	*dst << TABx3 << "}";
 
@@ -263,10 +349,11 @@ bool gLTFImportPbsMaterialsCreator::createDetailDiffuseJsonBlock(std::ofstream* 
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
 	*dst << TABx3 << "{\n";
-	*dst << TABx4 << "\"value\" : " << material.mOcclusionTexture.mStrength << "\n"; // Use strength of the occlusionTexture as weight
+	*dst << TABx4 << "\"value\" : " << material.mOcclusionTexture.mStrength << ",\n"; // Use strength of the occlusionTexture as weight
 																					 // baseColorTexture does not support Scale and Offset in gLTF
-																					 // TODO: Add "texture" + add "sampler"
-																					 // TODO: "uv" is based on the texCoord of the gLTF texture
+	*dst << TABx4 << "\"texture\" : \"" << material.mPbrMetallicRoughness.mBaseColorTexture.mUri << "\",\n";
+	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"\n";
+	// TODO: "uv" is based on the texCoord of the gLTF texture
 	*dst << TABx3 << "}";
 
 	++mDetailedDiffuseMapCount;
@@ -298,8 +385,9 @@ bool gLTFImportPbsMaterialsCreator::createDetailNormalJsonBlock(std::ofstream* d
 		material.mNormalTexture.mScale <<
 		", " <<
 		material.mNormalTexture.mScale <<
-		"]\n";
-	// TODO: Add texture and sampler (take the , into account)
+		"],\n";
+	*dst << TABx4 << "\"texture\" : \"" << material.mNormalTexture.mUri << "\",\n";
+	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mNormalTexture.mSampler << "\"\n";
 	*dst << TABx3 << "}";
 
 	return true;
@@ -317,7 +405,10 @@ bool gLTFImportPbsMaterialsCreator::createEmissiveJsonBlock(std::ofstream* dst, 
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO: Add "texture" + add "sampler"
+	*dst << TABx4 << "\"value\" : 6,\n"; // Pump up the light a bit
+	*dst << TABx4 << "\"mode\" : \"Add\",\n"; // Use additive blending
+	*dst << TABx4 << "\"texture\" : \"" << material.mEmissiveTexture.mUri << "\",\n";
+	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mEmissiveTexture.mSampler << "\"\n";
 	// TODO: "uv" is based on the texCoord of the gLTF texture
 	*dst << TABx3 << "}";
 
@@ -335,8 +426,30 @@ bool gLTFImportPbsMaterialsCreator::createDetailWeightJsonBlock(std::ofstream* d
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"detail_weight\" :\n";
 	*dst << TABx3 << "{\n";
-	// TODO: Add "texture" and "sampler"
+	*dst << TABx4 << "\"texture\" : \"" << material.mOcclusionTexture.mUri << "\",\n";
+	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mOcclusionTexture.mSampler << "\"\n";
+
+	// TODO: Add "sampler"
 	*dst << TABx3 << "}";
 
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::copyImageFiles (Ogre::HlmsEditorPluginData* data, std::map<int, gLTFImage> imagesMap)
+{
+	std::map<int, gLTFImage>::iterator it;
+	gLTFImage image;
+	std::string fileNameSource;
+	std::string fileNameDestination;
+	for (it = imagesMap.begin(); it != imagesMap.end(); it++)
+	{
+		image = it->second;
+		fileNameSource = data->mInFileDialogPath + image.mUri; // TODO: uri can be a full path
+		fileNameDestination = data->mInImportPath + data->mInFileDialogBaseName + "/" + image.mUri; // TODO: uri can be a full path
+		OUT << "DEBUG fileNameSource: " << fileNameSource << "\n";
+		OUT << "DEBUG fileNameDestination: " << fileNameDestination << "\n";
+		copyFile (fileNameSource, fileNameDestination);
+	}
 	return true;
 }

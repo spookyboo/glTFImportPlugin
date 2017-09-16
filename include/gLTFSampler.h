@@ -25,20 +25,64 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
+#ifndef __gLTFSampler_H__
+#define __gLTFSampler_H__
 
-#include "gLTFImportConstants.h"
-#include "gLTFTexture.h"
+#include <string>
+#include <iostream>
 
-//---------------------------------------------------------------------
-gLTFTexture::gLTFTexture(void) :
-	mSampler (0),
-	mSource (-1)
+/************************************************************************************************
+This file contains the data struture of a gLFTSampler. This is an intermediate structure
+used to generate an Ogre 3d material file.
+/************************************************************************************************/
+
+/************************************************/
+/** Class responsible that represents a Sampler */
+/************************************************/
+class gLTFSampler
 {
-	mTImageLocation = "";
-}
+	public:
+		gLTFSampler(void);
+		virtual ~gLTFSampler(void) {};
 
-//---------------------------------------------------------------------
-void gLTFTexture::out(void)
-{
-	OUT << "***************** Debug: gLTFTexture *****************\n";
-}
+		enum MAGFILTER
+		{
+			MAG_NEAREST = 9728,
+			MAG_LINEAR = 9729
+		};
+
+		enum MINFILTER
+		{
+			MIN_NEAREST = 9728,
+			MIN_LINEAR = 9729,
+			MIN_NEAREST_MIPMAP_NEAREST = 9984,
+			MIN_LINEAR_MIPMAP_NEAREST = 9985,
+			MIN_NEAREST_MIPMAP_LINEAR = 9986,
+			MIN_LINEAR_MIPMAP_LINEAR = 9987
+		};
+
+		enum S_WRAPPING_MODE
+		{
+			SW_CLAMP_TO_EDGE = 33071,
+			SW_MIRRORED_REPEAT = 33648,
+			SW_REPEAT = 10497
+		};
+
+		enum T_WRAPPING_MODE
+		{
+			TW_CLAMP_TO_EDGE = 33071,
+			TW_MIRRORED_REPEAT = 33648,
+			TW_REPEAT = 10497
+		};
+
+		void out (void); // prints the content of the gLTFSampler
+
+		// Public members
+		int mMagFilter;
+		int mMinFilter;
+		int mWrapS;
+		int mWrapT;
+		std::string mName;
+};
+
+#endif

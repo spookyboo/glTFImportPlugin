@@ -83,6 +83,8 @@ public:
 	// Public member attributes
 	int mIndex;
 	int mTextCoord;
+	std::string mUri;
+	int mSampler;
 };
 
 /*************************************************************/

@@ -140,8 +140,10 @@
     <ClInclude Include="include\gLTFImportPbsMaterialsCreator.h" />
     <ClInclude Include="include\gLTFImportPlugin.h" />
     <ClInclude Include="include\gLTFImportPrerequisites.h" />
+    <ClInclude Include="include\gLTFImportSamplersParser.h" />
     <ClInclude Include="include\gLTFImportTexturesParser.h" />
     <ClInclude Include="include\gLTFMaterial.h" />
+    <ClInclude Include="include\gLTFSampler.h" />
     <ClInclude Include="include\gLTFTexture.h" />
     <ClInclude Include="include\rapidjson\allocators.h" />
     <ClInclude Include="include\rapidjson\document.h" />
@@ -187,8 +189,10 @@
     <ClCompile Include="src\gLTFImportMaterialsParser.cpp" />
     <ClCompile Include="src\gLTFImportPbsMaterialsCreator.cpp" />
     <ClCompile Include="src\gLTFImportPlugin.cpp" />
+    <ClCompile Include="src\gLTFImportSamplerParser.cpp" />
     <ClCompile Include="src\gLTFImportTexturesParser.cpp" />
     <ClCompile Include="src\gLTFMaterial.cpp" />
+    <ClCompile Include="src\gLTFSampler.cpp" />
     <ClCompile Include="src\gLTFTexture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

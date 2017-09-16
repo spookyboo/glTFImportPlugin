@@ -40,16 +40,16 @@ class gLTFImportTexturesParser
 		gLTFImportTexturesParser (void) {};
 		virtual ~gLTFImportTexturesParser (void) {};
 
-		// Parse the gLTF textures (level 1)
+		// Parse the gLTF Textures (level 1)
 		bool parseTextures (rapidjson::Value::ConstMemberIterator jsonIterator);
 
-		// Returns the textures structure
-		const std::map<std::string, gLTFTexture> getParsedTextures (void) const;
+		// Returns the Textures structure
+		const std::map<int, gLTFTexture> getParsedTextures (void) const;
 
 	protected:
 
 	private:
-		std::map<std::string, gLTFTexture> mTexturesMap;
+		std::map<int, gLTFTexture> mTexturesMap;
 };
 
 #endif

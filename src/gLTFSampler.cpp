@@ -26,59 +26,21 @@
   -----------------------------------------------------------------------------
 */
 
-#include "gLTFImportImagesParser.h"
+#include "gLTFImportConstants.h"
+#include "gLTFSampler.h"
 
 //---------------------------------------------------------------------
-bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator jsonIterator)
+gLTFSampler::gLTFSampler(void) :
+	mMagFilter(-1),
+	mMinFilter(-1),
+	mWrapS(SW_REPEAT),
+	mWrapT(TW_REPEAT)
 {
-	OUT << TAB << "Perform gLTFImportImagesParser::parseImages\n";
-
-	int source = 0;
-	const rapidjson::Value& array = jsonIterator->value;
-
-	OUT << TAB << "Loop through images array\n";
-	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
-	{
-		rapidjson::Value::ConstMemberIterator it;
-		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
-		for (it = array[i].MemberBegin(); it != itEnd; ++it)
-		{
-			gLTFImage image;
-
-			OUT << TABx2 << "key image ==> " << it->name.GetString() << "\n";
-			std::string key = std::string(it->name.GetString());
-			if (it->value.IsString() && key == "uri")
-			{
-				// ******** 1. uri ********
-				image.mUri = it->value.GetString();
-				OUT << TABx2 << "value ==> " << image.mUri << "\n";
-			}
-			if (it->value.IsString() && key == "mimeType")
-			{
-				// ******** 2. mimeType ********
-				image.mMimeType = it->value.GetString();
-				OUT << TABx2 << "value ==> " << image.mMimeType << "\n";
-			}
-			if (it->value.IsInt() && key == "bufferView")
-			{
-				// ******** 3. bufferView ********
-				image.mBufferView = it->value.GetInt();
-				OUT << TABx2 << "value ==> " << image.mBufferView << "\n";
-			}
-
-			mImagesMap[source] = image;
-			++source;
-		}
-	}
-
-	return true;
+	mName = "";
 }
 
 //---------------------------------------------------------------------
-const std::map<int, gLTFImage> gLTFImportImagesParser::getParsedImages (void) const
+void gLTFSampler::out (void)
 {
-	return mImagesMap;
+	OUT << "***************** Debug: gLTFSampler *****************\n";
 }
-
-
-

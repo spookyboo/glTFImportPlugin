@@ -33,7 +33,7 @@ bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberItera
 {
 	OUT << TAB << "Perform gLTFImportTexturesParser::parseTextures\n";
 
-	gLTFTexture texture;
+	int index = 0;
 	const rapidjson::Value& array = jsonIterator->value;
 
 	OUT << TAB << "Loop through textures array\n";
@@ -44,6 +44,7 @@ bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberItera
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
 			OUT << TABx2 << "key texture ==> " << it->name.GetString() << "\n";
+			gLTFTexture texture;
 			std::string key = std::string(it->name.GetString());
 			if (it->value.IsInt() && key == "sampler")
 			{
@@ -57,6 +58,9 @@ bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberItera
 				texture.mSource = it->value.GetInt();
 				OUT << TABx2 << "value ==> " << texture.mSource << "\n";
 			}
+			
+			mTexturesMap[index] = texture;
+			++index;
 		}
 	}
 
@@ -65,7 +69,7 @@ bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberItera
 
 
 //---------------------------------------------------------------------
-const std::map<std::string, gLTFTexture> gLTFImportTexturesParser::getParsedTextures (void) const
+const std::map<int, gLTFTexture> gLTFImportTexturesParser::getParsedTextures (void) const
 {
 	return mTexturesMap;
 }

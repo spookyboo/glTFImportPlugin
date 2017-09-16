@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "gLTFMaterial.h"
 #include "gLTFTexture.h"
 #include "gLTFImage.h"
+#include "gLTFSampler.h"
 
 /** Class responsible for creation of Ogre PBS materials */
 class gLTFImportPbsMaterialsCreator
@@ -46,11 +47,24 @@ class gLTFImportPbsMaterialsCreator
 		// Create the Ogre Pbs Material files
 		bool createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* data,
 			std::map<std::string, gLTFMaterial> materialsMap,
-			std::map<std::string, gLTFTexture> texturesMap,
-			std::map<std::string, gLTFImage> imagesMap); // Creates *.material.json files and copy images
+			std::map<int, gLTFTexture> texturesMap,
+			std::map<int, gLTFImage> imagesMap,
+			std::map<int, gLTFSampler> samplersMap); // Creates *.material.json files and copy images
 
 	protected:
 		// Create json blocks
+		// Sampler
+		bool createSamplerJsonBlock(std::ofstream* dst, 
+			const gLTFMaterial& material, 
+			std::map<int, gLTFSampler> samplersMap);
+
+		// Macro
+		bool createMacroJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
+
+		// Blend
+		bool createBlendJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
+
+		// Pbs
 		bool createTransparencyJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 		bool createDiffuseJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 		bool createSpecularJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
@@ -63,14 +77,12 @@ class gLTFImportPbsMaterialsCreator
 		bool createDetailNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 		bool createDetailWeightJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 		bool createEmissiveJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
+
+		// Generic
+		bool copyImageFiles(Ogre::HlmsEditorPluginData* data, std::map<int, gLTFImage> imagesMap);
 	
 	private:
-		//std::map<std::string, gLTFMaterial> mMaterialsMap;
 		unsigned short mDetailedDiffuseMapCount;
-		//gLTFImportMaterialsParser mMaterialsParser;
-		//gLTFImportTexturesParser mTexturesParser;
-		//gLTFImportImagesParser mImagesParser;
-		//gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;
 };
 
 #endif

@@ -25,51 +25,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFImportExecutor_H__
-#define __gLTFImportExecutor_H__
+#ifndef __gLTFImportSamplersParser_H__
+#define __gLTFImportSamplersParser_H__
 
 #include <map>
-#include "hlms_editor_plugin.h"
 #include "gLTFImportConstants.h"
-#include "gLTFMaterial.h"
-#include "gLTFImportMaterialsParser.h"
-#include "gLTFImportTexturesParser.h"
-#include "gLTFImportImagesParser.h"
-#include "gLTFImportSamplersParser.h"
-#include "gLTFImportPbsMaterialsCreator.h"
+#include "gLTFSampler.h"
 #include "rapidjson/document.h"
 
-/** Class responsible for executing the import */
-class gLTFImportExecutor
+/** Class responsible for executing the import and transformation of gLTF Samplers */
+class gLTFImportSamplersParser
 {
 	public:
-		gLTFImportExecutor (void) {};
-		virtual ~gLTFImportExecutor(void) {};
-		
-		// Perform the import (called by plugin)
-		bool executeImport(Ogre::HlmsEditorPluginData* data);
+		gLTFImportSamplersParser (void) {};
+		virtual ~gLTFImportSamplersParser (void) {};
+
+		// Parse the gLTF Samplers (level 1)
+		bool parseSamplers (rapidjson::Value::ConstMemberIterator jsonIterator);
+
+		// Returns the Samplers structure
+		const std::map<int, gLTFSampler> getParsedSamplers(void) const;
 
 	protected:
-		// Process the binary file / text file
-		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .glb (binary) file
-		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .gltf (json text) file
-		bool enrichMaterialsTexturesAndImages (void);
-		const gLTFImage& getImageByTextureIndex (int index);
-		const std::string& getImageUriByTextureIndex (int index);
-		int getSamplerByTextureIndex (int index);
 
 	private:
-		std::string mHelperString;
-		gLTFImage mHelperImage;
-		std::map<std::string, gLTFMaterial> mMaterialsMap;
-		std::map<int, gLTFTexture> mTexturesMap;
-		std::map<int, gLTFImage> mImagesMap;
 		std::map<int, gLTFSampler> mSamplersMap;
-		gLTFImportMaterialsParser mMaterialsParser;
-		gLTFImportTexturesParser mTexturesParser;
-		gLTFImportSamplersParser mSamplersParser;
-		gLTFImportImagesParser mImagesParser;
-		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;
 };
 
 #endif

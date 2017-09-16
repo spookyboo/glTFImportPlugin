@@ -52,7 +52,7 @@ struct Devnull : std::ostream, std::streambuf
 //#define OUT devnull
 
 //---------------------------------------------------------------------
-static const std::string& getFileExtension(const std::string& fileName)
+static const std::string& getFileExtension (const std::string& fileName)
 {
 	std::string::size_type idx;
 	idx = fileName.rfind('.');
@@ -66,7 +66,7 @@ static const std::string& getFileExtension(const std::string& fileName)
 }
 
 //---------------------------------------------------------------------
-static void copyFile(const std::string& fileNameSource, std::string& fileNameDestination)
+static void copyFile (const std::string& fileNameSource, std::string& fileNameDestination)
 {
 	std::ifstream src(fileNameSource.c_str(), std::ios::binary);
 	std::ofstream dst(fileNameDestination.c_str(), std::ios::binary);
@@ -76,7 +76,7 @@ static void copyFile(const std::string& fileNameSource, std::string& fileNameDes
 }
 
 //---------------------------------------------------------------------
-static const std::string& getJsonAsString(const std::string& jsonFileName)
+static const std::string& getJsonAsString (const std::string& jsonFileName)
 {
 	std::ostringstream sstream;
 	std::ifstream fs(jsonFileName);

@@ -154,8 +154,10 @@
     <ClCompile Include="..\src\gLTFImportImagesParser.cpp" />
     <ClCompile Include="..\src\gLTFImportMaterialsParser.cpp" />
     <ClCompile Include="..\src\gLTFImportPbsMaterialsCreator.cpp" />
+    <ClCompile Include="..\src\gLTFImportSamplerParser.cpp" />
     <ClCompile Include="..\src\gLTFImportTexturesParser.cpp" />
     <ClCompile Include="..\src\gLTFMaterial.cpp" />
+    <ClCompile Include="..\src\gLTFSampler.cpp" />
     <ClCompile Include="..\src\gLTFTexture.cpp" />
     <ClCompile Include="gLTFTest.cpp" />
   </ItemGroup>

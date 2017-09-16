@@ -26,47 +26,59 @@
   -----------------------------------------------------------------------------
 */
 
-#include "gLTFImportImagesParser.h"
+#include "gLTFImportSamplersParser.h"
 
 //---------------------------------------------------------------------
-bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator jsonIterator)
+bool gLTFImportSamplersParser::parseSamplers (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << TAB << "Perform gLTFImportImagesParser::parseImages\n";
+	OUT << TAB << "Perform gLTFImportSamplersParser::parseSamplers\n";
 
 	int source = 0;
 	const rapidjson::Value& array = jsonIterator->value;
 
-	OUT << TAB << "Loop through images array\n";
+	OUT << TAB << "Loop through samplers array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
-			gLTFImage image;
+			gLTFSampler sampler;
 
-			OUT << TABx2 << "key image ==> " << it->name.GetString() << "\n";
+			OUT << TABx2 << "key sampler ==> " << it->name.GetString() << "\n";
 			std::string key = std::string(it->name.GetString());
-			if (it->value.IsString() && key == "uri")
+			if (it->value.IsInt() && key == "magFilter")
 			{
-				// ******** 1. uri ********
-				image.mUri = it->value.GetString();
-				OUT << TABx2 << "value ==> " << image.mUri << "\n";
+				// ******** 1. magFilter ********
+				sampler.mMagFilter = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << sampler.mMagFilter << "\n";
 			}
-			if (it->value.IsString() && key == "mimeType")
+			if (it->value.IsInt() && key == "minFilter")
 			{
-				// ******** 2. mimeType ********
-				image.mMimeType = it->value.GetString();
-				OUT << TABx2 << "value ==> " << image.mMimeType << "\n";
+				// ******** 2. minFilter ********
+				sampler.mMinFilter = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << sampler.mMinFilter << "\n";
 			}
-			if (it->value.IsInt() && key == "bufferView")
+			if (it->value.IsInt() && key == "wrapS")
 			{
-				// ******** 3. bufferView ********
-				image.mBufferView = it->value.GetInt();
-				OUT << TABx2 << "value ==> " << image.mBufferView << "\n";
+				// ******** 3. wrapS ********
+				sampler.mWrapS = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << sampler.mWrapS << "\n";
+			}
+			if (it->value.IsInt() && key == "wrapT")
+			{
+				// ******** 4. wrapT ********
+				sampler.mWrapT = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << sampler.mWrapT << "\n";
+			}
+			if (it->value.IsString() && key == "name")
+			{
+				// ******** 5. name ********
+				sampler.mName = it->value.GetString();
+				OUT << TABx2 << "value ==> " << sampler.mName << "\n";
 			}
 
-			mImagesMap[source] = image;
+			mSamplersMap[source] = sampler;
 			++source;
 		}
 	}
@@ -75,10 +87,7 @@ bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator 
 }
 
 //---------------------------------------------------------------------
-const std::map<int, gLTFImage> gLTFImportImagesParser::getParsedImages (void) const
+const std::map<int, gLTFSampler> gLTFImportSamplersParser::getParsedSamplers (void) const
 {
-	return mImagesMap;
+	return mSamplersMap;
 }
-
-
-
