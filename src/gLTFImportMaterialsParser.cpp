@@ -33,13 +33,14 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 {
 	OUT << TAB << "Perform gLTFImportMaterialsParser::parseMaterials\n";
 
-	gLTFMaterial material;
 	std::string name;
 	const rapidjson::Value& array = jsonIterator->value;
 
 	OUT << TAB << "Loop through materials array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		gLTFMaterial material;
+		name = "";
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
@@ -96,10 +97,10 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 				// ******** 9. doubleSided ********
 				material.mDoubleSided = it->value.GetBool();
 			}
-
-			if (name != "")
-				mMaterialsMap[name] = material;
 		}
+		
+		if (name != "")
+			mMaterialsMap[name] = material;
 	}
 
 	return true;

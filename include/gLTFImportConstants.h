@@ -85,4 +85,34 @@ static const std::string& getJsonAsString (const std::string& jsonFileName)
 	return gJsonString;
 }
 
+//---------------------------------------------------------------------
+static bool isFilePathAbsolute (std::string fileName)
+{
+	if (fileName == "")
+		return false;
+
+#if defined(_WIN32) || defined(_WIN64)
+	if (fileName.substr(1, 1) == ":")
+		return true;
+	else
+		return false;
+
+#elif defined(LINUX )
+	if (fileName.substr(0, 1) == "/")
+		return true;
+	else
+		return false;
+
+#endif 
+
+	return false;
+}
+
+//---------------------------------------------------------------------
+static std::string getBaseFileNameWithExtension (std::string fileName)
+{
+	std::size_t found = fileName.find_last_of("/\\");
+	return fileName.substr(found + 1);
+}
+
 #endif

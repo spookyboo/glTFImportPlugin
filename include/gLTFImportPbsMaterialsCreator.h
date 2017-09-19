@@ -41,7 +41,10 @@ class gLTFImportPbsMaterialsCreator
 {
 	public:
 		gLTFImportPbsMaterialsCreator(void) :
-			mDetailedDiffuseMapCount(0) {};
+			mDetailedDiffuseMapCount(0)
+		{
+			mHelperString = "";
+		};
 		virtual ~gLTFImportPbsMaterialsCreator (void) {};
 
 		// Create the Ogre Pbs Material files
@@ -79,9 +82,11 @@ class gLTFImportPbsMaterialsCreator
 		bool createEmissiveJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 
 		// Generic
+		const std::string getUvString (int texCoord);
 		bool copyImageFiles(Ogre::HlmsEditorPluginData* data, std::map<int, gLTFImage> imagesMap);
 	
 	private:
+		std::string mHelperString;
 		unsigned short mDetailedDiffuseMapCount;
 };
 

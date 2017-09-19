@@ -53,6 +53,7 @@ class gLTFImportExecutor
 		// Process the binary file / text file
 		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .glb (binary) file
 		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .gltf (json text) file
+		bool executeJson (const char* jsonChar, Ogre::HlmsEditorPluginData* data);
 		bool enrichMaterialsTexturesAndImages (void);
 		const gLTFImage& getImageByTextureIndex (int index);
 		const std::string& getImageUriByTextureIndex (int index);

@@ -100,9 +100,18 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsE
 		return false;
 	}
 
-	// TODO: Read Json chunk
+	// Read Json chunk
+	char* jsonChar = new char[chunkLength];
+	fs.read(jsonChar, chunkLength);
+	OUT << "Json content: \n" << jsonChar << "\n\n";
+	if (!executeJson(jsonChar, data))
+	{
+		data->mOutErrorText = "Binary gLTF file does not contain a valid json specification";
+		return false;
+	}
 
-	data->mOutSuccessText = "Binary gLTF file succesfully imported";
+	data->mOutSuccessText = "Binary gLTF file succesfully imported in " +
+		data->mInImportPath + data->mInFileDialogBaseName;
 	return true;
 }
 
@@ -116,7 +125,15 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 	const char* jsonChar = jsonString.c_str();
 	OUT << "Json content: \n" << jsonString << "\n\n";
 
-	// Parse the json document
+	return executeJson (jsonChar, data);
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::executeJson (const char* jsonChar, Ogre::HlmsEditorPluginData* data)
+{
+	OUT << TABx2 << "gLTFImportExecutor::executeJson\n";
+
+	// Parse the json block
 	rapidjson::Document d;
 	d.Parse(jsonChar);
 	if (d.HasParseError())
@@ -125,7 +142,7 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 		return false;
 	}
 
-	// Check for each member in the json file
+	// Check for each member in the json data
 	rapidjson::Value::ConstMemberIterator itEnd = d.MemberEnd();
 	for (rapidjson::Value::ConstMemberIterator it = d.MemberBegin(); it != itEnd; ++it)
 	{
@@ -161,13 +178,13 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 	std::map<std::string, gLTFMaterial>::iterator it;
 	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
 	{
-		OUT << "\n***************** Debug: Material name = " << it->first << " *****************\n";
-		(it->second).out();
+	OUT << "\n***************** Debug: Material name = " << it->first << " *****************\n";
+	(it->second).out();
 	}
 	*/
 
-	data->mOutSuccessText = "gLTF file succesfully imported";
-
+	data->mOutSuccessText = "gLTF file succesfully imported in " +
+		data->mInImportPath + data->mInFileDialogBaseName;
 	return true;
 }
 
@@ -190,6 +207,8 @@ bool gLTFImportExecutor::enrichMaterialsTexturesAndImages (void)
 		uri = getImageUriByTextureIndex((it->second).mOcclusionTexture.mIndex);
 		(it->second).mOcclusionTexture.mUri = uri;
 		uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
+		OUT << "DEBUG: (it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex =" << (it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex << "\n";
+		OUT << "DEBUG: uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex); =" << uri << "\n";
 		(it->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uri;
 		uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
 		(it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uri;
@@ -206,6 +225,8 @@ bool gLTFImportExecutor::enrichMaterialsTexturesAndImages (void)
 		sampler = getSamplerByTextureIndex((it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
 		(it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler = sampler;
 	}
+
+	return true;
 }
 
 //---------------------------------------------------------------------
@@ -225,6 +246,8 @@ const gLTFImage& gLTFImportExecutor::getImageByTextureIndex (int index)
 		return mHelperImage;
 
 	mHelperImage = mImagesMap[source];
+	OUT << "DEBUG index=" << index << "\n";
+	OUT << "DEBUG mHelperImage.mUri=" << mHelperImage.mUri << "\n";
 	return mHelperImage;
 }
 
@@ -232,8 +255,10 @@ const gLTFImage& gLTFImportExecutor::getImageByTextureIndex (int index)
 const std::string& gLTFImportExecutor::getImageUriByTextureIndex (int index)
 {
 	OUT << TABx2 << "gLTFImportExecutor::getImageUriByTextureIndex\n";
+	OUT << "DEBUG: index1=" << index << "\n";
 
 	gLTFImage image = getImageByTextureIndex(index);
+	OUT << "DEBUG index2=" << index << "\n";
 	mHelperString = image.mUri; // The Uri is empty if the image could not be found
 	return mHelperString;
 }

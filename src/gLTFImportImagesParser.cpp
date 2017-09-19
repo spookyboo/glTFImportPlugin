@@ -39,12 +39,11 @@ bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator 
 	OUT << TAB << "Loop through images array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		gLTFImage image;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
-			gLTFImage image;
-
 			OUT << TABx2 << "key image ==> " << it->name.GetString() << "\n";
 			std::string key = std::string(it->name.GetString());
 			if (it->value.IsString() && key == "uri")
@@ -65,10 +64,10 @@ bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator 
 				image.mBufferView = it->value.GetInt();
 				OUT << TABx2 << "value ==> " << image.mBufferView << "\n";
 			}
-
-			mImagesMap[source] = image;
-			++source;
 		}
+		
+		mImagesMap[source] = image;
+		++source;
 	}
 
 	return true;
