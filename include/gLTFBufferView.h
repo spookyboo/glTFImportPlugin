@@ -25,37 +25,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFImage_H__
-#define __gLTFImage_H__
+#ifndef __gLTFBufferView_H__
+#define __gLTFBufferView_H__
 
 #include <string>
-//#include "gLTFImage.h"
 #include <iostream>
 
 /************************************************************************************************
- This file contains the data struture of a gLFTImage. This is an intermediate structure
+ This file contains the data struture of a gLFTBufferView. This is an intermediate structure
  used to generate an Ogre 3d material file.
 /************************************************************************************************/
 
-/***********************************************/
-/** Class responsible that represents an Image */
-/***********************************************/
-class gLTFImage
+/****************************************************/
+/** Class responsible that represents an BufferView */
+/****************************************************/
+class gLTFBufferView
 {
 	public:
-		gLTFImage (void);
-		virtual ~gLTFImage (void) {};
-		void out (void); // prints the content of the gLTFImage
+		gLTFBufferView (void);
+		virtual ~gLTFBufferView (void) {};
+		void out (void); // prints the content of the gLTFBufferView
 
 		// Public members
-		std::string mUri;
-		std::string mMimeType;
-		int mBufferView;
-
-		// Inherited from bufferView
 		int mBufferIndex;
 		int mByteOffset;
 		int mByteLength;
+		int mByteStride;
+		int mTarget;
+		std::string mName;
 };
 
 #endif

@@ -132,7 +132,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\gLTFBuffer.h" />
+    <ClInclude Include="include\gLTFBufferView.h" />
     <ClInclude Include="include\gLTFImage.h" />
+    <ClInclude Include="include\gLTFImportBuffersParser.h" />
+    <ClInclude Include="include\gLTFImportBufferViewsParser.h" />
     <ClInclude Include="include\gLTFImportConstants.h" />
     <ClInclude Include="include\gLTFImportExecutor.h" />
     <ClInclude Include="include\gLTFImportImagesParser.h" />
@@ -182,7 +186,11 @@
     <ClInclude Include="include\rapidjson\writer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\gLTFBuffer.cpp" />
+    <ClCompile Include="src\gLTFBufferView.cpp" />
     <ClCompile Include="src\gLTFImage.cpp" />
+    <ClCompile Include="src\gLTFImportBuffersParser.cpp" />
+    <ClCompile Include="src\gLTFImportBufferViewsParser.cpp" />
     <ClCompile Include="src\gLTFImportDll.cpp" />
     <ClCompile Include="src\gLTFImportExecutor.cpp" />
     <ClCompile Include="src\gLTFImportImagesParser.cpp" />

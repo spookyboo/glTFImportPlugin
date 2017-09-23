@@ -27,22 +27,18 @@
 */
 
 #include "gLTFImportConstants.h"
-#include "gLTFImage.h"
+#include "gLTFBuffer.h"
 
 //---------------------------------------------------------------------
-gLTFImage::gLTFImage(void) :
-	mBufferView (-1),
-	mBufferIndex(-1),
-	mByteOffset(0),
-	mByteLength(0)
-
+gLTFBuffer::gLTFBuffer(void) :
+	mByteLength (-1)
 {
 	mUri = "";
-	mMimeType = "mage/jpeg";
+	mName = "";
 }
 
 //---------------------------------------------------------------------
-void gLTFImage::out (void)
+void gLTFBuffer::out (void)
 {
-	OUT << "***************** Debug: gLTFImage *****************\n";
+	OUT << "***************** Debug: gLTFBuffer *****************\n";
 }

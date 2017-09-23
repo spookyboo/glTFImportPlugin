@@ -26,23 +26,55 @@
   -----------------------------------------------------------------------------
 */
 
-#include "gLTFImportConstants.h"
-#include "gLTFImage.h"
+#include "gLTFImportBuffersParser.h"
 
 //---------------------------------------------------------------------
-gLTFImage::gLTFImage(void) :
-	mBufferView (-1),
-	mBufferIndex(-1),
-	mByteOffset(0),
-	mByteLength(0)
-
+bool gLTFImportBuffersParser::parseBuffers (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	mUri = "";
-	mMimeType = "mage/jpeg";
+	OUT << TAB << "Perform gLTFImportBuffersParser::parseBuffers\n";
+
+	int source = 0;
+	const rapidjson::Value& array = jsonIterator->value;
+
+	OUT << TAB << "Loop through Buffers array\n";
+	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
+	{
+		gLTFBuffer buffer;
+		rapidjson::Value::ConstMemberIterator it;
+		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
+		for (it = array[i].MemberBegin(); it != itEnd; ++it)
+		{
+			OUT << TABx2 << "key buffer ==> " << it->name.GetString() << "\n";
+			std::string key = std::string(it->name.GetString());
+			if (it->value.IsString() && key == "uri")
+			{
+				// ******** 1. uri ********
+				buffer.mUri = it->value.GetString();
+				OUT << TABx2 << "value ==> " << buffer.mUri << "\n";
+			}
+			if (it->value.IsInt() && key == "byteLength")
+			{
+				// ******** 2. byteLength ********
+				buffer.mByteLength = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << buffer.mByteLength << "\n";
+			}
+			if (it->value.IsString() && key == "name")
+			{
+				// ******** 3. name ********
+				buffer.mName = it->value.GetString();
+				OUT << TABx2 << "value ==> " << buffer.mName << "\n";
+			}
+		}
+		
+		mBuffersMap[source] = buffer;
+		++source;
+	}
+
+	return true;
 }
 
 //---------------------------------------------------------------------
-void gLTFImage::out (void)
+const std::map<int, gLTFBuffer> gLTFImportBuffersParser::getParsedBuffers (void) const
 {
-	OUT << "***************** Debug: gLTFImage *****************\n";
+	return mBuffersMap;
 }

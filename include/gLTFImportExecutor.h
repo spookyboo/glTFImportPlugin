@@ -36,6 +36,8 @@ THE SOFTWARE.
 #include "gLTFImportTexturesParser.h"
 #include "gLTFImportImagesParser.h"
 #include "gLTFImportSamplersParser.h"
+#include "gLTFImportBuffersParser.h"
+#include "gLTFImportBufferViewsParser.h"
 #include "gLTFImportPbsMaterialsCreator.h"
 #include "rapidjson/document.h"
 
@@ -54,7 +56,7 @@ class gLTFImportExecutor
 		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .glb (binary) file
 		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .gltf (json text) file
 		bool executeJson (const char* jsonChar, Ogre::HlmsEditorPluginData* data);
-		bool enrichMaterialsTexturesAndImages (void);
+		bool propagateMaterialsTexturesAndImages (void);
 		const gLTFImage& getImageByTextureIndex (int index);
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
@@ -66,9 +68,14 @@ class gLTFImportExecutor
 		std::map<int, gLTFTexture> mTexturesMap;
 		std::map<int, gLTFImage> mImagesMap;
 		std::map<int, gLTFSampler> mSamplersMap;
+		std::map<int, gLTFBufferView> mBufferViewsMap;
+		std::map<int, gLTFBuffer> mBuffersMap;
+
 		gLTFImportMaterialsParser mMaterialsParser;
 		gLTFImportTexturesParser mTexturesParser;
 		gLTFImportSamplersParser mSamplersParser;
+		gLTFImportBuffersParser mBuffersParser;
+		gLTFImportBufferViewsParser mBufferViewsParser;
 		gLTFImportImagesParser mImagesParser;
 		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;
 };

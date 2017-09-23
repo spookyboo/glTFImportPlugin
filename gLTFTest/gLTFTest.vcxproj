@@ -149,7 +149,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\gLTFBuffer.cpp" />
+    <ClCompile Include="..\src\gLTFBufferView.cpp" />
     <ClCompile Include="..\src\gLTFImage.cpp" />
+    <ClCompile Include="..\src\gLTFImportBuffersParser.cpp" />
+    <ClCompile Include="..\src\gLTFImportBufferViewsParser.cpp" />
     <ClCompile Include="..\src\gLTFImportExecutor.cpp" />
     <ClCompile Include="..\src\gLTFImportImagesParser.cpp" />
     <ClCompile Include="..\src\gLTFImportMaterialsParser.cpp" />

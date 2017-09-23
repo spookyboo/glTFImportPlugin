@@ -47,8 +47,8 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	// Create Ogre Pbs material files if parsing was succesful
 	if (result)
 	{
-		// First enrich the data structures, so it can be easily used by the mPbsMaterialsCreator
-		enrichMaterialsTexturesAndImages();
+		// First propagate the data structure elementsw, so it can be easily used by the mPbsMaterialsCreator
+		propagateMaterialsTexturesAndImages();
 
 		// Create the Material files
 		result = mPbsMaterialsCreator.createOgrePbsMaterialFiles(data, 
@@ -171,6 +171,20 @@ bool gLTFImportExecutor::executeJson (const char* jsonChar, Ogre::HlmsEditorPlug
 			mSamplersParser.parseSamplers(it); // Create a gLTFImportSamplersParser object and parse the samplers
 			mSamplersMap = mSamplersParser.getParsedSamplers();
 		}
+		if (it->value.IsArray() && name == "bufferViews")
+		{
+			mBufferViewsParser.parseBufferViews(it); // Create a gLTFImportBufferViewsParser object and parse the bufferViews
+			mBufferViewsMap = mBufferViewsParser.getParsedBufferViews();
+		}
+		if (it->value.IsArray() && name == "buffers")
+		{
+			mBuffersParser.parseBuffers(it); // Create a gLTFImportBuffersParser object and parse the buffers
+			mBuffersMap = mBuffersParser.getParsedBuffers();
+		}
+
+		gLTFImportBuffersParser mBuffersParser;
+		gLTFImportBufferViewsParser mBufferViewsParser;
+
 	}
 
 	// Debug
@@ -189,16 +203,22 @@ bool gLTFImportExecutor::executeJson (const char* jsonChar, Ogre::HlmsEditorPlug
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::enrichMaterialsTexturesAndImages (void)
+bool gLTFImportExecutor::propagateMaterialsTexturesAndImages (void)
 {
-	OUT << "gLTFImportExecutor::enrichMaterialsTexturesAndImages\n";
+	OUT << "gLTFImportExecutor::propagateMaterialsTexturesAndImages\n";
 	std::map<std::string, gLTFMaterial>::iterator it;
 	gLTFMaterial material;
 	gLTFTexture texture;
 	gLTFImage image;
+	gLTFBufferView bufferView;
+	gLTFBuffer buffer;
 	std::string uri;
 	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
 	{
+		// TODO: Add the buffer pointers to the image
+
+		// TODO: Convert the binary image data to files and set the file uri's in the Image
+
 		// Add the uri's to the material
 		uri = getImageUriByTextureIndex((it->second).mEmissiveTexture.mIndex);
 		(it->second).mEmissiveTexture.mUri = uri;

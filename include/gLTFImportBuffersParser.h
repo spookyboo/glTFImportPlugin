@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
-For the latest info, see http://www.ogre3d.org/
+For the latest info, see http://www.ogre3d.org
 
 Copyright (c) 2000-2014 Torus Knot Software Ltd
 
@@ -25,37 +25,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFImage_H__
-#define __gLTFImage_H__
+#ifndef __gLTFImportBuffersParser_H__
+#define __gLTFImportBuffersParser_H__
 
-#include <string>
-//#include "gLTFImage.h"
-#include <iostream>
+#include <map>
+#include "gLTFImportConstants.h"
+#include "gLTFBuffer.h"
+#include "rapidjson/document.h"
 
-/************************************************************************************************
- This file contains the data struture of a gLFTImage. This is an intermediate structure
- used to generate an Ogre 3d material file.
-/************************************************************************************************/
-
-/***********************************************/
-/** Class responsible that represents an Image */
-/***********************************************/
-class gLTFImage
+/** Class responsible for executing the import and transformation of gLTF Buffers */
+class gLTFImportBuffersParser
 {
 	public:
-		gLTFImage (void);
-		virtual ~gLTFImage (void) {};
-		void out (void); // prints the content of the gLTFImage
+		gLTFImportBuffersParser (void) {};
+		virtual ~gLTFImportBuffersParser (void) {};
 
-		// Public members
-		std::string mUri;
-		std::string mMimeType;
-		int mBufferView;
+		// Parse the gLTF Buffers (level 1)
+		bool parseBuffers (rapidjson::Value::ConstMemberIterator jsonIterator);
 
-		// Inherited from bufferView
-		int mBufferIndex;
-		int mByteOffset;
-		int mByteLength;
+		// Returns the Buffers structure
+		const std::map<int, gLTFBuffer> getParsedBuffers (void) const;
+
+	protected:
+
+	private:
+		std::map<int, gLTFBuffer> mBuffersMap;
 };
 
 #endif
