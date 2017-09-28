@@ -39,6 +39,7 @@ bool gLTFImportBufferViewsParser::parseBufferViews (rapidjson::Value::ConstMembe
 	OUT << TAB << "Loop through BufferViews array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		OUT << TAB << "Source index " << source << "\n";
 		gLTFBufferView bufferView;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();

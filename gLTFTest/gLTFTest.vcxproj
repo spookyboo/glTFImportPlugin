@@ -149,6 +149,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\base64.cpp" />
     <ClCompile Include="..\src\gLTFBuffer.cpp" />
     <ClCompile Include="..\src\gLTFBufferView.cpp" />
     <ClCompile Include="..\src\gLTFImage.cpp" />

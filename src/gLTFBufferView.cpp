@@ -38,6 +38,7 @@ gLTFBufferView::gLTFBufferView(void) :
 	mTarget(0)
 {
 	mName = "";
+	mUri = "";
 }
 
 //---------------------------------------------------------------------

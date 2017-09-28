@@ -53,6 +53,7 @@ class gLTFBufferView
 		int mByteStride;
 		int mTarget;
 		std::string mName;
+		std::string mUri; // Inherited from Buffer
 };
 
 #endif

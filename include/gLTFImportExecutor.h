@@ -53,13 +53,23 @@ class gLTFImportExecutor
 
 	protected:
 		// Process the binary file / text file
-		bool executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .glb (binary) file
+		bool executeBinary (const std::string& fileName, 
+			Ogre::HlmsEditorPluginData* data,
+			int& startBinaryBuffer); // proces .glb (binary) file
 		bool executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data); // proces .gltf (json text) file
-		bool executeJson (const char* jsonChar, Ogre::HlmsEditorPluginData* data);
-		bool propagateMaterialsTexturesAndImages (void);
+		bool executeJson (const std::string& fileName, 
+			const char* jsonChar, 
+			Ogre::HlmsEditorPluginData* data);
+		bool propagateData (Ogre::HlmsEditorPluginData* data, 
+			int startBinaryBuffer); // Arrange the data structure so it is easier to use when creating a Pbs material
 		const gLTFImage& getImageByTextureIndex (int index);
+		int getImageIndexByTextureIndex (int index);
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
+		const std::string& extractAndCreateImageFromBufferByTextureIndex (Ogre::HlmsEditorPluginData* data, 
+			const std::string& materialName,
+			int index,
+			int startBinaryBuffer);
 
 	private:
 		std::string mHelperString;

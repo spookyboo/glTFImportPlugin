@@ -39,6 +39,7 @@ bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberItera
 	OUT << TAB << "Loop through textures array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		OUT << TAB << "Index " << index << "\n";
 		gLTFTexture texture;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();

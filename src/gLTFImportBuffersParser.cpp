@@ -29,7 +29,7 @@
 #include "gLTFImportBuffersParser.h"
 
 //---------------------------------------------------------------------
-bool gLTFImportBuffersParser::parseBuffers (rapidjson::Value::ConstMemberIterator jsonIterator)
+bool gLTFImportBuffersParser::parseBuffers (const std::string& fileName, rapidjson::Value::ConstMemberIterator jsonIterator)
 {
 	OUT << TAB << "Perform gLTFImportBuffersParser::parseBuffers\n";
 
@@ -39,6 +39,7 @@ bool gLTFImportBuffersParser::parseBuffers (rapidjson::Value::ConstMemberIterato
 	OUT << TAB << "Loop through Buffers array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		OUT << TAB << "Source index " << source << "\n";
 		gLTFBuffer buffer;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
@@ -66,6 +67,13 @@ bool gLTFImportBuffersParser::parseBuffers (rapidjson::Value::ConstMemberIterato
 			}
 		}
 		
+		if (buffer.mUri == "")
+		{
+			/* The uri is not defined, so assign the file in which the json is defined. This may be the case when
+			   both the json and the buffer are part of the same file (so, the glb file itself)
+			*/
+			buffer.mUri = fileName;
+		}
 		mBuffersMap[source] = buffer;
 		++source;
 	}

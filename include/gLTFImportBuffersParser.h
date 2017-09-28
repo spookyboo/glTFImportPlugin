@@ -41,7 +41,7 @@ class gLTFImportBuffersParser
 		virtual ~gLTFImportBuffersParser (void) {};
 
 		// Parse the gLTF Buffers (level 1)
-		bool parseBuffers (rapidjson::Value::ConstMemberIterator jsonIterator);
+		bool parseBuffers (const std::string& fileName, rapidjson::Value::ConstMemberIterator jsonIterator); // Include the name of the json/glb file
 
 		// Returns the Buffers structure
 		const std::map<int, gLTFBuffer> getParsedBuffers (void) const;

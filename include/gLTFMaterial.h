@@ -158,6 +158,7 @@ class gLTFMaterial
 		void out (void); // prints the content of the gLTFMaterial
 
 		// Public member attributes
+		std::string mName;
 		PbrMetallicRoughness mPbrMetallicRoughness;
 		NormalTexture mNormalTexture;
 		OcclusionTexture mOcclusionTexture;

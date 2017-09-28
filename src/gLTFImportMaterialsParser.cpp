@@ -51,6 +51,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 			{
 				// ******** 1. name ********
 				name = it->value.GetString();
+				material.mName = name;
 			}
 			if (it->value.IsObject() && key == "pbrMetallicRoughness")
 			{

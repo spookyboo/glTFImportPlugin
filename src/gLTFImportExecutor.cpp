@@ -27,6 +27,7 @@
 */
 
 #include "gLTFImportExecutor.h"
+#include "base64.h"
 
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
@@ -36,19 +37,19 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	bool result = true;
 
 	// Determine type of file
+	int startBinaryBuffer = 0;
 	std::string fileName = data->mInFileDialogPath + data->mInFileDialogName;
 	std::string extension = getFileExtension(fileName);
 	if (extension == "glb")
-		result = executeBinary (fileName, data);
+		result = executeBinary (fileName, data, startBinaryBuffer);
 	else
 		result = executeText(fileName, data);
-
 
 	// Create Ogre Pbs material files if parsing was succesful
 	if (result)
 	{
-		// First propagate the data structure elementsw, so it can be easily used by the mPbsMaterialsCreator
-		propagateMaterialsTexturesAndImages();
+		// First propagate the data structure elements, so it can be easily used by the mPbsMaterialsCreator
+		propagateData (data, startBinaryBuffer);
 
 		// Create the Material files
 		result = mPbsMaterialsCreator.createOgrePbsMaterialFiles(data, 
@@ -62,7 +63,9 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsEditorPluginData* data)
+bool gLTFImportExecutor::executeBinary (const std::string& fileName, 
+	Ogre::HlmsEditorPluginData* data, 
+	int& startBinaryBuffer)
 {
 	OUT << TABx2 << "Perform gLTFImportExecutor::executeBinary\n";
 
@@ -76,6 +79,7 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsE
 	if (magic != 0x46546C67)
 	{
 		data->mOutErrorText = "Binary gLTF file is not valid";
+		fs.close();
 		return false;
 	}
 
@@ -97,21 +101,31 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName, Ogre::HlmsE
 	if (chunkType != 0x4E4F534A)
 	{
 		data->mOutErrorText = "Binary gLTF file does not contain a valid json specification";
+		fs.close();
 		return false;
 	}
+
+	startBinaryBuffer += 12; // Size of the header
+	startBinaryBuffer += 8; // Size of the chunckLength and chunckType data
+	startBinaryBuffer += chunkLength; // Size of the actual chunck length
 
 	// Read Json chunk
 	char* jsonChar = new char[chunkLength];
 	fs.read(jsonChar, chunkLength);
 	OUT << "Json content: \n" << jsonChar << "\n\n";
-	if (!executeJson(jsonChar, data))
+	if (!executeJson(fileName, jsonChar, data))
 	{
 		data->mOutErrorText = "Binary gLTF file does not contain a valid json specification";
+		fs.close();
+		delete[] jsonChar;
 		return false;
 	}
 
 	data->mOutSuccessText = "Binary gLTF file succesfully imported in " +
 		data->mInImportPath + data->mInFileDialogBaseName;
+
+	delete[] jsonChar;
+	fs.close();
 	return true;
 }
 
@@ -125,11 +139,13 @@ bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEdi
 	const char* jsonChar = jsonString.c_str();
 	OUT << "Json content: \n" << jsonString << "\n\n";
 
-	return executeJson (jsonChar, data);
+	return executeJson (fileName, jsonChar, data);
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::executeJson (const char* jsonChar, Ogre::HlmsEditorPluginData* data)
+bool gLTFImportExecutor::executeJson (const std::string& fileName, 
+	const char* jsonChar, 
+	Ogre::HlmsEditorPluginData* data)
 {
 	OUT << TABx2 << "gLTFImportExecutor::executeJson\n";
 
@@ -178,7 +194,7 @@ bool gLTFImportExecutor::executeJson (const char* jsonChar, Ogre::HlmsEditorPlug
 		}
 		if (it->value.IsArray() && name == "buffers")
 		{
-			mBuffersParser.parseBuffers(it); // Create a gLTFImportBuffersParser object and parse the buffers
+			mBuffersParser.parseBuffers(fileName, it); // Create a gLTFImportBuffersParser object and parse the buffers
 			mBuffersMap = mBuffersParser.getParsedBuffers();
 		}
 
@@ -203,47 +219,110 @@ bool gLTFImportExecutor::executeJson (const char* jsonChar, Ogre::HlmsEditorPlug
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::propagateMaterialsTexturesAndImages (void)
+bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
 {
-	OUT << "gLTFImportExecutor::propagateMaterialsTexturesAndImages\n";
-	std::map<std::string, gLTFMaterial>::iterator it;
+	OUT << "gLTFImportExecutor::propagateData\n";
+	std::map<std::string, gLTFMaterial>::iterator itMaterials;
+	std::map<int, gLTFBufferView>::iterator itBufferViews;
+	std::map<int, gLTFImage>::iterator itImages;
 	gLTFMaterial material;
+	std::string materialName;
 	gLTFTexture texture;
 	gLTFImage image;
 	gLTFBufferView bufferView;
 	gLTFBuffer buffer;
-	std::string uri;
-	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
-	{
-		// TODO: Add the buffer pointers to the image
+	std::string uriImage;
+	std::string uriBuffer;
+	int bufferIndex;
+	int textureIndex;
+	int sampler;
 
-		// TODO: Convert the binary image data to files and set the file uri's in the Image
+	// Loop through bufferviews and propagate the data
+	if (mBuffersMap.size() > 0)
+	{
+		for (itBufferViews = mBufferViewsMap.begin(); itBufferViews != mBufferViewsMap.end(); itBufferViews++)
+		{
+			bufferIndex = (itBufferViews->second).mBufferIndex;
+			if (bufferIndex > -1)
+			{
+				// Assume uriBuffer is a file
+				uriBuffer = mBuffersMap[bufferIndex].mUri;
+				(itBufferViews->second).mUri = uriBuffer;
+			}
+		}
+	}
+
+	// Loop through materials and propagate the data
+	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
+	{
+		materialName = (itMaterials->second).mName;
+
+		// For each texture index it must be determined whether the uri of the image is from a binary file
+		// containing an image or a link to an image file + add the uri's to the material
+
+		// 0. baseColorTexture
+		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+			uriImage = getImageUriByTextureIndex(textureIndex);
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex(data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uriImage;
+
+		// 1. emissiveTexture
+		textureIndex = (itMaterials->second).mEmissiveTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+			uriImage = getImageUriByTextureIndex(textureIndex);
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex(data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mEmissiveTexture.mUri = uriImage;
+
+		// 2. normalTexture
+		textureIndex = (itMaterials->second).mNormalTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+			uriImage = getImageUriByTextureIndex(textureIndex);
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex(data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mNormalTexture.mUri = uriImage;
+
+		// 3. mOcclusionTexture
+		textureIndex = (itMaterials->second).mOcclusionTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+			uriImage = getImageUriByTextureIndex(textureIndex);
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex(data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mOcclusionTexture.mUri = uriImage;
+
+		// 4. metallicRoughnessTexture
+		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+			uriImage = getImageUriByTextureIndex(textureIndex);
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex(data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uriImage;
 
 		// Add the uri's to the material
-		uri = getImageUriByTextureIndex((it->second).mEmissiveTexture.mIndex);
-		(it->second).mEmissiveTexture.mUri = uri;
-		uri = getImageUriByTextureIndex((it->second).mNormalTexture.mIndex);
-		(it->second).mNormalTexture.mUri = uri;
-		uri = getImageUriByTextureIndex((it->second).mOcclusionTexture.mIndex);
-		(it->second).mOcclusionTexture.mUri = uri;
-		uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
-		OUT << "DEBUG: (it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex =" << (it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex << "\n";
-		OUT << "DEBUG: uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex); =" << uri << "\n";
-		(it->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uri;
-		uri = getImageUriByTextureIndex((it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
-		(it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uri;
+		//uriImage = getImageUriByTextureIndex((itMaterials->second).mEmissiveTexture.mIndex);
+		//(itMaterials->second).mEmissiveTexture.mUri = uriImage;
+		//uriImage = getImageUriByTextureIndex((itMaterials->second).mNormalTexture.mIndex);
+		//(itMaterials->second).mNormalTexture.mUri = uriImage;
+		//uriImage = getImageUriByTextureIndex((itMaterials->second).mOcclusionTexture.mIndex);
+		//(itMaterials->second).mOcclusionTexture.mUri = uriImage;
+		//uriImage = getImageUriByTextureIndex((itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
+		//(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uriImage;
+		//uriImage = getImageUriByTextureIndex((itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
+		//(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uriImage;
 
 		// Add the samplers to the material
-		int sampler = getSamplerByTextureIndex((it->second).mEmissiveTexture.mIndex);
-		(it->second).mEmissiveTexture.mSampler = sampler;
-		sampler = getSamplerByTextureIndex((it->second).mNormalTexture.mIndex);
-		(it->second).mNormalTexture.mSampler = sampler;
-		sampler = getSamplerByTextureIndex((it->second).mOcclusionTexture.mIndex);
-		(it->second).mOcclusionTexture.mSampler = sampler;
-		sampler = getSamplerByTextureIndex((it->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
-		(it->second).mPbrMetallicRoughness.mBaseColorTexture.mSampler = sampler;
-		sampler = getSamplerByTextureIndex((it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
-		(it->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mEmissiveTexture.mIndex);
+		(itMaterials->second).mEmissiveTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mNormalTexture.mIndex);
+		(itMaterials->second).mNormalTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mOcclusionTexture.mIndex);
+		(itMaterials->second).mOcclusionTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
+		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
+		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler = sampler;
 	}
 
 	return true;
@@ -266,19 +345,29 @@ const gLTFImage& gLTFImportExecutor::getImageByTextureIndex (int index)
 		return mHelperImage;
 
 	mHelperImage = mImagesMap[source];
-	OUT << "DEBUG index=" << index << "\n";
-	OUT << "DEBUG mHelperImage.mUri=" << mHelperImage.mUri << "\n";
 	return mHelperImage;
+}
+
+//---------------------------------------------------------------------
+int gLTFImportExecutor::getImageIndexByTextureIndex (int index)
+{
+	OUT << TABx3 << "gLTFImportExecutor::getImageIndexByTextureIndex\n";
+
+	if (index < 0 || index > mTexturesMap.size() - 1)
+		return -1;
+
+	gLTFTexture texture = mTexturesMap[index];
+	int source = texture.mSource;
+	
+	return source;
 }
 
 //---------------------------------------------------------------------
 const std::string& gLTFImportExecutor::getImageUriByTextureIndex (int index)
 {
 	OUT << TABx2 << "gLTFImportExecutor::getImageUriByTextureIndex\n";
-	OUT << "DEBUG: index1=" << index << "\n";
 
 	gLTFImage image = getImageByTextureIndex(index);
-	OUT << "DEBUG index2=" << index << "\n";
 	mHelperString = image.mUri; // The Uri is empty if the image could not be found
 	return mHelperString;
 }
@@ -293,4 +382,59 @@ int gLTFImportExecutor::getSamplerByTextureIndex (int index)
 
 	gLTFTexture texture = mTexturesMap[index];
 	return texture.mSampler;
+}
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureIndex (Ogre::HlmsEditorPluginData* data, 
+	const std::string& materialName, 
+	int index,
+	int startBinaryBuffer)
+{
+	OUT << TABx3 << "gLTFImportExecutor::extractAndCreateImageFromBufferByTextureIndex\n";
+	mHelperString = "";
+
+	// Get the image; return if it doesn't have a bufferIndex
+	gLTFImage image = getImageByTextureIndex(index);
+	if (image.mBufferView < 0)
+		return mHelperString;
+
+	// Get the bufferView
+	gLTFBufferView bufferView = mBufferViewsMap[image.mBufferView];
+	std::string fileName;
+	if (isFilePathAbsolute(bufferView.mUri))
+		fileName = bufferView.mUri;
+	else
+		fileName = data->mInFileDialogPath + bufferView.mUri;
+
+	std::streampos begin, end;
+	std::ifstream ifs(fileName, std::ios::binary);
+
+	// Read the data
+	char* imageBlock = new char[bufferView.mByteLength];
+	ifs.seekg(startBinaryBuffer + bufferView.mByteOffset + 8, std::ios::beg); // Add another 8 bytes for the chunkLength and chunkType
+	ifs.read(imageBlock, bufferView.mByteLength);
+	ifs.close();
+
+	// Write the image file
+	// TODO: Check on existence of the image file or just overwrite?
+	std::string extension = ".png";
+	if (image.mMimeType == "image/jpeg")
+		extension = ".jpg";
+	if (image.mMimeType == "image/jpg")
+		extension = ".jpg";
+	if (image.mMimeType == "image/bmp")
+		extension = ".bmp";
+	if (image.mMimeType == "image/tiff")
+		extension = ".tiff";
+
+	std::stringstream outFileName;
+	outFileName << "C:/temp/" << materialName << "_" << index << extension; // TODO: Determine target path
+	mHelperString = outFileName.str();
+	std::ofstream ofs(mHelperString, std::ios::binary);
+	ofs.write(imageBlock, bufferView.mByteLength);
+	OUT << TABx4 << "Written image file " << outFileName.str() << "\n";
+	ofs.close();
+
+	delete[] imageBlock;
+	return mHelperString;
 }

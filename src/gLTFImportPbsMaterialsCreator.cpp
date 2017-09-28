@@ -242,7 +242,6 @@ bool gLTFImportPbsMaterialsCreator::createDiffuseJsonBlock(std::ofstream* dst, c
 	{
 		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mBaseColorTexture.mUri);
-		OUT << "DEBUG: material.mPbrMetallicRoughness.mBaseColorTexture.mUri" << material.mPbrMetallicRoughness.mBaseColorTexture.mUri << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"";
 		*dst << getUvString(material.mPbrMetallicRoughness.mBaseColorTexture.mTextCoord);
