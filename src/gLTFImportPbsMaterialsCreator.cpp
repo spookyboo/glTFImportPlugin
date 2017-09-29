@@ -138,6 +138,21 @@ bool gLTFImportPbsMaterialsCreator::createSamplerJsonBlock (std::ofstream* dst,
 	if (samplersMap.size() > 0)
 	{
 		// TODO: Create Samplerblocks, based on the samplersMap
+		*dst << TABx2 << "\"Sampler_0\" :\n";
+		*dst << TABx2 << "{\n";
+		*dst << TABx3 << "\"min\" : \"anisotropic\",\n";
+		*dst << TABx3 << "\"mag\" : \"anisotropic\",\n";
+		*dst << TABx3 << "\"mip\" : \"anisotropic\",\n";
+		*dst << TABx3 << "\"u\" : \"wrap\",\n";
+		*dst << TABx3 << "\"v\" : \"wrap\",\n";
+		*dst << TABx3 << "\"w\" : \"wrap\",\n";
+		*dst << TABx3 << "\"miplodbias\" : 0,\n";
+		*dst << TABx3 << "\"max_anisotropic\" : 1,\n";
+		*dst << TABx3 << "\"compare_function\" : \"disabled\",\n";
+		*dst << TABx3 << "\"border\" : [1, 1, 1, 1],\n";
+		*dst << TABx3 << "\"min_lod\" : -3.40282e+38,\n";
+		*dst << TABx3 << "\"max_lod\" : 3.40282e+38\n";
+		*dst << TABx2 << "}\n";
 	}
 	else
 	{
@@ -242,6 +257,7 @@ bool gLTFImportPbsMaterialsCreator::createDiffuseJsonBlock(std::ofstream* dst, c
 	{
 		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mBaseColorTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"";
 		*dst << getUvString(material.mPbrMetallicRoughness.mBaseColorTexture.mTextCoord);
@@ -259,6 +275,7 @@ bool gLTFImportPbsMaterialsCreator::createDiffuseJsonBlock(std::ofstream* dst, c
 	{
 		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mBaseColorTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"";
 		*dst << getUvString(material.mPbrMetallicRoughness.mBaseColorTexture.mTextCoord);
@@ -285,6 +302,9 @@ bool gLTFImportPbsMaterialsCreator::createSpecularJsonBlock(std::ofstream* dst, 
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createMetalnessJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
+	// TODO: The occlusion texture is used as a metallic map, but this is not correct. The metallic map must be
+	// derived from the metalicRoughness texture I think
+
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"metalness\" :\n";
 	*dst << TABx3 << "{\n";
@@ -295,6 +315,7 @@ bool gLTFImportPbsMaterialsCreator::createMetalnessJsonBlock(std::ofstream* dst,
 		// TODO: What to do with the strength of the occlusion map?
 		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mOcclusionTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mOcclusionTexture.mSampler << "\"";
 		*dst << getUvString(material.mOcclusionTexture.mTextCoord);
@@ -340,6 +361,7 @@ bool gLTFImportPbsMaterialsCreator::createNormalJsonBlock(std::ofstream* dst, co
 	*dst << TABx3 << "\"normal\" :\n";
 	*dst << TABx3 << "{\n";
 	std::string baseImageName = getBaseFileNameWithExtension(material.mNormalTexture.mUri);
+	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 	*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mNormalTexture.mSampler << "\"";
 	*dst << getUvString(material.mNormalTexture.mTextCoord);
@@ -352,6 +374,9 @@ bool gLTFImportPbsMaterialsCreator::createNormalJsonBlock(std::ofstream* dst, co
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createRoughnessJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
+	// TODO: The rougness texture is used as given image, although it is a rougness/metallic texture. What needs to 
+	// be done to split it into a roughness and a metallic texture?
+
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"roughness\" :\n";
 	*dst << TABx3 << "{\n";
@@ -360,6 +385,7 @@ bool gLTFImportPbsMaterialsCreator::createRoughnessJsonBlock(std::ofstream* dst,
 	{
 		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler << "\"";
 		*dst << getUvString(material.mPbrMetallicRoughness.mMetallicRoughnessTexture.mTextCoord);
@@ -381,6 +407,9 @@ bool gLTFImportPbsMaterialsCreator::createReflectionJsonBlock(std::ofstream* dst
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createDetailDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
+	// TODO: This code is commented, because my perception was that the occlusion texture is a weight map
+	// And if the occlusion texture is available, the diffuse map becomes a diffuse detail map
+
 	// There must at least be a baseColorTexture
 /*
 	if (!material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable())
@@ -400,6 +429,7 @@ bool gLTFImportPbsMaterialsCreator::createDetailDiffuseJsonBlock (std::ofstream*
 	*dst << TABx4 << "\"value\" : " << material.mOcclusionTexture.mStrength << ",\n"; // Use strength of the occlusionTexture as weight
 																					 // baseColorTexture does not support Scale and Offset in gLTF
 	std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mBaseColorTexture.mUri);
+	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 	*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"";
 	*dst << getUvString(material.mPbrMetallicRoughness.mBaseColorTexture.mTextCoord);
@@ -444,6 +474,7 @@ bool gLTFImportPbsMaterialsCreator::createDetailNormalJsonBlock(std::ofstream* d
 	{
 		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mNormalTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mNormalTexture.mSampler << "\"";
 		*dst << getUvString(material.mNormalTexture.mTextCoord);
@@ -469,6 +500,7 @@ bool gLTFImportPbsMaterialsCreator::createEmissiveJsonBlock(std::ofstream* dst, 
 	*dst << TABx4 << "\"value\" : 6,\n"; // Pump up the weight a bit
 	*dst << TABx4 << "\"mode\" : \"Add\",\n"; // Use additive blending
 	std::string baseImageName = getBaseFileNameWithExtension(material.mEmissiveTexture.mUri);
+	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 	*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mEmissiveTexture.mSampler << "\"";
 	*dst << getUvString(material.mEmissiveTexture.mTextCoord);
@@ -483,6 +515,7 @@ bool gLTFImportPbsMaterialsCreator::createEmissiveJsonBlock(std::ofstream* dst, 
 bool gLTFImportPbsMaterialsCreator::createDetailWeightJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
 	// Return if there is no occlusion texture
+	// TODO: The code below is commented, because I have no clue whether the occlusion texture is the same as the weightmap
 /*
 	if (!material.mOcclusionTexture.isTextureAvailable())
 		return false;
@@ -491,6 +524,7 @@ bool gLTFImportPbsMaterialsCreator::createDetailWeightJsonBlock(std::ofstream* d
 	*dst << TABx3 << "\"detail_weight\" :\n";
 	*dst << TABx3 << "{\n";
 	std::string baseImageName = getBaseFileNameWithExtension(material.mOcclusionTexture.mUri);
+	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 	*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
 	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mOcclusionTexture.mSampler << "\"";
 	*dst << getUvString(material.mOcclusionTexture.mTextCoord);
@@ -532,15 +566,17 @@ bool gLTFImportPbsMaterialsCreator::copyImageFiles (Ogre::HlmsEditorPluginData* 
 		{
 			// It is a fully qualified filename
 			fileNameSource = image.mUri;
-			std::string baseName = getBaseFileNameWithExtension(image.mUri);
-			fileNameDestination = data->mInImportPath + data->mInFileDialogBaseName + "/" + baseName;
+			OUT << TAB << "Copy fully qualified image fileName = " << fileNameSource << "\n";
 		}
 		else
 		{
-			// It is a relative filename; TODO: .. and . are not taken into account
+			// It is a relative filename
 			fileNameSource = data->mInFileDialogPath + image.mUri;
-			fileNameDestination = data->mInImportPath + data->mInFileDialogBaseName + "/" + image.mUri;
+			OUT << TAB << "Copy relative image fileName = " << fileNameSource << "\n";
 		}
+		std::string baseName = getBaseFileNameWithExtension(image.mUri);
+		fileNameDestination = data->mInImportPath + data->mInFileDialogBaseName + "/" + baseName;
+		OUT << TAB << "Copy to image fileName = " << fileNameDestination << "\n";
 
 		copyFile (fileNameSource, fileNameDestination);
 	}

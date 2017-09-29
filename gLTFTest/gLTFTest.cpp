@@ -12,16 +12,25 @@ int main()
 	pluginData.mInProjectPath = "../project/"; // With end slash
 	pluginData.mInMaterialFileName = "";
 	pluginData.mInTextureFileName = "";
+	
 	//pluginData.mInFileDialogName = "BoomBox.gltf"; // Json text file
 	//pluginData.mInFileDialogName = "Suzanne.gltf"; // Json text file
-	pluginData.mInFileDialogName = "BoomBox.glb"; // Binary file
-	pluginData.mInFileDialogBaseName = "BoomBox";
+	//pluginData.mInFileDialogName = "BoomBox.glb"; // Binary file
+	pluginData.mInFileDialogName = "adamHead.gltf";
+	
+	//pluginData.mInFileDialogBaseName = "BoomBox";
 	//pluginData.mInFileDialogBaseName = "Suzanne";
-	//uginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/BoomBox/glTF/"; // With end slash
+	pluginData.mInFileDialogBaseName = "adamHead";
+	
+	//puginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/BoomBox/glTF/"; // With end slash
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/Suzanne/glTF/"; // With end slash
-	pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/BoomBox/glTF-Binary/"; // With end slash
-	pluginData.mInImportPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/"; // With end slash
-	pluginData.mInExportPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/BoomBox/glTF/"; // Not used
+	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/BoomBox/glTF-Binary/"; // With end slash
+	pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/AdamHead/"; // With end slash
+	
+	//pluginData.mInImportPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/"; // With end slash
+	pluginData.mInImportPath = "C:/Users/Henry/Downloads/AdamHead/import/"; // With end slash
+	
+	//pluginData.mInExportPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/BoomBox/glTF/"; // Not used
 	pluginData.mInItem = 0;
 	pluginData.mInRenderWindow = 0;
 	pluginData.mInSceneManager = 0;

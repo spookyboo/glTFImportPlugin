@@ -398,7 +398,7 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureI
 	if (image.mBufferView < 0)
 		return mHelperString;
 
-	// Get the bufferView
+	// Get the buffer file (uri)
 	gLTFBufferView bufferView = mBufferViewsMap[image.mBufferView];
 	std::string fileName;
 	if (isFilePathAbsolute(bufferView.mUri))
@@ -406,12 +406,22 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureI
 	else
 		fileName = data->mInFileDialogPath + bufferView.mUri;
 
+	// Read the binary data
 	std::streampos begin, end;
 	std::ifstream ifs(fileName, std::ios::binary);
 
-	// Read the data
+	// Set the stream to the beginning of the binary chunk
+	ifs.seekg(startBinaryBuffer + bufferView.mByteOffset, std::ios::beg);
+
+	// Read chunkLength
+	uint32_t chunkLength;
+	ifs.read((char*)&chunkLength, sizeof(chunkLength));
+
+	// Read chunkType
+	uint32_t chunkType;
+	ifs.read((char*)&chunkType, sizeof(chunkType)); // Don't validate on type, because it is not always reliable
+
 	char* imageBlock = new char[bufferView.mByteLength];
-	ifs.seekg(startBinaryBuffer + bufferView.mByteOffset + 8, std::ios::beg); // Add another 8 bytes for the chunkLength and chunkType
 	ifs.read(imageBlock, bufferView.mByteLength);
 	ifs.close();
 
@@ -428,7 +438,13 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureI
 		extension = ".tiff";
 
 	std::stringstream outFileName;
-	outFileName << "C:/temp/" << materialName << "_" << index << extension; // TODO: Determine target path
+	outFileName << data->mInImportPath << 
+		data->mInFileDialogBaseName << 
+		"/" << 
+		materialName << 
+		"_" << 
+		index << 
+		extension;
 	mHelperString = outFileName.str();
 	std::ofstream ofs(mHelperString, std::ios::binary);
 	ofs.write(imageBlock, bufferView.mByteLength);

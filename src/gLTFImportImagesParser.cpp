@@ -77,10 +77,6 @@ bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator 
 //---------------------------------------------------------------------
 const std::map<int, gLTFImage> gLTFImportImagesParser::getParsedImages (void) const
 {
-	std::map<int, gLTFImage>::const_iterator itImages;
-	for (itImages = mImagesMap.begin(); itImages != mImagesMap.end(); itImages++)
-		OUT << "Image.bufferView: " << (itImages->second).mBufferView << "\n";
-
 	return mImagesMap;
 }
 
