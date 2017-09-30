@@ -43,6 +43,7 @@ bool gLTFImportBuffersParser::parseBuffers (const std::string& fileName, rapidjs
 		gLTFBuffer buffer;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
+
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
 			OUT << TABx2 << "key buffer ==> " << it->name.GetString() << "\n";

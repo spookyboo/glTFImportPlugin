@@ -100,12 +100,13 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName,
 	// Read next 4 bytes
 	uint32_t chunkType;
 	fs.read((char*)&chunkType, sizeof(chunkType));
-	if (chunkType != 0x4E4F534A)
-	{
-		data->mOutErrorText = "Binary gLTF file does not contain a valid json specification";
-		fs.close();
-		return false;
-	}
+	// TODO: Check whether the test below must remain of removed
+//	if (chunkType != 0x4E4F534A)
+//	{
+		//data->mOutErrorText = "Binary gLTF file does not contain a valid json specification";
+		//fs.close();
+		//return false;
+	//}
 
 	startBinaryBuffer += 12; // Size of the header
 	startBinaryBuffer += 8; // Size of the chunckLength and chunckType data
@@ -164,10 +165,21 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 	rapidjson::Value::ConstMemberIterator itEnd = d.MemberEnd();
 	for (rapidjson::Value::ConstMemberIterator it = d.MemberBegin(); it != itEnd; ++it)
 	{
-		// TODO: Parse accessors, animations, asset, meshes, nodes, scene (?), skins, ... (needed for meshes and animations?
+		// TODO: Parse animations, assets, nodes, scene, skins, ... ?????
 
 		OUT << "key gLTF ==> " << it->name.GetString() << "\n";
 		std::string name(it->name.GetString());
+
+		if (it->value.IsArray() && name == "accessors")
+		{
+			mAccessorsParser.parseAccessors(it); // Create a gLTFImportAccessorsParser object and parse the accessors
+			mAccessorsMap = mAccessorsParser.getParsedAccessors();
+		}
+		if (it->value.IsArray() && name == "meshes")
+		{
+			mMeshesParser.parseMeshes(it); // Create a gLTFImportMeshesParser object and parse the meshes
+			mMeshesMap = mMeshesParser.getParsedMeshes();
+		}
 		if (it->value.IsArray() && name == "materials")
 		{
 			mMaterialsParser.parseMaterials(it); // Create a gLTFImportMaterialsParser object and parse the materials
@@ -223,22 +235,28 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
 {
 	OUT << "gLTFImportExecutor::propagateData\n";
-	std::map<std::string, gLTFMaterial>::iterator itMaterials;
-	std::map<int, gLTFBufferView>::iterator itBufferViews;
-	std::map<int, gLTFImage>::iterator itImages;
-	gLTFMaterial material;
-	std::string materialName;
-	gLTFTexture texture;
-	gLTFImage image;
-	gLTFBufferView bufferView;
-	gLTFBuffer buffer;
-	std::string uriImage;
-	std::string uriBuffer;
-	int bufferIndex;
-	int textureIndex;
-	int sampler;
+	//std::map<std::string, gLTFMaterial>::iterator itMaterials;
+	//std::map<int, gLTFBufferView>::iterator itBufferViews;
+	//std::map<int, gLTFImage>::iterator itImages;
+	//gLTFMaterial material;
+	//std::string materialName;
+	//gLTFTexture texture;
+	//gLTFImage image;
+	//gLTFBufferView bufferView;
+	//gLTFBuffer buffer;
+	//std::string uriImage;
+	//std::string uriBuffer;
+	//int bufferIndex;
+	//int textureIndex;
+	//int sampler;
+
+	// Propagate the data to rearrange it in such a manner that creation of Ogre3d meshes and materials is easier
+	propagateBufferViews();
+	propagateMaterials(data, startBinaryBuffer);
+	propagateMeshes(data, startBinaryBuffer);
 
 	// Loop through bufferviews and propagate the data
+	/*
 	if (mBuffersMap.size() > 0)
 	{
 		for (itBufferViews = mBufferViewsMap.begin(); itBufferViews != mBufferViewsMap.end(); itBufferViews++)
@@ -252,17 +270,18 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 			}
 		}
 	}
+	*/
 
 	// Loop through materials and propagate the data
-	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
-	{
-		materialName = (itMaterials->second).mName;
+	//for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
+	//{
+		//materialName = (itMaterials->second).mName;
 
 		/* For each texture index it must be determined whether the uri of the image is from a binary file
 		 * containing an image or a link to an image file.
 		 * The uri names are changed (for convenience) before they are set in the gLTFMaterial
 		 */
-
+/*
 		// 0. baseColorTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex;
 		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
@@ -372,7 +391,186 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mSampler = sampler;
 		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mSampler = sampler;
 	}
+*/
 
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::propagateBufferViews (void)
+{
+	// Loop through bufferviews and propagate the data
+	OUT << "gLTFImportExecutor::propagateBufferViews\n";
+	std::map<int, gLTFBufferView>::iterator itBufferViews;
+	int bufferIndex;
+	std::string uriBuffer;
+	if (mBuffersMap.size() > 0)
+	{
+		for (itBufferViews = mBufferViewsMap.begin(); itBufferViews != mBufferViewsMap.end(); itBufferViews++)
+		{
+			bufferIndex = (itBufferViews->second).mBufferIndex;
+			if (bufferIndex > -1)
+			{
+				// Assume uriBuffer is a file
+				uriBuffer = mBuffersMap[bufferIndex].mUri;
+				(itBufferViews->second).mUri = uriBuffer;
+			}
+		}
+	}
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
+{
+	// Loop through materials and propagate the data
+	OUT << "gLTFImportExecutor::propagateMaterials\n";
+	std::map<std::string, gLTFMaterial>::iterator itMaterials;
+	std::string materialName;
+	std::string uriImage;
+	int textureIndex;
+	int sampler;
+	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
+	{
+		materialName = (itMaterials->second).mName;
+
+		/* For each texture index it must be determined whether the uri of the image is from a binary file
+		* containing an image or a link to an image file.
+		* The uri names are changed (for convenience) before they are set in the gLTFMaterial
+		*/
+
+		// 0. baseColorTexture
+		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+		{
+			uriImage = getImageUriByTextureIndex(textureIndex);
+			uriImage = copyImageFile("baseColorTexture", data, materialName, uriImage);
+		}
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex("baseColorTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uriImage;
+
+		// 1. emissiveTexture
+		textureIndex = (itMaterials->second).mEmissiveTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+		{
+			uriImage = getImageUriByTextureIndex(textureIndex);
+			uriImage = copyImageFile("emissiveTexture", data, materialName, uriImage);
+		}
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex("emissiveTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mEmissiveTexture.mUri = uriImage;
+
+		// 2. normalTexture
+		textureIndex = (itMaterials->second).mNormalTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+		{
+			uriImage = getImageUriByTextureIndex(textureIndex);
+			uriImage = copyImageFile("normalTexture", data, materialName, uriImage);
+		}
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex("normalTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mNormalTexture.mUri = uriImage;
+
+		// 3. mOcclusionTexture
+		textureIndex = (itMaterials->second).mOcclusionTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+		{
+			uriImage = getImageUriByTextureIndex(textureIndex);
+			uriImage = copyImageFile("occlusionTexture", data, materialName, uriImage);
+		}
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex("occlusionTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mOcclusionTexture.mUri = uriImage;
+#ifdef TEXTURE_TRANSFORMATION
+		// Occlusion is represented by the R channel
+		convertTexture(uriImage, TTF_R_2_GB); // Convert the image file into a usable occlusion texture
+#endif // DEBUG
+
+											  // 4. metallicRoughnessTexture
+											  // Although not used by Ogre3d materials, they are still copied/extracted and used for metallicTexture and roughnessTexture
+		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+		{
+			uriImage = getImageUriByTextureIndex(textureIndex);
+			uriImage = copyImageFile("metallicRoughnessTexture", data, materialName, uriImage);
+		}
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex("metallicRoughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uriImage;
+
+		// 5. metallicTexture (copy of metallicRoughnessTexture)
+		// The metallicRoughnessTexture is used as if it was a metallicTexture
+		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+		{
+			uriImage = getImageUriByTextureIndex(textureIndex);
+			uriImage = copyImageFile("metallicTexture", data, materialName, uriImage);
+		}
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex("metallicTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mUri = uriImage;
+		// Convert to Metallic texture
+#ifdef TEXTURE_TRANSFORMATION
+		// Metallic is represented by the B channel
+		convertTexture(uriImage, TTF_G_2_RB); // Convert the image file into a usable metallic texture
+#endif // DEBUG
+
+											  // 6. roughnessTexture (copy of metallicRoughnessTexture)
+											  // The metallicRoughnessTexture is used as if it was a roughnessTexture
+		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
+		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+		{
+			uriImage = getImageUriByTextureIndex(textureIndex);
+			uriImage = copyImageFile("roughnessTexture", data, materialName, uriImage);
+		}
+		else
+			uriImage = extractAndCreateImageFromBufferByTextureIndex("roughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mUri = uriImage;
+
+		// Convert to Roughness texture
+#ifdef TEXTURE_TRANSFORMATION
+		// Roughness is represented by the G channel
+		convertTexture(uriImage, TTF_G_2_RB); // Convert the image file into a usable roughness texture
+#endif // DEBUG
+
+											  // Add the samplers to the material
+		sampler = getSamplerByTextureIndex((itMaterials->second).mEmissiveTexture.mIndex);
+		(itMaterials->second).mEmissiveTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mNormalTexture.mIndex);
+		(itMaterials->second).mNormalTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mOcclusionTexture.mIndex);
+		(itMaterials->second).mOcclusionTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex);
+		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex);
+		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler = sampler;
+		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mSampler = sampler;
+		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mSampler = sampler;
+	}
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
+{
+	OUT << TABx3 << "gLTFImportExecutor::propagateMeshes\n";
+	OUT << TABx3 << "DEBUG: Size of meshes map is " << mMeshesMap.size() << "\n";
+	std::map<int, gLTFMesh>::iterator itMeshes;
+	std::map<int, gLTFPrimitive>::iterator itPrimitives;
+	std::string materialName;
+	for (itMeshes = mMeshesMap.begin(); itMeshes  != mMeshesMap.end(); itMeshes++)
+	{
+		for (itPrimitives = (itMeshes->second).mPrimitiveMap.begin(); itPrimitives != (itMeshes->second).mPrimitiveMap.end(); itPrimitives++)
+		{
+			(itPrimitives->second).mMaterialName = getMaterialNameByIndex((itPrimitives->second).mMaterial);
+			OUT << TABx4 << "DEBUG: (itPrimitives->second).mMaterialName " << (itPrimitives->second).mMaterialName << "\n";
+			// TODO: Progagate more...
+		}
+	}
+		
 	return true;
 }
 
@@ -430,6 +628,27 @@ int gLTFImportExecutor::getSamplerByTextureIndex (int index)
 
 	gLTFTexture texture = mTexturesMap[index];
 	return texture.mSampler;
+}
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::getMaterialNameByIndex (int index)
+{
+	OUT << TABx2 << "gLTFImportExecutor::getMaterialNameByIndex\n";
+	mHelperMaterialNameString = "";
+	std::map<std::string, gLTFMaterial>::iterator itMaterials;
+
+	int count = 0;
+	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
+	{
+		if (count == index)
+		{
+			mHelperMaterialNameString = (itMaterials->second).mName;
+			return mHelperMaterialNameString;
+		}
+		count++;
+	}
+
+	return mHelperMaterialNameString;
 }
 
 //---------------------------------------------------------------------

@@ -39,12 +39,12 @@ bool gLTFImportSamplersParser::parseSamplers (rapidjson::Value::ConstMemberItera
 	OUT << TAB << "Loop through samplers array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		gLTFSampler sampler;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
+
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
-			gLTFSampler sampler;
-
 			OUT << TABx2 << "key sampler ==> " << it->name.GetString() << "\n";
 			std::string key = std::string(it->name.GetString());
 			if (it->value.IsInt() && key == "magFilter")
@@ -77,10 +77,10 @@ bool gLTFImportSamplersParser::parseSamplers (rapidjson::Value::ConstMemberItera
 				sampler.mName = it->value.GetString();
 				OUT << TABx2 << "value ==> " << sampler.mName << "\n";
 			}
-
-			mSamplersMap[source] = sampler;
-			++source;
 		}
+		
+		mSamplersMap[source] = sampler;
+		++source;
 	}
 
 	return true;

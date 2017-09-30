@@ -43,6 +43,7 @@ bool gLTFImportBufferViewsParser::parseBufferViews (rapidjson::Value::ConstMembe
 		gLTFBufferView bufferView;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
+
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
 			OUT << TABx2 << "key bufferView ==> " << it->name.GetString() << "\n";

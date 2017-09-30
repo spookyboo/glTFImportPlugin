@@ -32,6 +32,8 @@ THE SOFTWARE.
 #include "hlms_editor_plugin.h"
 #include "gLTFImportConstants.h"
 #include "gLTFMaterial.h"
+#include "gLTFImportAccessorsParser.h"
+#include "gLTFImportMeshesParser.h"
 #include "gLTFImportMaterialsParser.h"
 #include "gLTFImportTexturesParser.h"
 #include "gLTFImportImagesParser.h"
@@ -69,10 +71,14 @@ class gLTFImportExecutor
 			Ogre::HlmsEditorPluginData* data);
 		bool propagateData (Ogre::HlmsEditorPluginData* data, 
 			int startBinaryBuffer); // Arrange the data structure so it is easier to use when creating a Pbs material
+		bool propagateBufferViews (void);
+		bool propagateMaterials (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer);
+		bool propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer);
 		const gLTFImage& getImageByTextureIndex (int index);
 		int getImageIndexByTextureIndex (int index);
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
+		const std::string& getMaterialNameByIndex (int index);
 		const std::string& copyImageFile (const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data, 
 			const std::string& materialName,
@@ -86,7 +92,10 @@ class gLTFImportExecutor
 
 	private:
 		std::string mHelperString;
+		std::string mHelperMaterialNameString;
 		gLTFImage mHelperImage;
+		std::map<int, gLTFAccessor> mAccessorsMap;
+		std::map<int, gLTFMesh> mMeshesMap;
 		std::map<std::string, gLTFMaterial> mMaterialsMap;
 		std::map<int, gLTFTexture> mTexturesMap;
 		std::map<int, gLTFImage> mImagesMap;
@@ -94,6 +103,8 @@ class gLTFImportExecutor
 		std::map<int, gLTFBufferView> mBufferViewsMap;
 		std::map<int, gLTFBuffer> mBuffersMap;
 
+		gLTFImportAccessorsParser mAccessorsParser;
+		gLTFImportMeshesParser mMeshesParser;
 		gLTFImportMaterialsParser mMaterialsParser;
 		gLTFImportTexturesParser mTexturesParser;
 		gLTFImportSamplersParser mSamplersParser;

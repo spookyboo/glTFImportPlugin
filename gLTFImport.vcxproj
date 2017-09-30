@@ -133,21 +133,27 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\base64.h" />
+    <ClInclude Include="include\gLTFAccessor.h" />
     <ClInclude Include="include\gLTFBuffer.h" />
     <ClInclude Include="include\gLTFBufferView.h" />
     <ClInclude Include="include\gLTFImage.h" />
+    <ClInclude Include="include\gLTFImportAccessorsParser.h" />
     <ClInclude Include="include\gLTFImportBuffersParser.h" />
     <ClInclude Include="include\gLTFImportBufferViewsParser.h" />
     <ClInclude Include="include\gLTFImportConstants.h" />
     <ClInclude Include="include\gLTFImportExecutor.h" />
     <ClInclude Include="include\gLTFImportImagesParser.h" />
     <ClInclude Include="include\gLTFImportMaterialsParser.h" />
+    <ClInclude Include="include\gLTFImportMeshesParser.h" />
     <ClInclude Include="include\gLTFImportPbsMaterialsCreator.h" />
     <ClInclude Include="include\gLTFImportPlugin.h" />
     <ClInclude Include="include\gLTFImportPrerequisites.h" />
+    <ClInclude Include="include\gLTFImportPrimitivesParser.h" />
     <ClInclude Include="include\gLTFImportSamplersParser.h" />
     <ClInclude Include="include\gLTFImportTexturesParser.h" />
     <ClInclude Include="include\gLTFMaterial.h" />
+    <ClInclude Include="include\gLTFMesh.h" />
+    <ClInclude Include="include\gLTFPrimitive.h" />
     <ClInclude Include="include\gLTFSampler.h" />
     <ClInclude Include="include\gLTFTexture.h" />
     <ClInclude Include="include\rapidjson\allocators.h" />
@@ -188,20 +194,26 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\base64.cpp" />
+    <ClCompile Include="src\gLTFAccessor.cpp" />
     <ClCompile Include="src\gLTFBuffer.cpp" />
     <ClCompile Include="src\gLTFBufferView.cpp" />
     <ClCompile Include="src\gLTFImage.cpp" />
+    <ClCompile Include="src\gLTFImportAccessorsParser.cpp" />
     <ClCompile Include="src\gLTFImportBuffersParser.cpp" />
     <ClCompile Include="src\gLTFImportBufferViewsParser.cpp" />
     <ClCompile Include="src\gLTFImportDll.cpp" />
     <ClCompile Include="src\gLTFImportExecutor.cpp" />
     <ClCompile Include="src\gLTFImportImagesParser.cpp" />
     <ClCompile Include="src\gLTFImportMaterialsParser.cpp" />
+    <ClCompile Include="src\gLTFImportMeshesParser.cpp" />
     <ClCompile Include="src\gLTFImportPbsMaterialsCreator.cpp" />
     <ClCompile Include="src\gLTFImportPlugin.cpp" />
+    <ClCompile Include="src\gLTFImportPrimitivesParser.cpp" />
     <ClCompile Include="src\gLTFImportSamplerParser.cpp" />
     <ClCompile Include="src\gLTFImportTexturesParser.cpp" />
     <ClCompile Include="src\gLTFMaterial.cpp" />
+    <ClCompile Include="src\gLTFMesh.cpp" />
+    <ClCompile Include="src\gLTFPrimitive.cpp" />
     <ClCompile Include="src\gLTFSampler.cpp" />
     <ClCompile Include="src\gLTFTexture.cpp" />
   </ItemGroup>
