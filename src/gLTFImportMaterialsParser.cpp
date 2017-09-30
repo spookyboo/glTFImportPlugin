@@ -148,9 +148,11 @@ PbrMetallicRoughness gLTFImportMaterialsParser::parsePbrMetallicRoughness (rapid
 		}
 		if (it->value.IsObject() && key == "metallicRoughnessTexture")
 		{
-			// ******** 2.5 metallicRoughnessTexture ********
+			// ******** 2.5 metallicRoughnessTexture + metallicTexture + roughnessTexture ********
 			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
 			mPbrMetallicRoughness.mMetallicRoughnessTexture = texture;
+			mPbrMetallicRoughness.mMetallicTexture = texture;
+			mPbrMetallicRoughness.mRoughnessTexture = texture;
 		}
 	}
 

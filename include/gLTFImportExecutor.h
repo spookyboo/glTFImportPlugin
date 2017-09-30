@@ -52,6 +52,13 @@ class gLTFImportExecutor
 		bool executeImport(Ogre::HlmsEditorPluginData* data);
 
 	protected:
+		enum TextureTransformation
+		{
+			TTF_R_2_GB,
+			TTF_G_2_RB,
+			TTF_B_2_RG
+		};
+
 		// Process the binary file / text file
 		bool executeBinary (const std::string& fileName, 
 			Ogre::HlmsEditorPluginData* data,
@@ -66,10 +73,16 @@ class gLTFImportExecutor
 		int getImageIndexByTextureIndex (int index);
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
-		const std::string& extractAndCreateImageFromBufferByTextureIndex (Ogre::HlmsEditorPluginData* data, 
+		const std::string& copyImageFile (const std::string& textureName,
+			Ogre::HlmsEditorPluginData* data, 
+			const std::string& materialName,
+			const std::string& uriImage);
+		const std::string& extractAndCreateImageFromBufferByTextureIndex (const std::string& textureName,
+			Ogre::HlmsEditorPluginData* data, 
 			const std::string& materialName,
 			int index,
 			int startBinaryBuffer);
+		bool convertTexture (const std::string& fileName, TextureTransformation transformation); // Convert an image file to a roughness file
 
 	private:
 		std::string mHelperString;

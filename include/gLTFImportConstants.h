@@ -32,15 +32,6 @@ THE SOFTWARE.
 #include <sstream>
 #include <fstream>
 
-static const std::string TAB = "  ";
-static const std::string TABx2 = "    ";
-static const std::string TABx3 = "      ";
-static const std::string TABx4 = "        ";
-static const std::string TABx5 = "          ";
-
-static std::string gFileExtension = "";
-static std::string gJsonString = "";
-
 //---------------------------------------------------------------------
 struct Devnull : std::ostream, std::streambuf
 {
@@ -50,6 +41,20 @@ struct Devnull : std::ostream, std::streambuf
 // (un)comment first/second line to enable/disable debug to screen
 #define OUT std::cout
 //#define OUT devnull
+
+//---------------------------------------------------------------------
+// Disable the line below when using gLTFTEST, because otherwise Ogre::Image (used for texture transformation) does not work
+//#define TEXTURE_TRANSFORMATION 1
+
+//---------------------------------------------------------------------
+static const std::string TAB = "  ";
+static const std::string TABx2 = "    ";
+static const std::string TABx3 = "      ";
+static const std::string TABx4 = "        ";
+static const std::string TABx5 = "          ";
+
+static std::string gFileExtension = "";
+static std::string gJsonString = "";
 
 //---------------------------------------------------------------------
 static const std::string& getFileExtension (const std::string& fileName)
@@ -68,6 +73,9 @@ static const std::string& getFileExtension (const std::string& fileName)
 //---------------------------------------------------------------------
 static void copyFile (const std::string& fileNameSource, std::string& fileNameDestination)
 {
+	if (fileNameSource == fileNameDestination)
+		return;
+
 	std::ifstream src(fileNameSource.c_str(), std::ios::binary);
 	std::ofstream dst(fileNameDestination.c_str(), std::ios::binary);
 	dst << src.rdbuf();

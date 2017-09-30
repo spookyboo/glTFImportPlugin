@@ -103,6 +103,8 @@ class PbrMetallicRoughness
 		float mMetallicFactor;
 		float mRoughnessFactor;
 		MaterialGenericTexture mMetallicRoughnessTexture;
+		MaterialGenericTexture mMetallicTexture;
+		MaterialGenericTexture mRoughnessTexture;
 };
 
 /******************************************************/

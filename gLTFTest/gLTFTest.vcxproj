@@ -101,12 +101,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\include;..\..\..\Projects\HLMSEditor\source\header;..\..\..\Projects\ogre2.1\OgreMain\include;..\..\..\Projects\ogre2.1\VCBuild\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\..\..\Projects\HLMSEditor\source\header;..\..\..\Projects\ogre2.1\OgreMain\include;..\..\..\Projects\ogre2.1\VCBuild\include;..\..\..\Projects\\ogre2.1\RenderSystems\NULL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\..\Projects\ogre2.1\VCBuild\lib\Debug\OgreMain_d.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -135,14 +135,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\include;..\..\..\Projects\HLMSEditor\source\header;..\..\..\Projects\ogre2.1\OgreMain\include;..\..\..\Projects\ogre2.1\VCBuild\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include;..\..\..\Projects\HLMSEditor\source\header;..\..\..\Projects\ogre2.1\OgreMain\include;..\..\..\Projects\ogre2.1\VCBuild\include;..\..\..\Projects\\ogre2.1\RenderSystems\NULL\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\..\Projects\ogre2.1\VCBuild\lib\Release\OgreMain.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

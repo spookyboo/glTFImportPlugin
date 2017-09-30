@@ -83,8 +83,8 @@ class gLTFImportPbsMaterialsCreator
 
 		// Generic
 		const std::string getUvString (int texCoord);
-		bool copyImageFiles(Ogre::HlmsEditorPluginData* data, std::map<int, gLTFImage> imagesMap);
-	
+		//bool copyImageFiles (Ogre::HlmsEditorPluginData* data, std::map<int, gLTFImage> imagesMap);
+
 	private:
 		std::string mHelperString;
 		unsigned short mDetailedDiffuseMapCount;
