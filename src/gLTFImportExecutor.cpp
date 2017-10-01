@@ -34,7 +34,7 @@
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 {
-	OUT << TAB<< "Perform gLTFImportExecutor::executeImport\n";
+	OUT << "Perform gLTFImportExecutor::executeImport\n";
 
 	bool result = true;
 
@@ -59,6 +59,9 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 			mTexturesMap, 
 			mImagesMap,
 			mSamplersMap);
+
+		// Create the Meshes
+		result = mOgreMeshCreator.createOgreMeshFiles (data, mMeshesMap, mAccessorsMap, startBinaryBuffer);
 	}
 
 	return result;
@@ -69,7 +72,7 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName,
 	Ogre::HlmsEditorPluginData* data, 
 	int& startBinaryBuffer)
 {
-	OUT << TABx2 << "Perform gLTFImportExecutor::executeBinary\n";
+	OUT << TAB << "Perform gLTFImportExecutor::executeBinary\n";
 
 	std::streampos begin, end;
 	std::ifstream fs(fileName, std::ios::binary);
@@ -135,7 +138,7 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName,
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeText (const std::string& fileName, Ogre::HlmsEditorPluginData* data)
 {
-	OUT << TABx2 << "Perform gLTFImportExecutor::executeText\n";
+	OUT << TAB << "Perform gLTFImportExecutor::executeText\n";
 
 	// Assume a gltf json file; read the file and copy the content to a const char*
 	std::string jsonString = getJsonAsString(fileName);
@@ -150,7 +153,7 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 	const char* jsonChar, 
 	Ogre::HlmsEditorPluginData* data)
 {
-	OUT << TABx2 << "gLTFImportExecutor::executeJson\n";
+	OUT << TAB << "Perform gLTFImportExecutor::executeJson\n";
 
 	// Parse the json block
 	rapidjson::Document d;
@@ -234,7 +237,7 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
 {
-	OUT << "gLTFImportExecutor::propagateData\n";
+	OUT << TABx2 << "Perform gLTFImportExecutor::propagateData\n";
 	//std::map<std::string, gLTFMaterial>::iterator itMaterials;
 	//std::map<int, gLTFBufferView>::iterator itBufferViews;
 	//std::map<int, gLTFImage>::iterator itImages;
@@ -253,6 +256,7 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 	// Propagate the data to rearrange it in such a manner that creation of Ogre3d meshes and materials is easier
 	propagateBufferViews();
 	propagateMaterials(data, startBinaryBuffer);
+	propagateAccessors();
 	propagateMeshes(data, startBinaryBuffer);
 
 	// Loop through bufferviews and propagate the data
@@ -400,7 +404,7 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 bool gLTFImportExecutor::propagateBufferViews (void)
 {
 	// Loop through bufferviews and propagate the data
-	OUT << "gLTFImportExecutor::propagateBufferViews\n";
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateBufferViews\n";
 	std::map<int, gLTFBufferView>::iterator itBufferViews;
 	int bufferIndex;
 	std::string uriBuffer;
@@ -425,7 +429,7 @@ bool gLTFImportExecutor::propagateBufferViews (void)
 bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
 {
 	// Loop through materials and propagate the data
-	OUT << "gLTFImportExecutor::propagateMaterials\n";
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateMaterials\n";
 	std::map<std::string, gLTFMaterial>::iterator itMaterials;
 	std::string materialName;
 	std::string uriImage;
@@ -554,19 +558,70 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 }
 
 //---------------------------------------------------------------------
+bool gLTFImportExecutor::propagateAccessors(void)
+{
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateAccessors\n";
+	std::map<int, gLTFAccessor>::iterator itAccessors;
+
+	// Iterate though the accessors
+	for (itAccessors = mAccessorsMap.begin(); itAccessors != mAccessorsMap.end(); itAccessors++)
+	{
+		(itAccessors->second).mBufferIndex = mBufferViewsMap[(itAccessors->second).mBufferView].mBufferIndex;
+		(itAccessors->second).mByteOffsetBufferView = mBufferViewsMap[(itAccessors->second).mBufferView].mByteOffset;
+		(itAccessors->second).mByteLength = mBufferViewsMap[(itAccessors->second).mBufferView].mByteLength;
+		(itAccessors->second).mByteStride = mBufferViewsMap[(itAccessors->second).mBufferView].mByteStride;
+		(itAccessors->second).mTarget = mBufferViewsMap[(itAccessors->second).mBufferView].mTarget;
+		(itAccessors->second).mUri = mBufferViewsMap[(itAccessors->second).mBufferView].mUri;
+		OUT << "DEBUG: mUri of the Buffer is " << (itAccessors->second).mUri << "\n";
+	}
+
+	return true;
+}
+
+//---------------------------------------------------------------------
 bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
 {
-	OUT << TABx3 << "gLTFImportExecutor::propagateMeshes\n";
-	OUT << TABx3 << "DEBUG: Size of meshes map is " << mMeshesMap.size() << "\n";
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateMeshes\n";
 	std::map<int, gLTFMesh>::iterator itMeshes;
 	std::map<int, gLTFPrimitive>::iterator itPrimitives;
 	std::string materialName;
+	gLTFAccessor accessor;
+
+	// Iterate though the meshes
 	for (itMeshes = mMeshesMap.begin(); itMeshes  != mMeshesMap.end(); itMeshes++)
 	{
+		// Iterate though the primitives
 		for (itPrimitives = (itMeshes->second).mPrimitiveMap.begin(); itPrimitives != (itMeshes->second).mPrimitiveMap.end(); itPrimitives++)
 		{
 			(itPrimitives->second).mMaterialName = getMaterialNameByIndex((itPrimitives->second).mMaterial);
 			OUT << TABx4 << "DEBUG: (itPrimitives->second).mMaterialName " << (itPrimitives->second).mMaterialName << "\n";
+
+			// Iterate through Attribute map
+			std::map<std::string, int>::iterator itAttr;
+			for (itAttr = (itPrimitives->second).mAttributes.begin(); itAttr != (itPrimitives->second).mAttributes.end(); itAttr++)
+			{
+				// Assign the 
+				if (itAttr->first == "POSITION")
+				{
+					(itPrimitives->second).mPositionAccessor = itAttr->second;
+					OUT << TABx4 << "DEBUG: (itPrimitives->second).mPositionAccessor " << (itPrimitives->second).mPositionAccessor << "\n";
+				}
+				if (itAttr->first == "NORMAL")
+					(itPrimitives->second).mNormalAccessor = itAttr->second;
+				if (itAttr->first == "TANGENT")
+					(itPrimitives->second).mTangentAccessor = itAttr->second;
+				if (itAttr->first == "TEXCOORD_0")
+					(itPrimitives->second).mTexcoord_0Accessor = itAttr->second;
+				if (itAttr->first == "TEXCOORD_1")
+					(itPrimitives->second).mTexcoord_1Accessor = itAttr->second;
+				if (itAttr->first == "COLOR_0")
+					(itPrimitives->second).mColor_0Accessor = itAttr->second;
+				if (itAttr->first == "JOINTS_0")
+					(itPrimitives->second).mJoints_0Accessor = itAttr->second;
+				if (itAttr->first == "WEIGHTS_0")
+					(itPrimitives->second).mWeights_0Accessor = itAttr->second;
+			}
+
 			// TODO: Progagate more...
 		}
 	}
@@ -577,7 +632,7 @@ bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data, int 
 //---------------------------------------------------------------------
 const gLTFImage& gLTFImportExecutor::getImageByTextureIndex (int index)
 {
-	OUT << TABx3 << "gLTFImportExecutor::getImageByTextureIndex\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::getImageByTextureIndex\n";
 
 	mHelperImage = gLTFImage(); // Rest values
 
@@ -597,7 +652,7 @@ const gLTFImage& gLTFImportExecutor::getImageByTextureIndex (int index)
 //---------------------------------------------------------------------
 int gLTFImportExecutor::getImageIndexByTextureIndex (int index)
 {
-	OUT << TABx3 << "gLTFImportExecutor::getImageIndexByTextureIndex\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::getImageIndexByTextureIndex\n";
 
 	if (index < 0 || index > mTexturesMap.size() - 1)
 		return -1;
@@ -611,7 +666,7 @@ int gLTFImportExecutor::getImageIndexByTextureIndex (int index)
 //---------------------------------------------------------------------
 const std::string& gLTFImportExecutor::getImageUriByTextureIndex (int index)
 {
-	OUT << TABx2 << "gLTFImportExecutor::getImageUriByTextureIndex\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::getImageUriByTextureIndex\n";
 
 	gLTFImage image = getImageByTextureIndex(index);
 	mHelperString = image.mUri; // The Uri is empty if the image could not be found
@@ -621,7 +676,7 @@ const std::string& gLTFImportExecutor::getImageUriByTextureIndex (int index)
 //---------------------------------------------------------------------
 int gLTFImportExecutor::getSamplerByTextureIndex (int index)
 {
-	OUT << TABx2 << "gLTFImportExecutor::getSamplerByTextureIndex\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::getSamplerByTextureIndex\n";
 
 	if (index < 0 || index > mTexturesMap.size() - 1)
 		return 0;
@@ -633,8 +688,8 @@ int gLTFImportExecutor::getSamplerByTextureIndex (int index)
 //---------------------------------------------------------------------
 const std::string& gLTFImportExecutor::getMaterialNameByIndex (int index)
 {
-	OUT << TABx2 << "gLTFImportExecutor::getMaterialNameByIndex\n";
-	mHelperMaterialNameString = "";
+	OUT << TABx4 << "Perform gLTFImportExecutor::getMaterialNameByIndex\n";
+	mHelperMaterialNameString = "BaseWhite";
 	std::map<std::string, gLTFMaterial>::iterator itMaterials;
 
 	int count = 0;
@@ -657,7 +712,7 @@ const std::string&  gLTFImportExecutor::copyImageFile (const std::string& textur
 	const std::string& materialName,
 	const std::string& uriImage)
 {
-	OUT << TABx3 << "gLTFImportExecutor::copyImageFile\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::copyImageFile\n";
 	mHelperString = "";
 
 	// Do not copy if the uriImage is empty
@@ -701,7 +756,7 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureI
 	int index,
 	int startBinaryBuffer)
 {
-	OUT << TABx3 << "gLTFImportExecutor::extractAndCreateImageFromBufferByTextureIndex\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::extractAndCreateImageFromBufferByTextureIndex\n";
 	mHelperString = "";
 
 	// Get the image; return if it doesn't have a bufferIndex
@@ -767,7 +822,7 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureI
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::convertTexture (const std::string& fileName, TextureTransformation transformation)
 {
-	OUT << "gLTFImportExecutor::convertTexture\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::convertTexture\n";
 	if (fileName == "")
 		return false; // File does not exist
 

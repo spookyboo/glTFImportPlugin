@@ -58,7 +58,7 @@ class gLTFPrimitive
 		void out (void); // prints the content of the gLTFPrimitive
 
 		// Public members
-		int mIndices;
+		int mIndicesAccessor;
 		int mMaterial;
 		int mMode;
 		std::map<std::string, int> mAttributes;
@@ -66,6 +66,14 @@ class gLTFPrimitive
 
 		// Derived members
 		std::string mMaterialName;
+		int mPositionAccessor;
+		int mNormalAccessor;
+		int mTangentAccessor;
+		int mTexcoord_0Accessor;
+		int mTexcoord_1Accessor;
+		int mColor_0Accessor;
+		int mJoints_0Accessor;
+		int mWeights_0Accessor;
 };
 
 #endif

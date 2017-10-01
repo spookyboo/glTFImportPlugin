@@ -67,7 +67,13 @@ bool gLTFImportMeshesParser::parseMeshes (rapidjson::Value::ConstMemberIterator 
 				OUT << TABx2 << "value ==> " << mesh.mName << "\n";
 			}
 		}
-		
+
+		if (mesh.mName == "")
+		{
+			// Generate a name if not provided (name is optional in gLTF)
+			mesh.mName = "Mesh_" + generateRandomString();
+		}
+
 		mMeshesMap[index] = mesh;
 		++index;
 	}

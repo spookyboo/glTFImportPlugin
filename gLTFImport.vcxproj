@@ -145,6 +145,7 @@
     <ClInclude Include="include\gLTFImportImagesParser.h" />
     <ClInclude Include="include\gLTFImportMaterialsParser.h" />
     <ClInclude Include="include\gLTFImportMeshesParser.h" />
+    <ClInclude Include="include\gLTFImportOgreMeshCreator.h" />
     <ClInclude Include="include\gLTFImportPbsMaterialsCreator.h" />
     <ClInclude Include="include\gLTFImportPlugin.h" />
     <ClInclude Include="include\gLTFImportPrerequisites.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="src\gLTFImportImagesParser.cpp" />
     <ClCompile Include="src\gLTFImportMaterialsParser.cpp" />
     <ClCompile Include="src\gLTFImportMeshesParser.cpp" />
+    <ClCompile Include="src\gLTFImportOgreMeshCreator.cpp" />
     <ClCompile Include="src\gLTFImportPbsMaterialsCreator.cpp" />
     <ClCompile Include="src\gLTFImportPlugin.cpp" />
     <ClCompile Include="src\gLTFImportPrimitivesParser.cpp" />

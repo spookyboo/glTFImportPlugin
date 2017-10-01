@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "gLTFImportBuffersParser.h"
 #include "gLTFImportBufferViewsParser.h"
 #include "gLTFImportPbsMaterialsCreator.h"
+#include "gLTFImportOgreMeshCreator.h"
 #include "rapidjson/document.h"
 
 /** Class responsible for executing the import */
@@ -69,16 +70,23 @@ class gLTFImportExecutor
 		bool executeJson (const std::string& fileName, 
 			const char* jsonChar, 
 			Ogre::HlmsEditorPluginData* data);
+
+		// Data propagation (flatten the structure, so creation of Ogre 3d materials and meshes is less complex)
 		bool propagateData (Ogre::HlmsEditorPluginData* data, 
 			int startBinaryBuffer); // Arrange the data structure so it is easier to use when creating a Pbs material
-		bool propagateBufferViews (void);
-		bool propagateMaterials (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer);
-		bool propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer);
+		bool propagateBufferViews (void); // BufferViews are enriched with data from Buffers
+		bool propagateMaterials (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer); // Materials are enriched with data from BufferViews, Textures and Images
+		bool propagateAccessors(void); // Accessors are enriched with data from Buffers and BufferViews
+		bool propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer); // Primitives are enriched with data from Materials and Accessors
+		
+		// Utils
 		const gLTFImage& getImageByTextureIndex (int index);
 		int getImageIndexByTextureIndex (int index);
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
 		const std::string& getMaterialNameByIndex (int index);
+
+		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data, 
 			const std::string& materialName,
@@ -111,7 +119,10 @@ class gLTFImportExecutor
 		gLTFImportBuffersParser mBuffersParser;
 		gLTFImportBufferViewsParser mBufferViewsParser;
 		gLTFImportImagesParser mImagesParser;
+		
+		// Creator classes
 		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;
+		gLTFImportOgreMeshCreator mOgreMeshCreator;
 };
 
 #endif

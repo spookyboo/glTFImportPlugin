@@ -31,10 +31,19 @@
 
 //---------------------------------------------------------------------
 gLTFPrimitive::gLTFPrimitive(void) :
-	mIndices(-1),
 	mMaterial(0),
-	mMode(TRIANGLES)
+	mMode(TRIANGLES),
+	mIndicesAccessor(-1),
+	mPositionAccessor(-1),
+	mNormalAccessor(-1),
+	mTangentAccessor(-1),
+	mTexcoord_0Accessor(-1),
+	mTexcoord_1Accessor(-1),
+	mColor_0Accessor(-1),
+	mJoints_0Accessor(-1),
+	mWeights_0Accessor(-1)
 {
+	mMaterialName = "";
 }
 
 //---------------------------------------------------------------------

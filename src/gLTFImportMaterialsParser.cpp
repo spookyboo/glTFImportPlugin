@@ -100,8 +100,13 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 			}
 		}
 		
-		if (name != "")
-			mMaterialsMap[name] = material;
+		if (name == "")
+		{
+			// Generate a name if not provided (name is optional in gLTF)
+			name = "Mat_" + generateRandomString();
+		}
+		
+		mMaterialsMap[name] = material;
 	}
 
 	return true;

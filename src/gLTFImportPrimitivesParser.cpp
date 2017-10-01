@@ -110,8 +110,8 @@ bool gLTFImportPrimitivesParser::parsePrimitives (rapidjson::Value::ConstMemberI
 			if (it->value.IsInt() && key == "indices")
 			{
 				// ******** 2. indices ********
-				primitive.mIndices = it->value.GetInt();
-				OUT << TABx4 << "value ==> " << primitive.mIndices << "\n";
+				primitive.mIndicesAccessor = it->value.GetInt();
+				OUT << TABx4 << "value ==> " << primitive.mIndicesAccessor << "\n";
 			}
 			if (it->value.IsInt() && key == "material")
 			{

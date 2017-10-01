@@ -41,6 +41,15 @@ THE SOFTWARE.
 class gLTFAccessor
 {
 	public:
+		enum ComponentType
+		{
+			BYTE = 5120,
+			UNSIGNED_BYTE = 5121,
+			SHORT = 5122,
+			UNSIGNED_SHORT = 5123,
+			UNSIGNED_INT = 5125,
+			FLOAT = 5126
+		};
 		gLTFAccessor (void);
 		virtual ~gLTFAccessor (void) {};
 		void out (void); // prints the content of the gLTFAccessor
@@ -56,6 +65,14 @@ class gLTFAccessor
 		int mMax; // default 0
 		// TODO: map of Sparse classes
 		std::string mName;
+
+		// Derived data from BufferView
+		int mByteOffsetBufferView;
+		int mBufferIndex;
+		int mByteLength;
+		int mByteStride;
+		int mTarget;
+		std::string mUri; // uri of the Buffer
 };
 
 #endif

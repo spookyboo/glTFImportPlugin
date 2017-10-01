@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <ctime>
 
 //---------------------------------------------------------------------
 struct Devnull : std::ostream, std::streambuf
@@ -44,7 +45,7 @@ struct Devnull : std::ostream, std::streambuf
 
 //---------------------------------------------------------------------
 // Disable the line below when using gLTFTEST, because otherwise Ogre::Image (used for texture transformation) does not work
-//#define TEXTURE_TRANSFORMATION 1
+#define TEXTURE_TRANSFORMATION 1
 
 //---------------------------------------------------------------------
 static const std::string TAB = "  ";
@@ -52,6 +53,8 @@ static const std::string TABx2 = "    ";
 static const std::string TABx3 = "      ";
 static const std::string TABx4 = "        ";
 static const std::string TABx5 = "          ";
+static const std::string TABx6 = "            ";
+static const std::string TABx7 = "              ";
 
 static std::string gFileExtension = "";
 static std::string gJsonString = "";
@@ -121,6 +124,17 @@ static std::string getBaseFileNameWithExtension (std::string fileName)
 {
 	std::size_t found = fileName.find_last_of("/\\");
 	return fileName.substr(found + 1);
+}
+
+
+//---------------------------------------------------------------------
+static std::string generateRandomString (void)
+{
+	// Generate a name if not provided (name is optional in gLTF)
+	std::stringstream ss;
+	std::time_t result = std::time(nullptr);
+	ss << result;
+	return ss.str();
 }
 
 #endif

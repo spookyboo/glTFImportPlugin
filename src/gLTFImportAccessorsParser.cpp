@@ -68,7 +68,7 @@ bool gLTFImportAccessorsParser::parseAccessors (rapidjson::Value::ConstMemberIte
 			if (it->value.IsBool() && key == "normalized")
 			{
 				// ******** 4. normalized ********
-				accessor.mNormalized = it->value.GetInt();
+				accessor.mNormalized = it->value.GetBool();
 				OUT << TABx2 << "value ==> " << accessor.mNormalized << "\n";
 			}
 			if (it->value.IsInt() && key == "count")
@@ -88,12 +88,14 @@ bool gLTFImportAccessorsParser::parseAccessors (rapidjson::Value::ConstMemberIte
 				// ******** 7. min ********
 				accessor.mMin = it->value.GetInt();
 				OUT << TABx2 << "value ==> " << accessor.mMin << "\n";
+				// TODO: Min is an array
 			}
 			if (it->value.IsInt() && key == "max")
 			{
 				// ******** 8. max ********
 				accessor.mMax = it->value.GetInt();
 				OUT << TABx2 << "value ==> " << accessor.mMax << "\n";
+				// TODO: Max is an array
 			}
 			if (it->value.IsArray() && key == "sparse")
 			{
