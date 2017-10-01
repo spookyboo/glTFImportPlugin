@@ -841,26 +841,31 @@ bool gLTFImportExecutor::convertTexture (const std::string& fileName, TextureTra
 			col = pixelbox.getColourAt(x, y, 0);
 			switch (transformation)
 			{
-			case gLTFImportExecutor::TTF_R_2_GB:
-			{
-				col.b = col.r;
-				col.g = col.r;
-			}
-			break;
-			case gLTFImportExecutor::TTF_G_2_RB:
-			{
-				col.r = col.g;
-				col.b = col.g;
-			}
-			break;
-			case gLTFImportExecutor::TTF_B_2_RG:
-			{
-				col.r = col.b;
-				col.g = col.b;
-			}
-			break;
-			default:
-			break;
+				case TTF_R_2_GB:
+				{
+					col.b = col.r;
+					col.g = col.r;
+				}
+				break;
+				case TTF_G_2_RB:
+				{
+					col.r = col.g;
+					col.b = col.g;
+				}
+				break;
+				case TTF_B_2_RG:
+				{
+					col.r = col.b;
+					col.g = col.b;
+				}
+				break;
+				case TTF_R_2_GB_INV:
+				{
+					col.b = 1 - col.r;
+					col.g = 1 - col.r;
+					col.r = 1 - col.r;
+				}
+				break;
 			}
 			pixelbox.setColourAt(col, x, y, 0);
 		}

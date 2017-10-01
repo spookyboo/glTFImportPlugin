@@ -59,7 +59,8 @@ class gLTFImportExecutor
 		{
 			TTF_R_2_GB,
 			TTF_G_2_RB,
-			TTF_B_2_RG
+			TTF_B_2_RG,
+			TTF_R_2_GB_INV
 		};
 
 		// Process the binary file / text file
