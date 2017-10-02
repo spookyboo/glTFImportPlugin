@@ -83,7 +83,8 @@ class gLTFImportExecutor
 		bool propagateBufferViews (void); // BufferViews are enriched with data from Buffers
 		bool propagateMaterials (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer); // Materials are enriched with data from BufferViews, Textures and Images
 		bool propagateAccessors(void); // Accessors are enriched with data from Buffers and BufferViews
-		bool propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer); // Primitives are enriched with data from Materials and Accessors
+		//bool propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer); // Primitives are enriched with data from Materials and Accessors
+		bool propagateMeshes (Ogre::HlmsEditorPluginData* data); // Primitives are enriched with data from Materials and Accessors
 		
 		// Utils
 		const gLTFImage& getImageByTextureIndex (int index);

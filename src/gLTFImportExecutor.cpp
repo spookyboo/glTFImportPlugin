@@ -43,7 +43,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	std::string fileName = data->mInFileDialogPath + data->mInFileDialogName;
 	std::string extension = getFileExtension(fileName);
 	if (extension == "glb")
-		result = executeBinary (fileName, data, startBinaryBuffer);
+		result = executeBinary(fileName, data, startBinaryBuffer);
 	else
 		result = executeText(fileName, data);
 
@@ -60,6 +60,10 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 			mImagesMap,
 			mSamplersMap);
 
+		// In case of a full binary file the start of the buffer is +8 bytes
+		if (extension == "glb")
+			startBinaryBuffer += 8;
+		
 		// Create the Meshes
 		result = mOgreMeshCreator.createOgreMeshFiles (data, mMeshesMap, mAccessorsMap, startBinaryBuffer);
 	}
@@ -243,7 +247,8 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 	propagateBufferViews();
 	propagateMaterials(data, startBinaryBuffer);
 	propagateAccessors();
-	propagateMeshes(data, startBinaryBuffer);
+	//propagateMeshes(data, startBinaryBuffer);
+	propagateMeshes(data);
 	return true;
 }
 
@@ -419,7 +424,8 @@ bool gLTFImportExecutor::propagateAccessors(void)
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
+//bool gLTFImportExecutor::propagateMeshes(Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
+bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data)
 {
 	OUT << TABx3 << "Perform gLTFImportExecutor::propagateMeshes\n";
 	std::map<int, gLTFMesh>::iterator itMeshes;
