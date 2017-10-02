@@ -49,12 +49,12 @@ struct Devnull : std::ostream, std::streambuf
 
 //---------------------------------------------------------------------
 static const std::string TAB = "  ";
-static const std::string TABx2 = "    ";
-static const std::string TABx3 = "      ";
-static const std::string TABx4 = "        ";
-static const std::string TABx5 = "          ";
-static const std::string TABx6 = "            ";
-static const std::string TABx7 = "              ";
+static const std::string TABx2 = TAB + TAB;
+static const std::string TABx3 = TAB + TABx2;
+static const std::string TABx4 = TAB + TABx3;
+static const std::string TABx5 = TAB + TABx4;
+static const std::string TABx6 = TAB + TABx5;
+static const std::string TABx7 = TAB + TABx6;
 
 static std::string gFileExtension = "";
 static std::string gJsonString = "";

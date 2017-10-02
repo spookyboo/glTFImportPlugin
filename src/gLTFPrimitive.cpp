@@ -34,16 +34,16 @@ gLTFPrimitive::gLTFPrimitive(void) :
 	mMaterial(0),
 	mMode(TRIANGLES),
 	mIndicesAccessor(-1),
-	mPositionAccessor(-1),
-	mNormalAccessor(-1),
-	mTangentAccessor(-1),
-	mTexcoord_0Accessor(-1),
-	mTexcoord_1Accessor(-1),
-	mColor_0Accessor(-1),
-	mJoints_0Accessor(-1),
-	mWeights_0Accessor(-1)
+	mPositionAccessorDerived(-1),
+	mNormalAccessorDerived(-1),
+	mTangentAccessorDerived(-1),
+	mTexcoord_0AccessorDerived(-1),
+	mTexcoord_1AccessorDerived(-1),
+	mColor_0AccessorDerived(-1),
+	mJoints_0AccessorDerived(-1),
+	mWeights_0AccessorDerived(-1)
 {
-	mMaterialName = "";
+	mMaterialNameDerived = "";
 }
 
 //---------------------------------------------------------------------

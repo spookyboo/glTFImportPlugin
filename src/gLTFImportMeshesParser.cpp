@@ -35,9 +35,6 @@ bool gLTFImportMeshesParser::parseMeshes (rapidjson::Value::ConstMemberIterator 
 
 	int index = 0;
 	const rapidjson::Value& array = jsonIterator->value;
-
-	OUT << TAB << "Loop through meshes array\n";
-	OUT << TAB << "DEBUG: Array size is " << array.Size() << "\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
 		gLTFMesh mesh;
@@ -77,8 +74,6 @@ bool gLTFImportMeshesParser::parseMeshes (rapidjson::Value::ConstMemberIterator 
 		mMeshesMap[index] = mesh;
 		++index;
 	}
-
-	OUT << TABx3 << "DEBUG: Size of meshes map is " << mMeshesMap.size() << "\n";
 
 	return true;
 }

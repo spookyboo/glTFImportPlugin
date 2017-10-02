@@ -65,15 +65,15 @@ class gLTFPrimitive
 		// TODO: mTargets
 
 		// Derived members
-		std::string mMaterialName;
-		int mPositionAccessor;
-		int mNormalAccessor;
-		int mTangentAccessor;
-		int mTexcoord_0Accessor;
-		int mTexcoord_1Accessor;
-		int mColor_0Accessor;
-		int mJoints_0Accessor;
-		int mWeights_0Accessor;
+		std::string mMaterialNameDerived;
+		int mPositionAccessorDerived;
+		int mNormalAccessorDerived;
+		int mTangentAccessorDerived;
+		int mTexcoord_0AccessorDerived;
+		int mTexcoord_1AccessorDerived;
+		int mColor_0AccessorDerived;
+		int mJoints_0AccessorDerived;
+		int mWeights_0AccessorDerived;
 };
 
 #endif

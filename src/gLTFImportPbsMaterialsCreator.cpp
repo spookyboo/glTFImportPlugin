@@ -36,7 +36,8 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 	std::map<int, gLTFImage> imagesMap,
 	std::map<int, gLTFSampler> samplersMap)
 {
-	OUT << "Perform gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles\n";
+	OUT << "\nPerform gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles\n";
+	OUT << "-----------------------------------------------------------------\n";
 
 	// Create the Ogre Pbs material files (*.material.json)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
@@ -46,7 +47,7 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 	for (it = materialsMap.begin(); it != materialsMap.end(); it++)
 	{
 		std::string ogreFullyQualifiedMaterialFileName = fullyQualifiedImportPath + it->first + ".material.json";
-		OUT << "\nCreate: material file " << ogreFullyQualifiedMaterialFileName << "\n";
+		OUT << "Create: material file " << ogreFullyQualifiedMaterialFileName << "\n";
 
 		// Create the file
 		std::ofstream dst(ogreFullyQualifiedMaterialFileName);
@@ -123,10 +124,6 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		else
 			OUT << "Ok, file " << ogreFullyQualifiedMaterialFileName << " is valid Json\n";
 	}
-
-	// Copy all gLTF files (images)
-	// Remove: This has become part of the Executor
-	//copyImageFiles(data, imagesMap);
 
 	return true;
 }
@@ -519,36 +516,3 @@ const std::string gLTFImportPbsMaterialsCreator::getUvString (int texCoord)
 
 	return mHelperString;
 }
-
-//---------------------------------------------------------------------
-/*
-bool gLTFImportPbsMaterialsCreator::copyImageFiles (Ogre::HlmsEditorPluginData* data, std::map<int, gLTFImage> imagesMap)
-{
-	std::map<int, gLTFImage>::iterator it;
-	gLTFImage image;
-	std::string fileNameSource;
-	std::string fileNameDestination;
-	for (it = imagesMap.begin(); it != imagesMap.end(); it++)
-	{
-		image = it->second;
-		if (isFilePathAbsolute(image.mUri))
-		{
-			// It is a fully qualified filename
-			fileNameSource = image.mUri;
-			OUT << TAB << "Copy fully qualified image fileName = " << fileNameSource << "\n";
-		}
-		else
-		{
-			// It is a relative filename
-			fileNameSource = data->mInFileDialogPath + image.mUri;
-			OUT << TAB << "Copy relative image fileName = " << fileNameSource << "\n";
-		}
-		std::string baseName = getBaseFileNameWithExtension(image.mUri);
-		fileNameDestination = data->mInImportPath + data->mInFileDialogBaseName + "/" + baseName;
-		OUT << TAB << "Copy to image fileName = " << fileNameDestination << "\n";
-
-		copyFile (fileNameSource, fileNameDestination);
-	}
-	return true;
-}
-*/

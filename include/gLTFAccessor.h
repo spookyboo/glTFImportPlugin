@@ -67,12 +67,12 @@ class gLTFAccessor
 		std::string mName;
 
 		// Derived data from BufferView
-		int mByteOffsetBufferView;
-		int mBufferIndex;
-		int mByteLength;
-		int mByteStride;
-		int mTarget;
-		std::string mUri; // uri of the Buffer
+		int mByteOffsetBufferViewDerived;
+		int mBufferIndexDerived;
+		int mByteLengthDerived;
+		int mByteStrideDerived;
+		int mTargetDerived;
+		std::string mUriDerived; // uri of the Buffer
 };
 
 #endif

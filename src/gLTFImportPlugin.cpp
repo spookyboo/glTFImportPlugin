@@ -35,7 +35,7 @@ Copyright (c) 2000-2014 Torus Knot Software Ltd
 namespace Ogre
 {
 	static const String gExportMenuText = "";
-	static const String gImportMenuText = "Import gLTF material(s)";
+	static const String gImportMenuText = "Import gLTF";
 	//---------------------------------------------------------------------
 	gLTFImportPlugin::gLTFImportPlugin()
     {
