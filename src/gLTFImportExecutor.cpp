@@ -341,7 +341,7 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		(itMaterials->second).mOcclusionTexture.mUri = uriImage;
 
 		// Occlusion is represented by the R channel
-		convertTexture(uriImage, TTF_R_2_GBA); // Convert the image file into a usable occlusion texture
+		convertTexture(uriImage, TTF_R_2_GB_INV); // Convert the image file into a usable occlusion texture
 
 		// 4. metallicRoughnessTexture
 		// Although not used by Ogre3d materials, they are still copied/extracted and used for metallicTexture and roughnessTexture
@@ -686,6 +686,13 @@ bool gLTFImportExecutor::convertTexture (const std::string& fileName, TextureTra
 			col = pixelbox.getColourAt(x, y, 0);
 			switch (transformation)
 			{
+				case TTF_R000:
+				{
+					col.g = 0.0f;
+					col.b = 0.0f;
+					col.a = 0.0f;
+				}
+				break;
 				case TTF_R_2_GB:
 				{
 					col.b = col.r;

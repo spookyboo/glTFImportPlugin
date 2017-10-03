@@ -251,25 +251,7 @@ bool gLTFImportPbsMaterialsCreator::createDiffuseJsonBlock(std::ofstream* dst, c
 	*dst << TABx4 << "\"background\" : [1, 1, 1, 1]";
 
 	// Diffuse texture
-	/*
 	if (material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable())
-	{
-		*dst << ",\n";
-		std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mBaseColorTexture.mUri);
-		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
-		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
-		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"";
-		*dst << getUvString(material.mPbrMetallicRoughness.mBaseColorTexture.mTextCoord);
-	}
-	*dst << "\n";
-	*dst << TABx3 << "}," << "\n";
-	*/
-
-	/* The baseColorTexture becomes a diffuse texture in case there is NO occlusionTexture
-	*  present in the gLTF material.
-	*/
-	if (material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable() &&
-		!material.mOcclusionTexture.isTextureAvailable())
 	{
 		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mBaseColorTexture.mUri);
@@ -385,30 +367,25 @@ bool gLTFImportPbsMaterialsCreator::createReflectionJsonBlock(std::ofstream* dst
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createDetailDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
-	// There must at least be a baseColorTexture
-	if (!material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable())
-		return false;
-	
-	/* The baseColorTexture becomes a detail diffuse texture in case there is also a occlusionTexture
-	* present in the gLTF material.
-	*/
+	// The occlusion map results in a detail diffuse map, with a texture colour transformation
 	if (!material.mOcclusionTexture.isTextureAvailable())
 		return false;
 
 	*dst << "," << "\n";
 	*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
 	*dst << TABx3 << "{\n";
-	*dst << TABx4 << "\"value\" : " << material.mOcclusionTexture.mStrength << ",\n"; // Use strength of the occlusionTexture as weight
-																					  // baseColorTexture does not support Scale and Offset in gLTF
-	std::string baseImageName = getBaseFileNameWithExtension(material.mPbrMetallicRoughness.mBaseColorTexture.mUri);
+	*dst << TABx4 << "\"value\" : " << 0.5f * material.mOcclusionTexture.mStrength << ",\n";
+	*dst << TABx4 << "\"mode\" : \"Subtract\",\n";
+	std::string baseImageName = getBaseFileNameWithExtension(material.mOcclusionTexture.mUri);
 	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 	*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
-	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mPbrMetallicRoughness.mBaseColorTexture.mSampler << "\"";
-	*dst << getUvString(material.mPbrMetallicRoughness.mBaseColorTexture.mTextCoord);
+	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mOcclusionTexture.mSampler << "\"";
+	*dst << getUvString(material.mOcclusionTexture.mTextCoord);
 	*dst << "\n";
 	*dst << TABx3 << "}";
 
 	++mDetailedDiffuseMapCount;
+
 	return true;
 }
 
@@ -421,10 +398,6 @@ bool gLTFImportPbsMaterialsCreator::createDetailNormalJsonBlock(std::ofstream* d
 
 	/* The normal texture becomes a detail normal texture in case the scale is <> 1. This means also that
 	*  only 1 detail normal texture can be present.
-	*  @remark:
-	*  Unlike the the diffuse map, a normal mal will not become a detail normal map in case an occlusion texture
-	*  is present. The gLTF specification does not specify whether an occlusion texture also affects a normal map.
-	*  This means that property "value" (= weight) is always 1.0 (= the default, so it is omitted).
 	*/
 	if (material.mNormalTexture.mScale == 1.0f)
 		return false;
@@ -483,21 +456,9 @@ bool gLTFImportPbsMaterialsCreator::createEmissiveJsonBlock(std::ofstream* dst, 
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createDetailWeightJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
-	// Return if there is no occlusion texture
-	if (!material.mOcclusionTexture.isTextureAvailable())
-		return false;
-
-	*dst << "," << "\n";
-	*dst << TABx3 << "\"detail_weight\" :\n";
-	*dst << TABx3 << "{\n";
-	std::string baseImageName = getBaseFileNameWithExtension(material.mOcclusionTexture.mUri);
-	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
-	*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
-	*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mOcclusionTexture.mSampler << "\"";
-	*dst << getUvString(material.mOcclusionTexture.mTextCoord);
-	*dst << "\n";
-	*dst << TABx3 << "}";
-
+	// There is no detail weight map. Experimenting with the occlusion map as a detail weight map only resulted in
+	// bad lighting
+	
 	return true;
 }
 
