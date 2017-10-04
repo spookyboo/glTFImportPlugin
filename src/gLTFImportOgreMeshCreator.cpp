@@ -124,11 +124,17 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 					numTextCoordsText = "\"2\"";
 
 				dst << TABx4 << "<vertexbuffer positions = " << hasPositionsText <<
-					" normals = " << hasNormalsText <<
-					" texture_coord_dimensions_0 = \"float2\"" <<
-					" tangents = " << hasTangentsText <<
-					" texture_coords = " << numTextCoordsText <<
-					">\n";
+				" normals = " << hasNormalsText <<
+
+				// Texture coordinate dimensions (assume float2 for now)
+				" texture_coord_dimensions_0 = \"float2\"";
+				if (primitive.mTexcoord_1AccessorDerived > -1)
+					dst << " texture_coord_dimensions_1 = \"float2\"";
+
+				// Tangents
+				dst << " tangents = " << hasTangentsText <<
+				" texture_coords = " << numTextCoordsText <<
+				">\n";
 
 				// Write vertices
 				writeVertices(dst, primitive, accessorMap, data, startBinaryBuffer);
@@ -201,7 +207,8 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 	readPositionsFromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the positions
 	readNormalsFromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the normals
 	readTangentsFromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the tangents
-	readTexCoords0FromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the uv's
+	readTexCoords0FromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 0
+	readTexCoords1FromFile(primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 1
 
 	// Write vertices; Assume that count of positions, texcoords, etc. is the same
 	// TODO: Verify !!!!!!!!!!
@@ -223,9 +230,21 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 		vec3 = mTangentsMap[i];
 		dst << TABx6 << "<tangent x=\"" << vec3.x << "\" y=\"" << vec3.y << "\" z=\"" << vec3.z << "\" />\n";
 
-		// Texcoord
-		Vec2Struct vec2 = mTexcoords_0Map[i];
-		dst << TABx6 << "<texcoord u=\"" << vec2.u << "\" v=\"" << vec2.v << "\" />\n";
+		// Texcoord 0
+		if (mTexcoords_0Map.size() > 0)
+		{
+			Vec2Struct vec2 = mTexcoords_0Map[i];
+			dst << TABx6 << "<texcoord u=\"" << vec2.u << "\" v=\"" << vec2.v << "\" />\n";
+			OUT << "DEBUG: we have uv set 0\n";
+		}
+
+		// Texcoord 1
+		if (mTexcoords_1Map.size() > 0)
+		{
+			Vec2Struct vec2 = mTexcoords_1Map[i];
+			dst << TABx6 << "<texcoord u=\"" << vec2.u << "\" v=\"" << vec2.v << "\" />\n";
+			OUT << "DEBUG: we have uv set 1\n";
+		}
 
 		// Close vertex
 		dst << TABx5 << "</vertex>\n";
@@ -370,6 +389,31 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromFile (const gLTFPrimitive& pri
 	delete[] buffer;
 }
 
+//---------------------------------------------------------------------
+void gLTFImportOgreMeshCreator::readTexCoords1FromFile(const gLTFPrimitive& primitive,
+	std::map<int, gLTFAccessor> accessorMap,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
+	// Open the buffer file and read positions
+	gLTFAccessor  mTexcoord_1Accessor = accessorMap[primitive.mTexcoord_1AccessorDerived];
+	std::string fileName = getFileNameBufferFile(mTexcoord_1Accessor.mUriDerived, data);
+	char* buffer = getBufferChunk(fileName, mTexcoord_1Accessor, startBinaryBuffer);
+
+	// Iterate through the chunk
+	mTexcoords_1Map.clear();
+	for (int i = 0; i < mTexcoord_1Accessor.mCount; i++)
+	{
+		// A position must be a VEC3/Float, otherwise it doesn't get read
+		if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::FLOAT)
+		{
+			Vec2Struct pos = readVec2FromBuffer(buffer, i);
+			mTexcoords_1Map[i] = pos;
+		}
+	}
+
+	delete[] buffer;
+}
 //---------------------------------------------------------------------
 char* gLTFImportOgreMeshCreator::getBufferChunk (const std::string& fileName, gLTFAccessor accessor, int startBinaryBuffer)
 {

@@ -97,7 +97,11 @@ class gLTFImportOgreMeshCreator
 		void readTexCoords0FromFile(const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
-			int startBinaryBuffer); // Read the texcoords
+			int startBinaryBuffer); // Read the texcoords 0
+		void readTexCoords1FromFile(const gLTFPrimitive& primitive,
+			std::map<int, gLTFAccessor> accessorMap,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer); // Read the texcoords 1
 
 		// Utils
 		char* getBufferChunk (const std::string& fileName, gLTFAccessor accessor, int startBinaryBuffer);
@@ -115,6 +119,7 @@ class gLTFImportOgreMeshCreator
 		std::map <int, Vec3Struct> mNormalsMap;
 		std::map <int, Vec3Struct> mTangentsMap;
 		std::map <int, Vec2Struct> mTexcoords_0Map;
+		std::map <int, Vec2Struct> mTexcoords_1Map;
 		std::map <int, unsigned int> mIndicesMap;
 		Vec3Struct mHelperVec3Struct;
 		Vec2Struct mHelperVec2Struct;
