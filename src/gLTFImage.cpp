@@ -33,12 +33,12 @@
 gLTFImage::gLTFImage(void) :
 	mBufferView (-1),
 	mBufferIndex(-1),
-	mByteOffset(0),
-	mByteLength(0)
+	mByteOffset (0),
+	mByteLength (0)
 
 {
 	mUri = "";
-	mMimeType = "mage/jpeg";
+	mMimeType = "image/jpeg";
 }
 
 //---------------------------------------------------------------------

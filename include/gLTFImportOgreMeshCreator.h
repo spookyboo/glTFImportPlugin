@@ -78,34 +78,36 @@ class gLTFImportOgreMeshCreator
 			int startBinaryBuffer); // Write all vertices
 		
 		// Read attributes from buffer
-		void readPositionsFromFile(const gLTFPrimitive& primitive,
+		void readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Read the positions
-		void readNormalsFromFile(const gLTFPrimitive& primitive,
+		void readNormalsFromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Read the normals
-		void readTangentsFromFile(const gLTFPrimitive& primitive,
+		void readTangentsFromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Read the tangents
-		void readIndicesFromFile(const gLTFPrimitive& primitive,
+		void readIndicesFromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Read the indices
-		void readTexCoords0FromFile(const gLTFPrimitive& primitive,
+		void readTexCoords0FromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Read the texcoords 0
-		void readTexCoords1FromFile(const gLTFPrimitive& primitive,
+		void readTexCoords1FromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Read the texcoords 1
 
 		// Utils
-		char* getBufferChunk (const std::string& fileName, gLTFAccessor accessor, int startBinaryBuffer);
-		const std::string& getFileNameBufferFile (const std::string& uri, Ogre::HlmsEditorPluginData* data);
+		char* getBufferChunk (const std::string& uri, 
+			Ogre::HlmsEditorPluginData* data, 
+			gLTFAccessor accessor, 
+			int startBinaryBuffer);
 		unsigned char readUnsignedByteFromBuffer(char* buffer, int count); // Read an unsigned byte
 		unsigned short readUnsignedShortFromBuffer(char* buffer, int count); // Read an unsigned short
 		unsigned int readUnsignedIntFromBuffer(char* buffer, int count); // Read an unsigned int

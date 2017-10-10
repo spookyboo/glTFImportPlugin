@@ -28,6 +28,7 @@
 
 #include "gLTFImportOgreMeshCreator.h"
 #include "rapidjson/document.h"
+#include "base64.h"
 
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData* data,
@@ -69,7 +70,11 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 			if (materialName == "")
 				materialName = "BaseWhite";
 
-			// Write submesh definition
+			/* Write submesh definition
+			 * Do not share vertices. It is not clear whether gLTF shares geometry data, so use the default 'false' value,
+			 * until proved otherwise.
+			 * We always use 32 bit incices (no 16 bit), even if the gLTF file itself uses 16 bits
+			 */
 			dst << TABx2 << "<submesh material = \"" + primitive.mMaterialNameDerived + "\"";
 			dst << " usesharedvertices = \"false\" use32bitindexes = \"false\" "; // TODO: Hardcoded?
 
@@ -171,7 +176,7 @@ bool gLTFImportOgreMeshCreator::writeFaces (std::ofstream& dst,
 		return false;
 
 	// Read indices
-	readIndicesFromFile (primitive, accessorMap, data, startBinaryBuffer);
+	readIndicesFromUriOrFile (primitive, accessorMap, data, startBinaryBuffer);
 
 	// Write indices
 	dst << TABx3 << "<faces count = \"" << indicesAccessor.mCount / 3 << "\">\n";
@@ -204,11 +209,11 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 	int startBinaryBuffer)
 {
 	// Read positions, normals, tangents,... etc.
-	readPositionsFromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the positions
-	readNormalsFromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the normals
-	readTangentsFromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the tangents
-	readTexCoords0FromFile (primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 0
-	readTexCoords1FromFile(primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 1
+	readPositionsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the positions
+	readNormalsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the normals
+	readTangentsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the tangents
+	readTexCoords0FromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 0
+	readTexCoords1FromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 1
 
 	// Write vertices; Assume that count of positions, texcoords, etc. is the same
 	// TODO: Verify !!!!!!!!!!
@@ -235,7 +240,6 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 		{
 			Vec2Struct vec2 = mTexcoords_0Map[i];
 			dst << TABx6 << "<texcoord u=\"" << vec2.u << "\" v=\"" << vec2.v << "\" />\n";
-			OUT << "DEBUG: we have uv set 0\n";
 		}
 
 		// Texcoord 1
@@ -243,7 +247,6 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 		{
 			Vec2Struct vec2 = mTexcoords_1Map[i];
 			dst << TABx6 << "<texcoord u=\"" << vec2.u << "\" v=\"" << vec2.v << "\" />\n";
-			OUT << "DEBUG: we have uv set 1\n";
 		}
 
 		// Close vertex
@@ -254,15 +257,14 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-void gLTFImportOgreMeshCreator::readPositionsFromFile(const gLTFPrimitive& primitive,
+void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived];
-	std::string fileName = getFileNameBufferFile(positionAccessor.mUriDerived, data);
-	char* buffer = getBufferChunk(fileName, positionAccessor, startBinaryBuffer);
+	char* buffer = getBufferChunk(positionAccessor.mUriDerived, data, positionAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
 	mPositionsMap.clear();
@@ -280,15 +282,14 @@ void gLTFImportOgreMeshCreator::readPositionsFromFile(const gLTFPrimitive& primi
 }
 
 //---------------------------------------------------------------------
-void gLTFImportOgreMeshCreator::readNormalsFromFile (const gLTFPrimitive& primitive,
+void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  normalAccessor = accessorMap[primitive.mNormalAccessorDerived];
-	std::string fileName = getFileNameBufferFile(normalAccessor.mUriDerived, data);
-	char* buffer = getBufferChunk(fileName, normalAccessor, startBinaryBuffer);
+	char* buffer = getBufferChunk(normalAccessor.mUriDerived, data, normalAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
 	mNormalsMap.clear();
@@ -306,15 +307,14 @@ void gLTFImportOgreMeshCreator::readNormalsFromFile (const gLTFPrimitive& primit
 }
 
 //---------------------------------------------------------------------
-void gLTFImportOgreMeshCreator::readTangentsFromFile(const gLTFPrimitive& primitive,
+void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  tangentAccessor = accessorMap[primitive.mTangentAccessorDerived];
-	std::string fileName = getFileNameBufferFile(tangentAccessor.mUriDerived, data);
-	char* buffer = getBufferChunk(fileName, tangentAccessor, startBinaryBuffer);
+	char* buffer = getBufferChunk(tangentAccessor.mUriDerived, data, tangentAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
 	mTangentsMap.clear();
@@ -332,15 +332,14 @@ void gLTFImportOgreMeshCreator::readTangentsFromFile(const gLTFPrimitive& primit
 }
 
 //---------------------------------------------------------------------
-void gLTFImportOgreMeshCreator::readIndicesFromFile (const gLTFPrimitive& primitive,
+void gLTFImportOgreMeshCreator::readIndicesFromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
 	// Open the buffer file and read indices
 	gLTFAccessor indicesAccessor = accessorMap[primitive.mIndicesAccessor];
-	std::string fileName = getFileNameBufferFile(indicesAccessor.mUriDerived, data);
-	char* buffer = getBufferChunk(fileName, indicesAccessor, startBinaryBuffer);
+	char* buffer = getBufferChunk(indicesAccessor.mUriDerived, data, indicesAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
 	mIndicesMap.clear();
@@ -364,15 +363,14 @@ void gLTFImportOgreMeshCreator::readIndicesFromFile (const gLTFPrimitive& primit
 }
 
 //---------------------------------------------------------------------
-void gLTFImportOgreMeshCreator::readTexCoords0FromFile (const gLTFPrimitive& primitive,
+void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  mTexcoord_0Accessor = accessorMap[primitive.mTexcoord_0AccessorDerived];
-	std::string fileName = getFileNameBufferFile(mTexcoord_0Accessor.mUriDerived, data);
-	char* buffer = getBufferChunk(fileName, mTexcoord_0Accessor, startBinaryBuffer);
+	char* buffer = getBufferChunk(mTexcoord_0Accessor.mUriDerived, data, mTexcoord_0Accessor, startBinaryBuffer);
 
 	// Iterate through the chunk
 	mTexcoords_0Map.clear();
@@ -390,15 +388,14 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromFile (const gLTFPrimitive& pri
 }
 
 //---------------------------------------------------------------------
-void gLTFImportOgreMeshCreator::readTexCoords1FromFile(const gLTFPrimitive& primitive,
+void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  mTexcoord_1Accessor = accessorMap[primitive.mTexcoord_1AccessorDerived];
-	std::string fileName = getFileNameBufferFile(mTexcoord_1Accessor.mUriDerived, data);
-	char* buffer = getBufferChunk(fileName, mTexcoord_1Accessor, startBinaryBuffer);
+	char* buffer = getBufferChunk(mTexcoord_1Accessor.mUriDerived, data, mTexcoord_1Accessor, startBinaryBuffer);
 
 	// Iterate through the chunk
 	mTexcoords_1Map.clear();
@@ -415,32 +412,49 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromFile(const gLTFPrimitive& prim
 	delete[] buffer;
 }
 //---------------------------------------------------------------------
-char* gLTFImportOgreMeshCreator::getBufferChunk (const std::string& fileName, gLTFAccessor accessor, int startBinaryBuffer)
+char* gLTFImportOgreMeshCreator::getBufferChunk (const std::string& uri, 
+	Ogre::HlmsEditorPluginData* data, 
+	gLTFAccessor accessor, 
+	int startBinaryBuffer)
 {
-	// Read the binary data
-	std::ifstream ifs(fileName, std::ios::binary);
+	char* buffer;
+	if (isUriEmbeddedBase64(uri))
+	{
+		// Get the binary data from a base64 encoded string
+		std::string imageBuffer = getEmbeddedBase64FromUri(uri); // Get the encoded data
+		imageBuffer = base64_decode(imageBuffer); // Decode it
 
-	// Set the stream to the beginning of the binary chunk
-	ifs.seekg(startBinaryBuffer + accessor.mByteOffset + accessor.mByteOffsetBufferViewDerived, std::ios::beg);
+		// Read the data from the string
+		std::istringstream iss(imageBuffer);
 
-	// Read the buffer
-	char* buffer = new char[accessor.mByteLengthDerived]; // Don not forget to delete[] the buffer
-	ifs.read(buffer, accessor.mByteLengthDerived);
-	ifs.close();
-	return buffer;
-}
+		// Set the stream to the beginning of the binary chunk; ignore startBinaryBuffer (it should be 0 afterall)
+		iss.seekg(accessor.mByteOffset + accessor.mByteOffsetBufferViewDerived, std::ios::beg);
 
-//---------------------------------------------------------------------
-const std::string& gLTFImportOgreMeshCreator::getFileNameBufferFile (const std::string& uri, 
-	Ogre::HlmsEditorPluginData* data)
-{
-	fileNameBufferHelper = "";
-	if (isFilePathAbsolute(uri))
-		fileNameBufferHelper = uri;
+		// Read the buffer
+		buffer = new char[accessor.mByteLengthDerived]; // Don not forget to delete[] the buffer
+		iss.read(buffer, accessor.mByteLengthDerived);
+	}
 	else
-		fileNameBufferHelper = data->mInFileDialogPath + uri;
+	{
+		std::string fileNameBufferHelper = "";
+		if (isFilePathAbsolute(uri))
+			fileNameBufferHelper = uri;
+		else
+			fileNameBufferHelper = data->mInFileDialogPath + uri;
+
+		// Read the binary data
+		std::ifstream ifs(fileNameBufferHelper, std::ios::binary);
+
+		// Set the stream to the beginning of the binary chunk
+		ifs.seekg(startBinaryBuffer + accessor.mByteOffset + accessor.mByteOffsetBufferViewDerived, std::ios::beg);
+
+		// Read the buffer
+		buffer = new char[accessor.mByteLengthDerived]; // Don not forget to delete[] the buffer
+		ifs.read(buffer, accessor.mByteLengthDerived);
+		ifs.close();
+	}
 	
-	return fileNameBufferHelper;
+	return buffer;
 }
 
 //---------------------------------------------------------------------
@@ -480,7 +494,6 @@ const gLTFImportOgreMeshCreator::Vec2Struct& gLTFImportOgreMeshCreator::readVec2
 	mHelperVec2Struct.u = fRaw;
 	memcpy(&fRaw, &buffer[count * vec2Size + floatSize], floatSize);
 	mHelperVec2Struct.v = fRaw;
-	//OUT << mHelperVec2Struct.u << ", " << mHelperVec2Struct.v << "\n";
 	return mHelperVec2Struct;
 }
 
@@ -496,7 +509,6 @@ const gLTFImportOgreMeshCreator::Vec3Struct& gLTFImportOgreMeshCreator::readVec3
 	mHelperVec3Struct.y = fRaw;
 	memcpy(&fRaw, &buffer[count * vec3Size + 2 * floatSize], floatSize);
 	mHelperVec3Struct.z = fRaw;
-	//OUT << count * vec3Size + 2 * floatSize << "\n";
 	return mHelperVec3Struct;
 }
 

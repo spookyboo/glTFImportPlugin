@@ -93,23 +93,40 @@ class gLTFImportExecutor
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
 		const std::string& getMaterialNameByIndex (int index);
+		const std::string& prepareUri(const std::string&  textureName,
+			Ogre::HlmsEditorPluginData* data,
+			const std::string&  materialName,
+			int textureIndex,
+			int startBinaryBuffer);
 
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data, 
 			const std::string& materialName,
 			const std::string& uriImage);
-		const std::string& extractAndCreateImageFromBufferByTextureIndex (const std::string& textureName,
+		const std::string& extractAndCreateImageFromUriByTextureIndex(const std::string& textureName,
+			Ogre::HlmsEditorPluginData* data,
+			const std::string& materialName,
+			int index);
+		const std::string& extractAndCreateImageFromFileByTextureIndex (const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data, 
 			const std::string& materialName,
 			int index,
 			int startBinaryBuffer);
 		bool convertTexture (const std::string& fileName, TextureTransformation transformation); // Convert an image file to a roughness file
+		const std::string& writeImageFile (const std::string& textureName,
+			const std::string& mimeType,
+			Ogre::HlmsEditorPluginData* data,
+			const std::string& materialName,
+			char* imageBlock,
+			int byteLength);
 
 	private:
 		std::string mHelperString;
 		std::string mHelperMaterialNameString;
 		gLTFImage mHelperImage;
+		std::string mHelperUri;
+		std::string mHelperOutputFile;
 		std::map<int, gLTFAccessor> mAccessorsMap;
 		std::map<int, gLTFMesh> mMeshesMap;
 		std::map<std::string, gLTFMaterial> mMaterialsMap;

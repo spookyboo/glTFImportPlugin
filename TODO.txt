@@ -1,0 +1,30 @@
+HLMS Editor:
+===========
+- After importing a gltf, load the HLMS material and load (import) the Mesh.
+- After importing a gltf, create a project with all the materials in the material browser.
+  - Change interface; add map 'references' with key/value pairs (e.g. 'mesh' --> meshfile.xml; 'material' --> material file; 'project' --> project file, etc.)
+
+Plugin:
+======
+- Test transparent materials
+- Implement macroblocks, blendblocks and samplers; they are currently fixed
+- gLTFImportAccessorsParser --> parse and implement min/max in Accessors
+- Parse animations, assets and skins, possibly nodes, scene, ...
+- Added Sparse class to Accessor and implement Parsing Sparse objects
+- Init gLTF so texture tranformation is possible
+- How to implement reflection? (using dds cubemaps)
+- Determine when to create a metallic texture. This is standard, but doesn't always gives a good result
+- Bytestride is not used to jump in a buffer; currently is assumed that data is aligned
+- Level of detail implemented in gLTF?
+- Godot engine swaps the v2 and v3 indexed in a face (swap around indices, convert ccw to cw for front face). Test this in the plugin
+- Add KHR_ extensions to read Unity gLTF models and materials
+- Vertex count is derived from position vertices. Validate whether this is correct
+- Implement (morph) targets in Primitives
+- Implement point_list, line_list, triangle_strip and triangle_fan
+- Check whether colours_diffuse, colours_specular, tangent_dimensions, binormals should be implemented in the mesh xml file (it is specified in Ogre xml)
+
+DONE:
+- Use shared vertices? ==> Not for now; usesharedvertices is always 'false'
+- Use 16 and 32 bit indices ==> No, only use 32 bit
+- Bug? Loading the binary corset model gives an error (no valid json)
+- Add possibility to process embedded base64 data in gTLF files

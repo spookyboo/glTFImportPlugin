@@ -157,7 +157,8 @@ void Color4::out (void)
 MaterialGenericTexture::MaterialGenericTexture (void) :
 	mIndex (-1),
 	mTextCoord (0),
-	mSampler(0)
+	mSampler (0),
+	mBase64EncodedUriDerived (false)
 {
 	mUri = "";
 }

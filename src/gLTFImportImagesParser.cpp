@@ -68,6 +68,11 @@ bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator 
 			}
 		}
 		
+		// Determine mimetype in case of a base64 encoded uri
+		if (isUriEmbeddedBase64(image.mUri))
+		{
+			image.mMimeType = getMimeTypeFromBase64Uri(image.mUri);
+		}
 		mImagesMap[source] = image;
 		++source;
 	}

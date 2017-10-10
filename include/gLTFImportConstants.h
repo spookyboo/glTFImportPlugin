@@ -97,6 +97,34 @@ static const std::string& getJsonAsString (const std::string& jsonFileName)
 }
 
 //---------------------------------------------------------------------
+static bool isUriEmbeddedBase64 (std::string uri)
+{
+	std::size_t found = uri.find(";base64,");
+	return found != std::string::npos;
+}
+
+//---------------------------------------------------------------------
+static std::string getEmbeddedBase64FromUri (std::string uri)
+{
+	std::size_t found = uri.find(";base64,");
+	if (found != std::string::npos)
+	{
+		std::size_t found = uri.find(";base64,");
+		return uri.substr(found + 8);
+	}
+
+	return "";
+}
+
+//---------------------------------------------------------------------
+static std::string getMimeTypeFromBase64Uri (std::string uri)
+{
+	std::size_t start = uri.find("data:") + 5;
+	std::size_t end = uri.find(";base64,");
+	return uri.substr(start, end - start);
+}
+
+//---------------------------------------------------------------------
 static bool isFilePathAbsolute (std::string fileName)
 {
 	if (fileName == "")
@@ -135,6 +163,20 @@ static std::string generateRandomString (void)
 	std::time_t result = std::time(nullptr);
 	ss << result;
 	return ss.str();
+}
+
+//---------------------------------------------------------------------
+static std::string getExtensionFromMimeType(std::string mimeType)
+{
+	if (mimeType == "image/jpeg")
+		return ".jpg";
+	if (mimeType == "image/jpg")
+		return ".jpg";
+	if (mimeType == "image/bmp")
+		return ".bmp";
+	if (mimeType == "image/tiff")
+		return ".tiff";
+	return ".png";
 }
 
 #endif

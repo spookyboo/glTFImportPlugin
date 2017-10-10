@@ -120,7 +120,8 @@ bool gLTFImportExecutor::executeBinary (const std::string& fileName,
 	startBinaryBuffer += chunkLength; // Size of the actual chunck length
 
 	// Read Json chunk
-	char* jsonChar = new char[chunkLength];
+	char* jsonChar = new char[chunkLength+1];
+	memset(jsonChar, 0, chunkLength+1);
 	fs.read(jsonChar, chunkLength);
 	OUT << "Json content: \n" << jsonChar << "\n\n";
 	if (!executeJson(fileName, jsonChar, data))
@@ -291,53 +292,29 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 	{
 		materialName = (itMaterials->second).mName;
 
-		/* For each texture index it must be determined whether the uri of the image is from a binary file
-		* containing an image or a link to an image file.
-		* The uri names are changed (for convenience) before they are set in the gLTFMaterial
+		/* For each texture index it must be determined whether the uri of the image refers to a binary file
+		* containing an image, a link to an image file or to embeded base64 encoded data in the uri itself.
+		* The uri names are changed (for convenience) before they are set in the gLTFMaterial.
 		*/
 
 		// 0. baseColorTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex;
-		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
-		{
-			uriImage = getImageUriByTextureIndex(textureIndex);
-			uriImage = copyImageFile("baseColorTexture", data, materialName, uriImage);
-		}
-		else
-			uriImage = extractAndCreateImageFromBufferByTextureIndex("baseColorTexture", data, materialName, textureIndex, startBinaryBuffer);
+		uriImage = prepareUri("baseColorTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uriImage;
 
 		// 1. emissiveTexture
 		textureIndex = (itMaterials->second).mEmissiveTexture.mIndex;
-		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
-		{
-			uriImage = getImageUriByTextureIndex(textureIndex);
-			uriImage = copyImageFile("emissiveTexture", data, materialName, uriImage);
-		}
-		else
-			uriImage = extractAndCreateImageFromBufferByTextureIndex("emissiveTexture", data, materialName, textureIndex, startBinaryBuffer);
+		uriImage = prepareUri("emissiveTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mEmissiveTexture.mUri = uriImage;
 
 		// 2. normalTexture
 		textureIndex = (itMaterials->second).mNormalTexture.mIndex;
-		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
-		{
-			uriImage = getImageUriByTextureIndex(textureIndex);
-			uriImage = copyImageFile("normalTexture", data, materialName, uriImage);
-		}
-		else
-			uriImage = extractAndCreateImageFromBufferByTextureIndex("normalTexture", data, materialName, textureIndex, startBinaryBuffer);
+		uriImage = prepareUri("normalTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mNormalTexture.mUri = uriImage;
 
 		// 3. mOcclusionTexture
 		textureIndex = (itMaterials->second).mOcclusionTexture.mIndex;
-		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
-		{
-			uriImage = getImageUriByTextureIndex(textureIndex);
-			uriImage = copyImageFile("occlusionTexture", data, materialName, uriImage);
-		}
-		else
-			uriImage = extractAndCreateImageFromBufferByTextureIndex("occlusionTexture", data, materialName, textureIndex, startBinaryBuffer);
+		uriImage = prepareUri("occlusionTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mOcclusionTexture.mUri = uriImage;
 
 		// Occlusion is represented by the R channel
@@ -346,25 +323,13 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		// 4. metallicRoughnessTexture
 		// Although not used by Ogre3d materials, they are still copied/extracted and used for metallicTexture and roughnessTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
-		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
-		{
-			uriImage = getImageUriByTextureIndex(textureIndex);
-			uriImage = copyImageFile("metallicRoughnessTexture", data, materialName, uriImage);
-		}
-		else
-			uriImage = extractAndCreateImageFromBufferByTextureIndex("metallicRoughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		uriImage = prepareUri("metallicRoughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uriImage;
 
 		// 5. metallicTexture (copy of metallicRoughnessTexture)
 		// The metallicRoughnessTexture is used as if it was a metallicTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
-		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
-		{
-			uriImage = getImageUriByTextureIndex(textureIndex);
-			uriImage = copyImageFile("metallicTexture", data, materialName, uriImage);
-		}
-		else
-			uriImage = extractAndCreateImageFromBufferByTextureIndex("metallicTexture", data, materialName, textureIndex, startBinaryBuffer);
+		uriImage = prepareUri("metallicTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mUri = uriImage;
 		
 		// Convert to Metallic texture. Metallic is represented by the B channel
@@ -373,13 +338,7 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		// 6. roughnessTexture (copy of metallicRoughnessTexture)
 		// The metallicRoughnessTexture is used as if it was a roughnessTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
-		if (getImageByTextureIndex(textureIndex).mBufferView == -1)
-		{
-			uriImage = getImageUriByTextureIndex(textureIndex);
-			uriImage = copyImageFile("roughnessTexture", data, materialName, uriImage);
-		}
-		else
-			uriImage = extractAndCreateImageFromBufferByTextureIndex("roughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		uriImage = prepareUri("roughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mUri = uriImage;
 
 		// Convert to Roughness texture. Roughness is represented by the G channel
@@ -424,7 +383,6 @@ bool gLTFImportExecutor::propagateAccessors(void)
 }
 
 //---------------------------------------------------------------------
-//bool gLTFImportExecutor::propagateMeshes(Ogre::HlmsEditorPluginData* data, int startBinaryBuffer)
 bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data)
 {
 	OUT << TABx3 << "Perform gLTFImportExecutor::propagateMeshes\n";
@@ -593,14 +551,74 @@ const std::string&  gLTFImportExecutor::copyImageFile (const std::string& textur
 	return mHelperString;
 }
 
+
 //---------------------------------------------------------------------
-const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureIndex (const std::string& textureName,
+const std::string& gLTFImportExecutor::prepareUri (const std::string&  textureName,
+	Ogre::HlmsEditorPluginData* data,
+	const std::string&  materialName,
+	int textureIndex, 
+	int startBinaryBuffer)
+{
+	mHelperUri = "";
+	if (getImageByTextureIndex(textureIndex).mBufferView == -1)
+	{
+		mHelperUri = getImageUriByTextureIndex(textureIndex);
+		if (isUriEmbeddedBase64(mHelperUri))
+			mHelperUri = extractAndCreateImageFromUriByTextureIndex(textureName, data, materialName, textureIndex);
+		else
+			mHelperUri = copyImageFile(textureName, data, materialName, mHelperUri);
+	}
+	else
+		mHelperUri = extractAndCreateImageFromFileByTextureIndex(textureName, data, materialName, textureIndex, startBinaryBuffer);
+
+	return mHelperUri;
+}
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::extractAndCreateImageFromUriByTextureIndex (const std::string& textureName,
+	Ogre::HlmsEditorPluginData* data,
+	const std::string& materialName,
+	int index)
+{
+	OUT << TABx4 << "Perform gLTFImportExecutor::extractAndCreateImageFromUriByTextureIndex\n";
+	mHelperString = "";
+
+	// Get the image
+	gLTFImage image = getImageByTextureIndex(index);
+
+	// Get the uri; it must be a base64 encoded string
+	std::string uri = image.mUri; // Get the uri from image
+	if (!isUriEmbeddedBase64(uri))
+		return mHelperString;
+
+	char* imageBlock;
+	// Get the binary data from a base64 encoded string
+	std::string imageBuffer = getEmbeddedBase64FromUri(uri); // Get the encoded data
+	imageBuffer = base64_decode(imageBuffer); // Decode it
+
+	// Read the data from the string
+	std::istringstream iss(imageBuffer);
+
+	// Set the stream to the beginning of the binary chunk
+	iss.seekg(0, std::ios::beg);
+
+	imageBlock = new char[imageBuffer.size()];
+	iss.read(imageBlock, imageBuffer.size());
+
+	// Write the image file
+	mHelperString = writeImageFile(textureName, image.mMimeType, data, materialName, imageBlock, imageBuffer.size());
+	delete[] imageBlock;
+	return mHelperString;
+}
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::extractAndCreateImageFromFileByTextureIndex (const std::string& textureName,
 	Ogre::HlmsEditorPluginData* data, 
 	const std::string& materialName, 
 	int index,
 	int startBinaryBuffer)
 {
-	OUT << TABx4 << "Perform gLTFImportExecutor::extractAndCreateImageFromBufferByTextureIndex\n";
+	OUT << TABx4 << "Perform gLTFImportExecutor::extractAndCreateImageFromFileByTextureIndex\n";
 	mHelperString = "";
 
 	// Get the image; return if it doesn't have a bufferIndex
@@ -608,17 +626,23 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureI
 	if (image.mBufferView < 0)
 		return mHelperString;
 
-	// Get the buffer file (uri)
+	// Get the uri and determine whether it is a file or it contains the bufferdata as base64 encoded string
 	gLTFBufferView bufferView = mBufferViewsMap[image.mBufferView];
-	std::string fileName;
-	if (isFilePathAbsolute(bufferView.mUriDerived))
-		fileName = bufferView.mUriDerived;
-	else
-		fileName = data->mInFileDialogPath + bufferView.mUriDerived;
+	std::string uri = bufferView.mUriDerived; // The uri refers to the (binary) file
 
-	// Read the binary data
+	// Uri may not be a base64 encoded one
+	if (isUriEmbeddedBase64(uri))
+		return mHelperString;
+
+	char* imageBlock;
+
+	// Get the binary data from file
+	if (!isFilePathAbsolute(uri))
+		uri = data->mInFileDialogPath + uri;
+
+	// Read the binary data from file
 	std::streampos begin, end;
-	std::ifstream ifs(fileName, std::ios::binary);
+	std::ifstream ifs(uri, std::ios::binary);
 
 	// Set the stream to the beginning of the binary chunk
 	ifs.seekg(startBinaryBuffer + bufferView.mByteOffset, std::ios::beg);
@@ -631,36 +655,39 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromBufferByTextureI
 	uint32_t chunkType;
 	ifs.read((char*)&chunkType, sizeof(chunkType)); // Don't validate on type, because it is not always reliable
 
-	char* imageBlock = new char[bufferView.mByteLength];
+	imageBlock = new char[bufferView.mByteLength];
 	ifs.read(imageBlock, bufferView.mByteLength);
 	ifs.close();
 
 	// Write the image file
-	// TODO: Check on existence of the image file or just overwrite?
-	std::string extension = ".png";
-	if (image.mMimeType == "image/jpeg")
-		extension = ".jpg";
-	if (image.mMimeType == "image/jpg")
-		extension = ".jpg";
-	if (image.mMimeType == "image/bmp")
-		extension = ".bmp";
-	if (image.mMimeType == "image/tiff")
-		extension = ".tiff";
+	mHelperString = writeImageFile(textureName, image.mMimeType, data, materialName, imageBlock, bufferView.mByteLength);
+	delete[] imageBlock;
+	return mHelperString;
+}
 
-	mHelperString = data->mInImportPath +
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::writeImageFile (const std::string& textureName,
+	const std::string& mimeType,
+	Ogre::HlmsEditorPluginData* data,
+	const std::string& materialName,
+	char* imageBlock,
+	int byteLength)
+{
+	// Write the image file
+	// TODO: Check on existence of the image file or just overwrite?
+	std::string extension = getExtensionFromMimeType(mimeType);
+	mHelperOutputFile = data->mInImportPath +
 		data->mInFileDialogBaseName +
 		"/" +
 		materialName +
 		"_" +
 		textureName +
 		extension;
-	std::ofstream ofs(mHelperString, std::ios::binary);
-	ofs.write(imageBlock, bufferView.mByteLength);
-	OUT << TABx4 << "Written image file " << mHelperString << "\n";
+	std::ofstream ofs(mHelperOutputFile, std::ios::binary);
+	ofs.write(imageBlock, byteLength);
+	OUT << TABx4 << "Written image file " << mHelperOutputFile << "\n";
 	ofs.close();
-
-	delete[] imageBlock;
-	return mHelperString;
+	return mHelperOutputFile;
 }
 
 //---------------------------------------------------------------------

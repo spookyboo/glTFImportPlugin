@@ -83,7 +83,8 @@ public:
 	// Public member attributes
 	int mIndex;
 	int mTextCoord;
-	std::string mUri;
+	std::string mUri; // Inherited from Image
+	bool mBase64EncodedUriDerived; // Inherited from Image
 	int mSampler;
 };
 
