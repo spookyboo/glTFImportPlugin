@@ -8,7 +8,6 @@ Plugin:
 ======
 - Test transparent materials
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
-- gLTFImportAccessorsParser --> parse and implement min/max in Accessors
 - Parse animations, assets and skins, possibly nodes, scene, ...
 - Added Sparse class to Accessor and implement Parsing Sparse objects
 - Init gLTF so texture tranformation is possible
@@ -28,3 +27,4 @@ DONE:
 - Use 16 and 32 bit indices ==> No, only use 32 bit
 - Bug? Loading the binary corset model gives an error (no valid json)
 - Add possibility to process embedded base64 data in gTLF files
+- gLTFImportAccessorsParser --> parse and implement min/max in Accessors

@@ -83,19 +83,43 @@ bool gLTFImportAccessorsParser::parseAccessors (rapidjson::Value::ConstMemberIte
 				accessor.mType = it->value.GetString();
 				OUT << TABx2 << "value ==> " << accessor.mType << "\n";
 			}
-			if (it->value.IsInt() && key == "min")
+			if (it->value.IsArray() && key == "min")
 			{
 				// ******** 7. min ********
-				accessor.mMin = it->value.GetInt();
-				OUT << TABx2 << "value ==> " << accessor.mMin << "\n";
-				// TODO: Min is an array
+				accessor.mMinAvailable = true;
+				const rapidjson::Value& minArray = it->value;
+				for (rapidjson::SizeType iMin = 0; iMin < minArray.Size(); iMin++)
+				{
+					if (minArray[iMin].IsInt())
+					{
+						accessor.mMinInt[iMin] = minArray[iMin].GetInt();
+						OUT << TABx2 << "value ==> " << accessor.mMinInt[iMin] << "\n";
+					}
+					else if (minArray[iMin].IsFloat())
+					{
+						accessor.mMinFloat[iMin] = minArray[iMin].GetFloat();
+						OUT << TABx2 << "value ==> " << accessor.mMinFloat[iMin] << "\n";
+					}
+				}
 			}
-			if (it->value.IsInt() && key == "max")
+			if (it->value.IsArray() && key == "max")
 			{
 				// ******** 8. max ********
-				accessor.mMax = it->value.GetInt();
-				OUT << TABx2 << "value ==> " << accessor.mMax << "\n";
-				// TODO: Max is an array
+				accessor.mMaxAvailable = true;
+				const rapidjson::Value& maxArray = it->value;
+				for (rapidjson::SizeType iMax = 0; iMax < maxArray.Size(); iMax++)
+				{
+					if (maxArray[iMax].IsInt())
+					{
+						accessor.mMaxInt[iMax] = maxArray[iMax].GetInt();
+						OUT << TABx2 << "value ==> " << accessor.mMaxInt[iMax] << "\n";
+					}
+					if (maxArray[iMax].IsFloat())
+					{
+						accessor.mMaxFloat[iMax] = maxArray[iMax].GetFloat();
+						OUT << TABx2 << "value ==> " << accessor.mMaxFloat[iMax] << "\n";
+					}
+				}
 			}
 			if (it->value.IsArray() && key == "sparse")
 			{

@@ -61,8 +61,16 @@ class gLTFAccessor
 		bool mNormalized; // default false
 		int mCount; // default 1
 		std::string mType;
-		int mMin; // default 0
-		int mMax; // default 0
+		unsigned char mMinByte[16]; // Not used
+		unsigned char mMaxByte[16]; // Not used
+		unsigned short mMinUshort[16]; // Not used
+		unsigned short mMaxUshort[16]; // Not used
+		int mMinInt[16];
+		int mMaxInt[16];
+		float mMinFloat[16];
+		float mMaxFloat[16];
+		bool mMaxAvailable;
+		bool mMinAvailable;
 		// TODO: map of Sparse classes
 		std::string mName;
 

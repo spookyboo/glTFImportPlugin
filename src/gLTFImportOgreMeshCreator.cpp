@@ -120,19 +120,23 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 				std::string hasPositionsText = "\"true\""; // Assume there are always positions, right?
 				std::string hasNormalsText = "\"true\"";
 				std::string hasTangentsText = "\"true\"";
-				std::string numTextCoordsText = "\"1\""; // Assume there is at least one
+				//std::string numTextCoordsText = "\"1\""; // Assume there is at least one
+				std::string numTextCoordsText = "\"0\"";
 				if (primitive.mNormalAccessorDerived < 0)
 					hasNormalsText = "\"false\"";
 				if (primitive.mTangentAccessorDerived < 0)
 					hasTangentsText = "\"false\"";
+				if (primitive.mTexcoord_0AccessorDerived > -1)
+					numTextCoordsText = "\"1\"";
 				if (primitive.mTexcoord_1AccessorDerived > -1)
 					numTextCoordsText = "\"2\"";
 
 				dst << TABx4 << "<vertexbuffer positions = " << hasPositionsText <<
-				" normals = " << hasNormalsText <<
+					" normals = " << hasNormalsText;
 
 				// Texture coordinate dimensions (assume float2 for now)
-				" texture_coord_dimensions_0 = \"float2\"";
+				if (primitive.mTexcoord_0AccessorDerived > -1)
+					dst << " texture_coord_dimensions_0 = \"float2\"";
 				if (primitive.mTexcoord_1AccessorDerived > -1)
 					dst << " texture_coord_dimensions_1 = \"float2\"";
 
@@ -273,7 +277,7 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (positionAccessor.mType == "VEC3" && positionAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec3Struct pos = readVec3FromBuffer(buffer, i);
+			Vec3Struct pos = readVec3FromBuffer(buffer, i, positionAccessor);
 			mPositionsMap[i] = pos;
 		}
 	}
@@ -298,7 +302,7 @@ void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& p
 		// A normal  must be a VEC3/Float, otherwise it doesn't get read
 		if (normalAccessor.mType == "VEC3" && normalAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec3Struct pos = readVec3FromBuffer(buffer, i);
+			Vec3Struct pos = readVec3FromBuffer(buffer, i, normalAccessor);
 			mNormalsMap[i] = pos;
 		}
 	}
@@ -323,7 +327,7 @@ void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& 
 		// A tangent must be a VEC3/Float, otherwise it doesn't get read
 		if (tangentAccessor.mType == "VEC3" && tangentAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec3Struct pos = readVec3FromBuffer(buffer, i);
+			Vec3Struct pos = readVec3FromBuffer(buffer, i, tangentAccessor);
 			mTangentsMap[i] = pos;
 		}
 	}
@@ -346,17 +350,17 @@ void gLTFImportOgreMeshCreator::readIndicesFromUriOrFile (const gLTFPrimitive& p
 	if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = readUnsignedByteFromBuffer(buffer, i);
+			mIndicesMap[i] = readUnsignedByteFromBuffer(buffer, i, indicesAccessor);
 	}
 	else if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = readUnsignedShortFromBuffer(buffer, i);
+			mIndicesMap[i] = readUnsignedShortFromBuffer(buffer, i, indicesAccessor);
 	}
 	else if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_INT)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = readUnsignedIntFromBuffer(buffer, i);
+			mIndicesMap[i] = readUnsignedIntFromBuffer(buffer, i, indicesAccessor);
 	}
 
 	delete[] buffer;
@@ -379,7 +383,7 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = readVec2FromBuffer (buffer, i);
+			Vec2Struct pos = readVec2FromBuffer (buffer, i, mTexcoord_0Accessor);
 			mTexcoords_0Map[i] = pos;
 		}
 	}
@@ -404,7 +408,7 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = readVec2FromBuffer(buffer, i);
+			Vec2Struct pos = readVec2FromBuffer(buffer, i, mTexcoord_1Accessor);
 			mTexcoords_1Map[i] = pos;
 		}
 	}
@@ -458,34 +462,54 @@ char* gLTFImportOgreMeshCreator::getBufferChunk (const std::string& uri,
 }
 
 //---------------------------------------------------------------------
-unsigned char gLTFImportOgreMeshCreator::readUnsignedByteFromBuffer (char* buffer, int count)
+unsigned char gLTFImportOgreMeshCreator::readUnsignedByteFromBuffer (char* buffer, int count, gLTFAccessor accessor)
 {
 	unsigned char scalar;
 	int unsignedCharSize = sizeof(unsigned char);
 	memcpy(&scalar, &buffer[count * unsignedCharSize], unsignedCharSize);
+
+	// Correct with min/max
+	if (accessor.mMinAvailable)
+		scalar = scalar < accessor.mMinInt[0] ? accessor.mMinInt[0] : scalar;
+	if (accessor.mMaxAvailable)
+		scalar = scalar > accessor.mMaxInt[0] ? accessor.mMaxInt[0] : scalar;
 	return scalar;
 }
 
 //---------------------------------------------------------------------
-unsigned short gLTFImportOgreMeshCreator::readUnsignedShortFromBuffer (char* buffer, int count)
+unsigned short gLTFImportOgreMeshCreator::readUnsignedShortFromBuffer (char* buffer, int count, gLTFAccessor accessor)
 {
 	unsigned short scalar;
 	int unsignedShortSize = sizeof(unsigned short);
 	memcpy(&scalar, &buffer[count * unsignedShortSize], unsignedShortSize);
+
+	// Correct with min/max
+	if (accessor.mMinAvailable)
+		scalar = scalar < accessor.mMinInt[0] ? accessor.mMinInt[0] : scalar;
+	if (accessor.mMaxAvailable)
+		scalar = scalar > accessor.mMaxInt[0] ? accessor.mMaxInt[0] : scalar;
 	return scalar;
 }
 
 //---------------------------------------------------------------------
-unsigned int gLTFImportOgreMeshCreator::readUnsignedIntFromBuffer (char* buffer, int count)
+unsigned int gLTFImportOgreMeshCreator::readUnsignedIntFromBuffer (char* buffer, int count, gLTFAccessor accessor)
 {
 	unsigned int scalar;
 	int unsignedIntSize = sizeof(unsigned int);
 	memcpy(&scalar, &buffer[count * unsignedIntSize], unsignedIntSize);
+
+	// Correct with min/max
+	if (accessor.mMinAvailable)
+		scalar = scalar < accessor.mMinInt[0] ? accessor.mMinInt[0] : scalar;
+	if (accessor.mMaxAvailable)
+		scalar = scalar > accessor.mMaxInt[0] ? accessor.mMaxInt[0] : scalar;
 	return scalar;
 }
 
 //---------------------------------------------------------------------
-const gLTFImportOgreMeshCreator::Vec2Struct& gLTFImportOgreMeshCreator::readVec2FromBuffer (char* buffer, int count)
+const gLTFImportOgreMeshCreator::Vec2Struct& gLTFImportOgreMeshCreator::readVec2FromBuffer (char* buffer, 
+	int count,
+	gLTFAccessor accessor)
 {
 	float fRaw;
 	int floatSize = sizeof(float);
@@ -494,11 +518,25 @@ const gLTFImportOgreMeshCreator::Vec2Struct& gLTFImportOgreMeshCreator::readVec2
 	mHelperVec2Struct.u = fRaw;
 	memcpy(&fRaw, &buffer[count * vec2Size + floatSize], floatSize);
 	mHelperVec2Struct.v = fRaw;
+	
+	// Correct with min/max
+	if (accessor.mMinAvailable)
+	{
+		mHelperVec2Struct.u = mHelperVec2Struct.u < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : mHelperVec2Struct.u;
+		mHelperVec2Struct.v = mHelperVec2Struct.v < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : mHelperVec2Struct.v;
+	}
+	if (accessor.mMaxAvailable)
+	{
+		mHelperVec2Struct.u = mHelperVec2Struct.u > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : mHelperVec2Struct.u;
+		mHelperVec2Struct.v = mHelperVec2Struct.v > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : mHelperVec2Struct.v;
+	}
 	return mHelperVec2Struct;
 }
 
 //---------------------------------------------------------------------
-const gLTFImportOgreMeshCreator::Vec3Struct& gLTFImportOgreMeshCreator::readVec3FromBuffer (char* buffer, int count)
+const gLTFImportOgreMeshCreator::Vec3Struct& gLTFImportOgreMeshCreator::readVec3FromBuffer (char* buffer, 
+	int count, 
+	gLTFAccessor accessor)
 {
 	float fRaw;
 	int floatSize = sizeof(float);
@@ -509,6 +547,19 @@ const gLTFImportOgreMeshCreator::Vec3Struct& gLTFImportOgreMeshCreator::readVec3
 	mHelperVec3Struct.y = fRaw;
 	memcpy(&fRaw, &buffer[count * vec3Size + 2 * floatSize], floatSize);
 	mHelperVec3Struct.z = fRaw;
+
+	// Correct with min/max
+	if (accessor.mMinAvailable)
+	{
+		mHelperVec3Struct.x = mHelperVec3Struct.x < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : mHelperVec3Struct.x;
+		mHelperVec3Struct.y = mHelperVec3Struct.y < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : mHelperVec3Struct.y;
+		mHelperVec3Struct.z = mHelperVec3Struct.z < accessor.mMinFloat[2] ? accessor.mMinFloat[2] : mHelperVec3Struct.z;
+	}
+	if (accessor.mMaxAvailable)
+	{
+		mHelperVec3Struct.x = mHelperVec3Struct.x > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : mHelperVec3Struct.x;
+		mHelperVec3Struct.y = mHelperVec3Struct.y > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : mHelperVec3Struct.y;
+		mHelperVec3Struct.z = mHelperVec3Struct.z > accessor.mMaxFloat[2] ? accessor.mMaxFloat[2] : mHelperVec3Struct.z;
+	}
 	return mHelperVec3Struct;
 }
-

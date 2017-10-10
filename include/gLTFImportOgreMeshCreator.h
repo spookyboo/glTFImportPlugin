@@ -108,11 +108,11 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data, 
 			gLTFAccessor accessor, 
 			int startBinaryBuffer);
-		unsigned char readUnsignedByteFromBuffer(char* buffer, int count); // Read an unsigned byte
-		unsigned short readUnsignedShortFromBuffer(char* buffer, int count); // Read an unsigned short
-		unsigned int readUnsignedIntFromBuffer(char* buffer, int count); // Read an unsigned int
-		const Vec2Struct& readVec2FromBuffer (char* buffer, int count); // Read a Vec2
-		const Vec3Struct& readVec3FromBuffer (char* buffer, int count); // Read a Vec3
+		unsigned char readUnsignedByteFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned byte
+		unsigned short readUnsignedShortFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned short
+		unsigned int readUnsignedIntFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned int
+		const Vec2Struct& readVec2FromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
+		const Vec3Struct& readVec3FromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec3
 
 	private:
 		std::string mHelperString;

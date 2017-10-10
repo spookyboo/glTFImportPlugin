@@ -36,13 +36,13 @@ gLTFAccessor::gLTFAccessor (void) :
 	mByteOffset(0),
 	mNormalized(false),
 	mCount(1),
-	mMin(0),
-	mMax(0),
 	mBufferIndexDerived(-1),
 	mByteOffsetBufferViewDerived(0),
 	mByteLengthDerived(0),
 	mByteStrideDerived(0),
-	mTargetDerived(0)
+	mTargetDerived(0),
+	mMaxAvailable(false),
+	mMinAvailable(false)
 {
 	mType = "";
 	mName = "";
