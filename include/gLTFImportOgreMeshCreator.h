@@ -49,6 +49,13 @@ class gLTFImportOgreMeshCreator
 			float y;
 			float z;
 		};
+		struct Vec4Struct
+		{
+			float r;
+			float g;
+			float b;
+			float a;
+		};
 
 		gLTFImportOgreMeshCreator(void) 
 		{
@@ -94,6 +101,10 @@ class gLTFImportOgreMeshCreator
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Read the indices
+		void readColorsFromUriOrFile (const gLTFPrimitive& primitive,
+			std::map<int, gLTFAccessor> accessorMap,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer); // Read the diffuse colours
 		void readTexCoords0FromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
@@ -112,7 +123,8 @@ class gLTFImportOgreMeshCreator
 		unsigned short readUnsignedShortFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned short
 		unsigned int readUnsignedIntFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned int
 		const Vec2Struct& readVec2FromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
-		const Vec3Struct& readVec3FromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec3
+		const Vec3Struct& readVec3FromBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec3
+		const Vec4Struct& readVec4FromBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec4
 
 	private:
 		std::string mHelperString;
@@ -120,9 +132,11 @@ class gLTFImportOgreMeshCreator
 		std::map <int, Vec3Struct> mPositionsMap;
 		std::map <int, Vec3Struct> mNormalsMap;
 		std::map <int, Vec3Struct> mTangentsMap;
+		std::map <int, Vec4Struct> mColor_0AccessorMap;
 		std::map <int, Vec2Struct> mTexcoords_0Map;
 		std::map <int, Vec2Struct> mTexcoords_1Map;
 		std::map <int, unsigned int> mIndicesMap;
+		Vec4Struct mHelperVec4Struct;
 		Vec3Struct mHelperVec3Struct;
 		Vec2Struct mHelperVec2Struct;
 };
