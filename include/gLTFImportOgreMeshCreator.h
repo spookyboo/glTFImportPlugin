@@ -70,6 +70,16 @@ class gLTFImportOgreMeshCreator
 			std::map<int, gLTFAccessor> accessorMap,
 			int startBinaryBuffer); // Creates *.xml and .mesh files
 
+		bool createIndividualOgreMeshFiles(Ogre::HlmsEditorPluginData* data,
+			std::map<int, gLTFMesh> meshesMap,
+			std::map<int, gLTFAccessor> accessorMap,
+			int startBinaryBuffer); // Creates individual files
+
+		bool createCombinedOgreMeshFile(Ogre::HlmsEditorPluginData* data,
+			std::map<int, gLTFMesh> meshesMap,
+			std::map<int, gLTFAccessor> accessorMap,
+			int startBinaryBuffer); // Combine into one file
+
 	protected:
 		// Write to mesh .xml file
 		bool writeFaces(std::ofstream& dst,
@@ -119,19 +129,24 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data, 
 			gLTFAccessor accessor, 
 			int startBinaryBuffer);
-		unsigned char readUnsignedByteFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned byte
-		unsigned short readUnsignedShortFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned short
-		unsigned int readUnsignedIntFromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned int
-		const Vec2Struct& readVec2FromBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
-		const Vec3Struct& readVec3FromBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec3
-		const Vec4Struct& readVec4FromBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec4
+		unsigned char readFromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned byte
+		unsigned short readFromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned short
+		unsigned int readFromUnsignedIntBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned int
+		const Vec2Struct& readVec2FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
+		const Vec2Struct& readVec2FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
+		const Vec2Struct& readVec2FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
+		const Vec3Struct& readVec3FromFloatBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec3
+		const Vec4Struct& readVec4FromFloatBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec4
+
+		// Min/Max corrections
+		void correctVec2StructWithMinMax (gLTFAccessor accessor, Vec2Struct* vec2Struct);
 
 	private:
 		std::string mHelperString;
 		std::string fileNameBufferHelper;
 		std::map <int, Vec3Struct> mPositionsMap;
 		std::map <int, Vec3Struct> mNormalsMap;
-		std::map <int, Vec3Struct> mTangentsMap;
+		std::map <int, Vec4Struct> mTangentsMap;
 		std::map <int, Vec4Struct> mColor_0AccessorMap;
 		std::map <int, Vec2Struct> mTexcoords_0Map;
 		std::map <int, Vec2Struct> mTexcoords_1Map;

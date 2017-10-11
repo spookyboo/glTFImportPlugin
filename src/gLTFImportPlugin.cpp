@@ -99,7 +99,24 @@ namespace Ogre
 		// 1. Open a dialog to read the gLTF file
 		// 2. Create a directory in the import directory with the base name of the selected file
 		return	PAF_PRE_IMPORT_OPEN_FILE_DIALOG |
-			PAF_PRE_IMPORT_MK_DIR;
+			PAF_PRE_IMPORT_MK_DIR |
+			PAF_PRE_ACTION_SETTINGS_DIALOG;
+	}
+
+	//---------------------------------------------------------------------
+	std::map<std::string, HlmsEditorPluginData::PLUGIN_PROPERTY> gLTFImportPlugin::getProperties(void)
+	{
+		// Mesh is subMesh property
+		HlmsEditorPluginData::PLUGIN_PROPERTY property;
+		property.propertyName = "mesh_is_submesh";
+		property.labelName = "Combine all meshes into one mesh";
+		property.info = "gLTF distinguishes meshes and primitives. Meshes are transformed to Ogre meshes, while primitives are transformed into OgresubMeshes\n.\
+						 If this property is set, each gLTF mesh is transformed to a submesh. This results in one Ogre mesh per import.";
+		property.type = HlmsEditorPluginData::BOOL;
+		property.boolValue = false;
+		mProperties[property.propertyName] = property;
+		
+		return mProperties;
 	}
 
 	//---------------------------------------------------------------------

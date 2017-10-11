@@ -67,9 +67,10 @@ namespace Ogre
 			virtual void performPreExportActions(void);
 			virtual void performPostExportActions(void);
 			virtual unsigned int getActionFlag(void);
+			virtual std::map<std::string, HlmsEditorPluginData::PLUGIN_PROPERTY> getProperties (void);
 
 		protected:
-			//bool loadMaterial(const String& fileName);
+			std::map<std::string, HlmsEditorPluginData::PLUGIN_PROPERTY> mProperties;
     };
 }
 
