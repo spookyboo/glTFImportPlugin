@@ -44,7 +44,6 @@ class gLTFImportOgreMeshCreator
 		{
 			mHelperString = "";
 			fileNameBufferHelper = "";
-			mMeshToolCmd = "OgreMeshTool -v2 -e -t -ts 4 -O puqs ";
 		};
 		virtual ~gLTFImportOgreMeshCreator (void) {};
 
@@ -155,7 +154,6 @@ class gLTFImportOgreMeshCreator
 		Vec3Struct mHelperVec3Struct;
 		Vec2Struct mHelperVec2Struct;
 		gLTFImportBufferReader mBufferReader;
-		std::string mMeshToolCmd;
 };
 
 #endif

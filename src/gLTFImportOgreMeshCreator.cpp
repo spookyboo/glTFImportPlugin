@@ -722,39 +722,29 @@ bool gLTFImportOgreMeshCreator::convertXmlFileToMesh (Ogre::HlmsEditorPluginData
 	const std::string& xmlFileName, 
 	const std::string& meshFileName)
 {
-	mMeshToolCmd = "OgreMeshTool -v2 ";
+	std::string meshToolCmd= "OgreMeshTool -v2 ";
+	std::string meshToolGenerateTangents = "";
+	std::string meshToolGenerateEdgeLists = "-e ";
+	std::string meshToolOptimize = "-O qs ";
 	
 	// First get the property values (from the HLMS Editor)
 	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
 	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY>::iterator it = properties.find("generate_edge_lists");
-	if (it != properties.end())
-	{
-		if (!(it->second).boolValue)
-			mMeshToolCmd += "-e ";
-	}
-	else
-		mMeshToolCmd += "-e ";
+	if (it != properties.end() && (it->second).boolValue)
+		meshToolGenerateEdgeLists = "";
 
 	it = properties.find("generate_tangents");
-	if (it != properties.end())
-	{
-		if ((it->second).boolValue)
-			mMeshToolCmd += "-t -ts 4 ";
-	}
+	if (it != properties.end() && (it->second).boolValue)
+		meshToolGenerateTangents = "-t -ts 4 ";
 
 	it = properties.find("optimize_for_desktop");
-	if (it != properties.end())
-	{
-		if ((it->second).boolValue)
-			mMeshToolCmd += "-O puqs ";
-		else
-			mMeshToolCmd += "-O qs ";
-	}
-	else
-		mMeshToolCmd += "-O qs ";
+	if (it != properties.end() && (it->second).boolValue)
+		meshToolOptimize = "-O puqs ";
+
+	meshToolCmd += meshToolGenerateEdgeLists + meshToolGenerateTangents + meshToolOptimize;
 
 	// Desktop with normals
-	std::string runOgreMeshTool = mMeshToolCmd + "\"" + xmlFileName + "\" \"" + meshFileName + "\"";
+	std::string runOgreMeshTool = meshToolCmd + "\"" + xmlFileName + "\" \"" + meshFileName + "\"";
 	OUT << "Generating mesh: " << runOgreMeshTool << "\n";
 	system(runOgreMeshTool.c_str());
 	return true;

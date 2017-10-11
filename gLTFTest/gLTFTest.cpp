@@ -25,6 +25,13 @@ int main()
 	property.boolValue = true; // Combine meshes to one mesh or make individual mesh files
 	pluginData.mInPropertiesMap[property.propertyName] = property;
 	
+	property.propertyName = "optimize_for_desktop";
+	property.labelName = "Optimized for Desktop";
+	property.info = "";
+	property.type = Ogre::HlmsEditorPluginData::BOOL;
+	property.boolValue = true; // Combine meshes to one mesh or make individual mesh files
+	pluginData.mInPropertiesMap[property.propertyName] = property;
+
 	//pluginData.mInFileDialogName = "BoomBox.gltf"; // Json text file
 	//pluginData.mInFileDialogName = "Suzanne.gltf"; // Json text file
 	//pluginData.mInFileDialogName = "BoomBox.glb"; // Binary file

@@ -45,7 +45,7 @@ struct Devnull : std::ostream, std::streambuf
 
 //---------------------------------------------------------------------
 // Disable the line below when using gLTFTEST, because otherwise Ogre::Image (used for texture transformation) does not work
-//#define TEXTURE_TRANSFORMATION 1
+#define TEXTURE_TRANSFORMATION 1
 
 //---------------------------------------------------------------------
 static const std::string TAB = "  ";
