@@ -162,6 +162,7 @@
     <ClCompile Include="..\src\gLTFImportImagesParser.cpp" />
     <ClCompile Include="..\src\gLTFImportMaterialsParser.cpp" />
     <ClCompile Include="..\src\gLTFImportMeshesParser.cpp" />
+    <ClCompile Include="..\src\gLTFImportNodesParser.cpp" />
     <ClCompile Include="..\src\gLTFImportOgreMeshCreator.cpp" />
     <ClCompile Include="..\src\gLTFImportPbsMaterialsCreator.cpp" />
     <ClCompile Include="..\src\gLTFImportPrimitivesParser.cpp" />
@@ -169,6 +170,7 @@
     <ClCompile Include="..\src\gLTFImportTexturesParser.cpp" />
     <ClCompile Include="..\src\gLTFMaterial.cpp" />
     <ClCompile Include="..\src\gLTFMesh.cpp" />
+    <ClCompile Include="..\src\gLTFNode.cpp" />
     <ClCompile Include="..\src\gLTFPrimitive.cpp" />
     <ClCompile Include="..\src\gLTFSampler.cpp" />
     <ClCompile Include="..\src\gLTFTexture.cpp" />

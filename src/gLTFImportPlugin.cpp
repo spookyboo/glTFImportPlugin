@@ -106,7 +106,9 @@ namespace Ogre
 	//---------------------------------------------------------------------
 	std::map<std::string, HlmsEditorPluginData::PLUGIN_PROPERTY> gLTFImportPlugin::getProperties(void)
 	{
-		// Mesh is subMesh property
+		// Set the default property values
+
+		// Combine meshes to one mesh
 		HlmsEditorPluginData::PLUGIN_PROPERTY property;
 		property.propertyName = "mesh_is_submesh";
 		property.labelName = "Combine all meshes into one mesh";
@@ -115,7 +117,31 @@ namespace Ogre
 		property.type = HlmsEditorPluginData::BOOL;
 		property.boolValue = false;
 		mProperties[property.propertyName] = property;
-		
+
+		// Generate tangents
+		property.propertyName = "generate_tangents";
+		property.labelName = "Generate tangents";
+		property.info = "";
+		property.type = HlmsEditorPluginData::BOOL;
+		property.boolValue = false;
+		mProperties[property.propertyName] = property;
+
+		// Generate edge lists
+		property.propertyName = "generate_edge_lists";
+		property.labelName = "Generate edge lists";
+		property.info = "This is needed for stencil shadows";
+		property.type = HlmsEditorPluginData::BOOL;
+		property.boolValue = false;
+		mProperties[property.propertyName] = property;
+
+		// Optimize for desktop
+		property.propertyName = "optimize_for_desktop";
+		property.labelName = "Optimize for desktop";
+		property.info = "";
+		property.type = HlmsEditorPluginData::BOOL;
+		property.boolValue = true;
+		mProperties[property.propertyName] = property;
+
 		return mProperties;
 	}
 

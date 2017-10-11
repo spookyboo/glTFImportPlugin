@@ -65,7 +65,11 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 			startBinaryBuffer += 8;
 		
 		// Create the Meshes
-		result = mOgreMeshCreator.createOgreMeshFiles (data, mMeshesMap, mAccessorsMap, startBinaryBuffer);
+		result = mOgreMeshCreator.createOgreMeshFiles (data, 
+			mNodesMap, 
+			mMeshesMap, 
+			mAccessorsMap, 
+			startBinaryBuffer);
 	}
 
 	return result;
@@ -178,44 +182,49 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 		OUT << "-------------------------------- key gLTF ==> " << it->name.GetString() << " --------------------------------\n";
 		std::string name(it->name.GetString());
 
+		if (it->value.IsArray() && name == "nodes")
+		{
+			mNodesParser.parseNodes(it); // Parse the nodes
+			mNodesMap = mNodesParser.getParsedNodes();
+		}
 		if (it->value.IsArray() && name == "accessors")
 		{
-			mAccessorsParser.parseAccessors(it); // Create a gLTFImportAccessorsParser object and parse the accessors
+			mAccessorsParser.parseAccessors(it); // Parse the accessors
 			mAccessorsMap = mAccessorsParser.getParsedAccessors();
 		}
 		if (it->value.IsArray() && name == "meshes")
 		{
-			mMeshesParser.parseMeshes(it); // Create a gLTFImportMeshesParser object and parse the meshes
+			mMeshesParser.parseMeshes(it); // Parse the meshes
 			mMeshesMap = mMeshesParser.getParsedMeshes();
 		}
 		if (it->value.IsArray() && name == "materials")
 		{
-			mMaterialsParser.parseMaterials(it); // Create a gLTFImportMaterialsParser object and parse the materials
+			mMaterialsParser.parseMaterials(it); // Parse the materials
 			mMaterialsMap = mMaterialsParser.getParsedMaterials();
 		}
 		if (it->value.IsArray() && name == "textures")
 		{
-			mTexturesParser.parseTextures(it); // Create a gLTFImportTexturesParser object and parse the textures
+			mTexturesParser.parseTextures(it); // Parse the textures
 			mTexturesMap = mTexturesParser.getParsedTextures();
 		}
 		if (it->value.IsArray() && name == "images")
 		{
-			mImagesParser.parseImages(it); // Create a gLTFImportImagesParser object and parse the images
+			mImagesParser.parseImages(it); // Parse the images
 			mImagesMap = mImagesParser.getParsedImages();
 		}
 		if (it->value.IsArray() && name == "samplers")
 		{
-			mSamplersParser.parseSamplers(it); // Create a gLTFImportSamplersParser object and parse the samplers
+			mSamplersParser.parseSamplers(it); // Parse the samplers
 			mSamplersMap = mSamplersParser.getParsedSamplers();
 		}
 		if (it->value.IsArray() && name == "bufferViews")
 		{
-			mBufferViewsParser.parseBufferViews(it); // Create a gLTFImportBufferViewsParser object and parse the bufferViews
+			mBufferViewsParser.parseBufferViews(it); // Parse the bufferViews
 			mBufferViewsMap = mBufferViewsParser.getParsedBufferViews();
 		}
 		if (it->value.IsArray() && name == "buffers")
 		{
-			mBuffersParser.parseBuffers(fileName, it); // Create a gLTFImportBuffersParser object and parse the buffers
+			mBuffersParser.parseBuffers(fileName, it); // Parse the buffers
 			mBuffersMap = mBuffersParser.getParsedBuffers();
 		}
 
@@ -250,6 +259,7 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 	propagateAccessors();
 	//propagateMeshes(data, startBinaryBuffer);
 	propagateMeshes(data);
+	propagateNodes(data);
 	return true;
 }
 
@@ -429,6 +439,23 @@ bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data)
 	}
 		
 	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::propagateNodes(Ogre::HlmsEditorPluginData* data)
+{
+	// Propagate the mesh to the node
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateNodes\n";
+	std::map<int, gLTFNode>::iterator itNodes;
+	gLTFMesh mesh;
+	gLTFNode node;
+
+	// Iterate though the nodes and set the derived mesh object
+	for (itNodes = mNodesMap.begin(); itNodes != mNodesMap.end(); itNodes++)
+	{
+		mesh = mMeshesMap[itNodes->second.mMesh];
+		itNodes->second.mMeshDerived = mesh;
+	}
 }
 
 //---------------------------------------------------------------------

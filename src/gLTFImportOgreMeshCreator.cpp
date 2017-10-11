@@ -28,10 +28,13 @@
 
 #include "gLTFImportOgreMeshCreator.h"
 #include "rapidjson/document.h"
+#include "OgreVector3.h"
+#include "OgreQuaternion.h"
 #include "base64.h"
 
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData* data,
+	std::map<int, gLTFNode> nodesMap,
 	std::map<int, gLTFMesh> meshesMap,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer)
@@ -46,7 +49,7 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 	{
 		// Property found; determine its value
 		if ((it->second).boolValue)
-			return createCombinedOgreMeshFile (data, meshesMap, accessorMap, startBinaryBuffer);
+			return createCombinedOgreMeshFile (data, nodesMap, accessorMap, startBinaryBuffer);
 		else
 			return createIndividualOgreMeshFiles (data, meshesMap, accessorMap, startBinaryBuffer);
 	}
@@ -72,10 +75,12 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 	std::map<int, gLTFMesh>::iterator it;
 	gLTFMesh mesh;
 	std::string ogreFullyQualifiedMeshXmlFileName;
+	std::string ogreFullyQualifiedMeshMeshFileName;
 	for (it = meshesMap.begin(); it != meshesMap.end(); it++)
 	{
 		mesh = it->second;
 		ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + mesh.mName + ".xml";
+		ogreFullyQualifiedMeshMeshFileName = fullyQualifiedImportPath + mesh.mName + ".mesh";
 		OUT << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 
 		// Create the file
@@ -85,34 +90,37 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		dst << "<mesh>\n";
 		dst << TAB << "<submeshes>\n";
 
-		writeSubmesh(dst, mesh, data, meshesMap, accessorMap, startBinaryBuffer);
+		writeSubmesh(dst, mesh, data, accessorMap, startBinaryBuffer);
 		
 		dst << TAB << "</submeshes>\n";
 		dst << "</mesh>\n";
 
 		dst.close();
+		OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 	}
 
-	OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
-
+	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
 	return true;
 }
 
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPluginData* data,
-	std::map<int, gLTFMesh> meshesMap,
+	std::map<int, gLTFNode> nodesMap,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer)
 {
-	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreMeshFile\n";
+	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreMeshFile2\n";
 
 	// Create the Ogre mesh xml files (*.xml)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
 
 	// Create one combined Ogre mesh file (.xml)
-	std::map<int, gLTFMesh>::iterator it;
+	std::map<int, gLTFNode>::iterator it;
+	gLTFNode node;
 	gLTFMesh mesh;
+
 	std::string ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".xml";
+	std::string ogreFullyQualifiedMeshMeshFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".mesh";
 	OUT << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 
 	// Create the file
@@ -122,20 +130,55 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	dst << "<mesh>\n";
 	dst << TAB << "<submeshes>\n";
 
-	// Iterate through meshes and add the geometry data
-	for (it = meshesMap.begin(); it != meshesMap.end(); it++)
+	// Iterate through nodes and add the geometry data of the related meshes
+	for (it = nodesMap.begin(); it != nodesMap.end(); it++)
 	{
-		mesh = it->second;
+		node = it->second;
+		if (node.mMesh > -1)
+		{
+			mesh = node.mMeshDerived;
 
-		// Iterate through primitives (each gLTF mesh is a submesh)
-		// TODO: Apply transformation to the submeshes, because they are now have the same origin/rotation !!!!!!!!!
-		writeSubmesh(dst, mesh, data, meshesMap, accessorMap, startBinaryBuffer);
+			// Iterate through primitives (each gLTF mesh is a submesh)
+			// Apply transformation of the node
+			Vec3Struct translation;
+			QuaternionStruct rotation;
+			Vec3Struct scale;
+			if (node.mHasTranslation)
+			{
+				translation.x = node.mTranslation[0];
+				translation.y = node.mTranslation[1];
+				translation.z = node.mTranslation[2];
+			}
+			if (node.mHasRotation)
+			{
+				rotation.x = node.mRotation[0];
+				rotation.y = node.mRotation[1];
+				rotation.z = node.mRotation[2];
+				rotation.w = node.mRotation[3];
+			}
+			if (node.mHasScale)
+			{
+				scale.x = node.mScale[0];
+				scale.y = node.mScale[1];
+				scale.z = node.mScale[2];
+			}
+
+			writeSubmesh(dst, 
+				mesh, 
+				data, 
+				accessorMap, 
+				startBinaryBuffer, 
+				translation,
+				rotation,
+				scale);
+		}
 	}
-	
+
 	dst << TAB << "</submeshes>\n";
 	dst << "</mesh>\n";
 	dst.close();
 	OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
 
 	return true;
 }
@@ -144,9 +187,11 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst, 
 	gLTFMesh mesh,
 	Ogre::HlmsEditorPluginData* data,
-	std::map<int, gLTFMesh> meshesMap,
 	std::map<int, gLTFAccessor> accessorMap,
-	int startBinaryBuffer)
+	int startBinaryBuffer,
+	Vec3Struct translation,
+	QuaternionStruct rotation,
+	Vec3Struct scale)
 {
 	std::map<int, gLTFPrimitive>::iterator itPrimitives;
 	gLTFPrimitive primitive;
@@ -244,7 +289,7 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 				">\n";
 
 			// Write vertices
-			writeVertices(dst, primitive, accessorMap, data, startBinaryBuffer);
+			writeVertices(dst, primitive, accessorMap, data, startBinaryBuffer, translation, rotation, scale);
 
 			// Closing tags
 			dst << TABx4 << "</vertexbuffer>\n";
@@ -300,10 +345,19 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 	const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
-	int startBinaryBuffer)
+	int startBinaryBuffer,
+	Vec3Struct translation,
+	QuaternionStruct rotation,
+	Vec3Struct scale)
 {
 	// Read positions, normals, tangents,... etc.
-	readPositionsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the positions
+	readPositionsFromUriOrFile(primitive, 
+		accessorMap, 
+		data, 
+		startBinaryBuffer, 
+		translation,
+		rotation,
+		scale); // Read the positions
 	readNormalsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the normals
 	readTangentsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the tangents
 	readColorsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the diffuse colours
@@ -376,7 +430,10 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
-	int startBinaryBuffer)
+	int startBinaryBuffer,
+	Vec3Struct translation,
+	QuaternionStruct rotation,
+	Vec3Struct scale)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived];
@@ -389,7 +446,21 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (positionAccessor.mType == "VEC3" && positionAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
+			// Perform the transformation; use Ogre's classes, becaus they are proven
 			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, i, positionAccessor);
+			Ogre::Vector3 oPos (pos.x, pos.y, pos.z);
+			Ogre::Vector3 oTranslation (translation.x, translation.y, translation.z);
+			Ogre::Quaternion oRotation (rotation.w, rotation.x, rotation.y, rotation.z);
+			Ogre::Vector3 oScale (scale.x, scale.y, scale.z);
+			
+			oPos += oTranslation;
+			if (oRotation != Ogre::Quaternion::IDENTITY)
+				oPos = oRotation * oPos;
+			if (oScale != Ogre::Vector3::ZERO)
+				oPos *= oScale;
+			pos.x = oPos.x;
+			pos.y = oPos.y;
+			pos.z = oPos.z;
 			mPositionsMap[i] = pos;
 		}
 	}
@@ -645,3 +716,47 @@ char* gLTFImportOgreMeshCreator::getBufferChunk (const std::string& uri,
 	
 	return buffer;
 }
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::convertXmlFileToMesh (Ogre::HlmsEditorPluginData* data, 
+	const std::string& xmlFileName, 
+	const std::string& meshFileName)
+{
+	mMeshToolCmd = "OgreMeshTool -v2 ";
+	
+	// First get the property values (from the HLMS Editor)
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY>::iterator it = properties.find("generate_edge_lists");
+	if (it != properties.end())
+	{
+		if (!(it->second).boolValue)
+			mMeshToolCmd += "-e ";
+	}
+	else
+		mMeshToolCmd += "-e ";
+
+	it = properties.find("generate_tangents");
+	if (it != properties.end())
+	{
+		if ((it->second).boolValue)
+			mMeshToolCmd += "-t -ts 4 ";
+	}
+
+	it = properties.find("optimize_for_desktop");
+	if (it != properties.end())
+	{
+		if ((it->second).boolValue)
+			mMeshToolCmd += "-O puqs ";
+		else
+			mMeshToolCmd += "-O qs ";
+	}
+	else
+		mMeshToolCmd += "-O qs ";
+
+	// Desktop with normals
+	std::string runOgreMeshTool = mMeshToolCmd + "\"" + xmlFileName + "\" \"" + meshFileName + "\"";
+	OUT << "Generating mesh: " << runOgreMeshTool << "\n";
+	system(runOgreMeshTool.c_str());
+	return true;
+}
+

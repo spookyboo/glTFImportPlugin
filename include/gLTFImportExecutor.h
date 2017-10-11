@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "gLTFImportSamplersParser.h"
 #include "gLTFImportBuffersParser.h"
 #include "gLTFImportBufferViewsParser.h"
+#include "gLTFImportNodesParser.h"
 #include "gLTFImportPbsMaterialsCreator.h"
 #include "gLTFImportOgreMeshCreator.h"
 #include "rapidjson/document.h"
@@ -86,6 +87,7 @@ class gLTFImportExecutor
 		bool propagateAccessors(void); // Accessors are enriched with data from Buffers and BufferViews
 		//bool propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer); // Primitives are enriched with data from Materials and Accessors
 		bool propagateMeshes (Ogre::HlmsEditorPluginData* data); // Primitives are enriched with data from Materials and Accessors
+		bool propagateNodes(Ogre::HlmsEditorPluginData* data);
 		
 		// Utils
 		const gLTFImage& getImageByTextureIndex (int index);
@@ -135,6 +137,7 @@ class gLTFImportExecutor
 		std::map<int, gLTFSampler> mSamplersMap;
 		std::map<int, gLTFBufferView> mBufferViewsMap;
 		std::map<int, gLTFBuffer> mBuffersMap;
+		std::map<int, gLTFNode> mNodesMap;
 
 		gLTFImportAccessorsParser mAccessorsParser;
 		gLTFImportMeshesParser mMeshesParser;
@@ -144,6 +147,7 @@ class gLTFImportExecutor
 		gLTFImportBuffersParser mBuffersParser;
 		gLTFImportBufferViewsParser mBufferViewsParser;
 		gLTFImportImagesParser mImagesParser;
+		gLTFImportNodesParser mNodesParser;
 		
 		// Creator classes
 		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;

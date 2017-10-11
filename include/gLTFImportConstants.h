@@ -62,21 +62,38 @@ static std::string gJsonString = "";
 //---------------------------------------------------------------------
 struct Vec2Struct
 {
-	float u;
-	float v;
+	float u = 0.0f;
+	float v = 0.0f;
+
+	Vec2Struct operator+(const Vec2Struct& v2)
+	{
+		u += v2.u;
+		v += v2.v;
+		return *this;
+	}
 };
+
 struct Vec3Struct
 {
-	float x;
-	float y;
-	float z;
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
 };
+
 struct Vec4Struct
 {
-	float r;
-	float g;
-	float b;
-	float a;
+	float r = 0.0f;
+	float g = 0.0f;
+	float b = 0.0f;
+	float a = 0.0f;
+};
+
+struct QuaternionStruct
+{
+	float w = 1.0f;
+	float x = 0.0f;
+	float y = 0.0f;
+	float z = 0.0f;
 };
 
 //---------------------------------------------------------------------
