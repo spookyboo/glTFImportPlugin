@@ -33,30 +33,12 @@ THE SOFTWARE.
 #include "gLTFMesh.h"
 #include "gLTFAccessor.h"
 #include "hlms_editor_plugin.h"
+#include "gLTFImportBufferReader.h"
 
 /** Class responsible for creation of Ogre meshes */
 class gLTFImportOgreMeshCreator
 {
 	public:
-		struct Vec2Struct
-		{
-			float u;
-			float v;
-		};
-		struct Vec3Struct
-		{
-			float x;
-			float y;
-			float z;
-		};
-		struct Vec4Struct
-		{
-			float r;
-			float g;
-			float b;
-			float a;
-		};
-
 		gLTFImportOgreMeshCreator(void) 
 		{
 			mHelperString = "";
@@ -82,7 +64,13 @@ class gLTFImportOgreMeshCreator
 
 	protected:
 		// Write to mesh .xml file
-		bool writeFaces(std::ofstream& dst,
+		bool writeSubmesh(std::ofstream& dst,
+			gLTFMesh mesh,
+			Ogre::HlmsEditorPluginData* data,
+			std::map<int, gLTFMesh> meshesMap,
+			std::map<int, gLTFAccessor> accessorMap,
+			int startBinaryBuffer);
+		bool writeFaces (std::ofstream& dst,
 			const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
@@ -129,18 +117,6 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data, 
 			gLTFAccessor accessor, 
 			int startBinaryBuffer);
-		unsigned char readFromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned byte
-		unsigned short readFromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned short
-		unsigned int readFromUnsignedIntBuffer (char* buffer, int count, gLTFAccessor accessor); // Read an unsigned int
-		const Vec2Struct& readVec2FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
-		const Vec2Struct& readVec2FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
-		const Vec2Struct& readVec2FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor); // Read a Vec2
-		const Vec3Struct& readVec3FromFloatBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec3
-		const Vec4Struct& readVec4FromFloatBuffer(char* buffer, int count, gLTFAccessor accessor); // Read a Vec4
-
-		// Min/Max corrections
-		void correctVec2StructWithMinMax (gLTFAccessor accessor, Vec2Struct* vec2Struct);
-
 	private:
 		std::string mHelperString;
 		std::string fileNameBufferHelper;
@@ -154,6 +130,7 @@ class gLTFImportOgreMeshCreator
 		Vec4Struct mHelperVec4Struct;
 		Vec3Struct mHelperVec3Struct;
 		Vec2Struct mHelperVec2Struct;
+		gLTFImportBufferReader mBufferReader;
 };
 
 #endif

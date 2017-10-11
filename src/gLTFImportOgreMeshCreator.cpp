@@ -39,6 +39,7 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 	OUT << "\nPerform gLTFImportOgreMeshCreator::createOgreMeshFiles\n";
 	OUT << "------------------------------------------------------\n";
 
+	// First get the property value (from the HLMS Editor)
 	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
 	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY>::iterator it = properties.find("mesh_is_submesh");
 	if (it != properties.end())
@@ -54,143 +55,6 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 		// Property not found; the default way of processing is to create individual meshes
 		return createIndividualOgreMeshFiles(data, meshesMap, accessorMap, startBinaryBuffer);
 	}
-
-	
-	// Create the Ogre mesh xml files (*.xml)
-	/*
-	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
-
-	// Iterate through meshes and create for each mesh an Ogre .xml file
-	// TODO: Take data->mInPropertiesMap into account (property 'mesh_is_submesh')
-	std::map<int, gLTFMesh>::iterator it;
-	std::map<int, gLTFPrimitive>::iterator itPrimitives;
-	gLTFMesh mesh;
-	gLTFPrimitive primitive;
-	std::string materialName;
-	std::string ogreFullyQualifiedMeshXmlFileName;
-	for (it = meshesMap.begin(); it != meshesMap.end(); it++)
-	{
-		mesh = it->second;
-		ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + mesh.mName + ".xml";
-		OUT << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
-
-		// Create the file
-		std::ofstream dst(ogreFullyQualifiedMeshXmlFileName);
-		
-		// Add xml content
-		dst << "<mesh>\n";
-		dst << TAB << "<submeshes>\n";
-
-		// Iterate through primitives (each primitive is a submesh)
-		for (itPrimitives = mesh.mPrimitiveMap.begin(); itPrimitives != mesh.mPrimitiveMap.end(); itPrimitives++)
-		{
-			primitive = itPrimitives->second;
-			materialName = primitive.mMaterialNameDerived;
-			if (materialName == "")
-				materialName = "BaseWhite";
-*/
-			/* Write submesh definition
-			 * Do not share vertices. It is not clear whether gLTF shares geometry data, so use the default 'false' value,
-			 * until proved otherwise.
-			 * We always use 32 bit incices (no 16 bit), even if the gLTF file itself uses 16 bits
-			 */
-/*
-			dst << TABx2 << "<submesh material = \"" + primitive.mMaterialNameDerived + "\"";
-			dst << " usesharedvertices = \"false\" use32bitindexes = \"false\" "; // TODO: Hardcoded?
-
-			// Write operation type
-			switch(primitive.mMode)
-			{
-				case gLTFPrimitive::POINTS:
-					dst << "operationtype = \"point_list\">\n";
-					break;
-				case gLTFPrimitive::LINES:
-					dst << "operationtype = \"line_list\">\n";
-					break;
-				case gLTFPrimitive::LINE_LOOP:
-					dst << "operationtype = \"line_list\">\n";
-					break;
-				case gLTFPrimitive::LINE_STRIP:
-					dst << "operationtype = \"triangle_list\">\n";
-					break;
-				case gLTFPrimitive::TRIANGLES:
-					dst << "operationtype = \"triangle_list\">\n";
-					break;
-				case gLTFPrimitive::TRIANGLE_STRIP:
-					dst << "operationtype = \"triangle_strip\">\n";
-					break;
-				case gLTFPrimitive::TRIANGLE_FAN:
-					dst << "operationtype = \"triangle_fan\">\n";
-					break;
-			}
-
-			// Write faces
-			if (primitive.mIndicesAccessor > -1)
-			{
-				writeFaces (dst, primitive, accessorMap, data, startBinaryBuffer);
-			}
-
-			// Write geometry
-			if (primitive.mPositionAccessorDerived > -1)
-			{
-				gLTFAccessor  accessor = accessorMap[primitive.mPositionAccessorDerived];
-				dst << TABx3 << "<geometry vertexcount=\"" << accessor.mCount << "\">\n";
-
-				// Write vertexbuffer header
-				std::string hasPositionsText = "\"true\""; // Assume there are always positions, right?
-				std::string hasNormalsText = "\"true\"";
-				std::string hasTangentsText = "\"true\"";
-				//std::string numTextCoordsText = "\"1\""; // Assume there is at least one
-				std::string numTextCoordsText = "\"0\"";
-				if (primitive.mNormalAccessorDerived < 0)
-					hasNormalsText = "\"false\"";
-				if (primitive.mTangentAccessorDerived < 0)
-					hasTangentsText = "\"false\"";
-				if (primitive.mTexcoord_0AccessorDerived > -1)
-					numTextCoordsText = "\"1\"";
-				if (primitive.mTexcoord_1AccessorDerived > -1)
-					numTextCoordsText = "\"2\"";
-
-				dst << TABx4 << "<vertexbuffer positions = " << hasPositionsText <<
-					" normals = " << hasNormalsText;
-
-				// Colours
-				if (primitive.mColor_0AccessorDerived > -1)
-					dst << " colours_diffuse = \"true\"";
-
-				// Texture coordinate dimensions (assume float2 for now)
-				if (primitive.mTexcoord_0AccessorDerived > -1)
-					dst << " texture_coord_dimensions_0 = \"float2\"";
-				if (primitive.mTexcoord_1AccessorDerived > -1)
-					dst << " texture_coord_dimensions_1 = \"float2\"";
-
-				// Tangents
-				dst << " tangents = " << hasTangentsText <<
-				" texture_coords = " << numTextCoordsText <<
-				">\n";
-
-				// Write vertices
-				writeVertices(dst, primitive, accessorMap, data, startBinaryBuffer);
-
-				// Closing tags
-				dst << TABx4 << "</vertexbuffer>\n";
-				dst << TABx3 << "</geometry>\n";
-			}
-			// TODO: Finsih it !
-
-			dst << TABx2 << "</submesh>\n";
-		}
-
-		dst << TAB << "</submeshes>\n";
-		dst << "</mesh>\n";
-
-		dst.close();
-	}
-
-	OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
-
-	return true;
-	*/
 }
 
 //---------------------------------------------------------------------
@@ -205,12 +69,8 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
 
 	// Iterate through meshes and create for each mesh an Ogre .xml file
-	// TODO: Take data->mInPropertiesMap into account (property 'mesh_is_submesh')
 	std::map<int, gLTFMesh>::iterator it;
-	std::map<int, gLTFPrimitive>::iterator itPrimitives;
 	gLTFMesh mesh;
-	gLTFPrimitive primitive;
-	std::string materialName;
 	std::string ogreFullyQualifiedMeshXmlFileName;
 	for (it = meshesMap.begin(); it != meshesMap.end(); it++)
 	{
@@ -225,109 +85,8 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		dst << "<mesh>\n";
 		dst << TAB << "<submeshes>\n";
 
-		// Iterate through primitives (each primitive is a submesh)
-		for (itPrimitives = mesh.mPrimitiveMap.begin(); itPrimitives != mesh.mPrimitiveMap.end(); itPrimitives++)
-		{
-			primitive = itPrimitives->second;
-			materialName = primitive.mMaterialNameDerived;
-			if (materialName == "")
-				materialName = "BaseWhite";
-
-			/* Write submesh definition
-			* Do not share vertices. It is not clear whether gLTF shares geometry data, so use the default 'false' value,
-			* until proved otherwise.
-			* We always use 32 bit incices (no 16 bit), even if the gLTF file itself uses 16 bits
-			*/
-			dst << TABx2 << "<submesh material = \"" + primitive.mMaterialNameDerived + "\"";
-			dst << " usesharedvertices = \"false\" use32bitindexes = \"false\" "; // TODO: Hardcoded?
-
-																				  // Write operation type
-			switch (primitive.mMode)
-			{
-			case gLTFPrimitive::POINTS:
-				dst << "operationtype = \"point_list\">\n";
-				break;
-			case gLTFPrimitive::LINES:
-				dst << "operationtype = \"line_list\">\n";
-				break;
-			case gLTFPrimitive::LINE_LOOP:
-				dst << "operationtype = \"line_list\">\n";
-				break;
-			case gLTFPrimitive::LINE_STRIP:
-				dst << "operationtype = \"triangle_list\">\n";
-				break;
-			case gLTFPrimitive::TRIANGLES:
-				dst << "operationtype = \"triangle_list\">\n";
-				break;
-			case gLTFPrimitive::TRIANGLE_STRIP:
-				dst << "operationtype = \"triangle_strip\">\n";
-				break;
-			case gLTFPrimitive::TRIANGLE_FAN:
-				dst << "operationtype = \"triangle_fan\">\n";
-				break;
-			}
-
-			// Write faces
-			if (primitive.mIndicesAccessor > -1)
-			{
-				writeFaces(dst, primitive, accessorMap, data, startBinaryBuffer);
-			}
-
-			// Write geometry
-			if (primitive.mPositionAccessorDerived > -1)
-			{
-				gLTFAccessor  accessor = accessorMap[primitive.mPositionAccessorDerived];
-				dst << TABx3 << "<geometry vertexcount=\"" << accessor.mCount << "\">\n";
-
-				// Write vertexbuffer header
-				std::string hasPositionsText = "\"true\""; // Assume there are always positions, right?
-				std::string hasNormalsText = "\"true\"";
-				std::string hasTangentsText = "\"true\"";
-				//std::string numTextCoordsText = "\"1\""; // Assume there is at least one
-				std::string numTextCoordsText = "\"0\"";
-				if (primitive.mNormalAccessorDerived < 0)
-					hasNormalsText = "\"false\"";
-				if (primitive.mTangentAccessorDerived < 0)
-					hasTangentsText = "\"false\"";
-				if (primitive.mTexcoord_0AccessorDerived > -1)
-					numTextCoordsText = "\"1\"";
-				if (primitive.mTexcoord_0AccessorDerived > -1 && primitive.mTexcoord_1AccessorDerived > -1)
-					numTextCoordsText = "\"2\"";
-
-				dst << TABx4 << "<vertexbuffer positions = " << hasPositionsText <<
-					" normals = " << hasNormalsText;
-
-				// Colours
-				if (primitive.mColor_0AccessorDerived > -1)
-					dst << " colours_diffuse = \"true\"";
-
-				// Texture coordinate dimensions (assume float2 for now)
-				if (primitive.mTexcoord_0AccessorDerived > -1)
-					dst << " texture_coord_dimensions_0 = \"float2\"";
-				if (primitive.mTexcoord_0AccessorDerived > -1 && primitive.mTexcoord_1AccessorDerived > -1)
-					dst << " texture_coord_dimensions_1 = \"float2\"";
-
-				// Tangents
-				dst << " tangents = " << hasTangentsText;
-				if (primitive.mTangentAccessorDerived > -1)
-					" tangent_dimensions = \"4\"";
-
-				// Texcoords
-				dst << " texture_coords = " << numTextCoordsText <<
-					">\n";
-
-				// Write vertices
-				writeVertices(dst, primitive, accessorMap, data, startBinaryBuffer);
-
-				// Closing tags
-				dst << TABx4 << "</vertexbuffer>\n";
-				dst << TABx3 << "</geometry>\n";
-			}
-			// TODO: Finsih it !
-
-			dst << TABx2 << "</submesh>\n";
-		}
-
+		writeSubmesh(dst, mesh, data, meshesMap, accessorMap, startBinaryBuffer);
+		
 		dst << TAB << "</submeshes>\n";
 		dst << "</mesh>\n";
 
@@ -345,7 +104,157 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer)
 {
-	// TODO:
+	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreMeshFile\n";
+
+	// Create the Ogre mesh xml files (*.xml)
+	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
+
+	// Create one combined Ogre mesh file (.xml)
+	std::map<int, gLTFMesh>::iterator it;
+	gLTFMesh mesh;
+	std::string ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".xml";
+	OUT << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+
+	// Create the file
+	std::ofstream dst(ogreFullyQualifiedMeshXmlFileName);
+
+	// Add xml content
+	dst << "<mesh>\n";
+	dst << TAB << "<submeshes>\n";
+
+	// Iterate through meshes and add the geometry data
+	for (it = meshesMap.begin(); it != meshesMap.end(); it++)
+	{
+		mesh = it->second;
+
+		// Iterate through primitives (each gLTF mesh is a submesh)
+		// TODO: Apply transformation to the submeshes, because they are now have the same origin/rotation !!!!!!!!!
+		writeSubmesh(dst, mesh, data, meshesMap, accessorMap, startBinaryBuffer);
+	}
+	
+	dst << TAB << "</submeshes>\n";
+	dst << "</mesh>\n";
+	dst.close();
+	OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst, 
+	gLTFMesh mesh,
+	Ogre::HlmsEditorPluginData* data,
+	std::map<int, gLTFMesh> meshesMap,
+	std::map<int, gLTFAccessor> accessorMap,
+	int startBinaryBuffer)
+{
+	std::map<int, gLTFPrimitive>::iterator itPrimitives;
+	gLTFPrimitive primitive;
+	std::string materialName;
+
+	// Iterate through primitives (each primitive is a submesh)
+	for (itPrimitives = mesh.mPrimitiveMap.begin(); itPrimitives != mesh.mPrimitiveMap.end(); itPrimitives++)
+	{
+		primitive = itPrimitives->second;
+		materialName = primitive.mMaterialNameDerived;
+		if (materialName == "")
+			materialName = "BaseWhite";
+
+		/* Write submesh definition
+		 * Do not share vertices. It is not clear whether gLTF shares geometry data, so use the default 'false' value,
+		 * until proven otherwise.
+		 * We always use 32 bit incices (no 16 bit), even if the gLTF file itself uses 16 bits
+		 */
+		dst << TABx2 << "<submesh material = \"" + primitive.mMaterialNameDerived + "\"";
+		dst << " usesharedvertices = \"false\" use32bitindexes = \"false\" "; // TODO: Hardcoded?
+
+		// Write operation type
+		switch (primitive.mMode)
+		{
+		case gLTFPrimitive::POINTS:
+			dst << "operationtype = \"point_list\">\n";
+			break;
+		case gLTFPrimitive::LINES:
+			dst << "operationtype = \"line_list\">\n";
+			break;
+		case gLTFPrimitive::LINE_LOOP:
+			dst << "operationtype = \"line_list\">\n";
+			break;
+		case gLTFPrimitive::LINE_STRIP:
+			dst << "operationtype = \"triangle_list\">\n";
+			break;
+		case gLTFPrimitive::TRIANGLES:
+			dst << "operationtype = \"triangle_list\">\n";
+			break;
+		case gLTFPrimitive::TRIANGLE_STRIP:
+			dst << "operationtype = \"triangle_strip\">\n";
+			break;
+		case gLTFPrimitive::TRIANGLE_FAN:
+			dst << "operationtype = \"triangle_fan\">\n";
+			break;
+		}
+
+		// Write faces
+		if (primitive.mIndicesAccessor > -1)
+		{
+			writeFaces(dst, primitive, accessorMap, data, startBinaryBuffer);
+		}
+
+		// Write geometry
+		if (primitive.mPositionAccessorDerived > -1)
+		{
+			gLTFAccessor  accessor = accessorMap[primitive.mPositionAccessorDerived];
+			dst << TABx3 << "<geometry vertexcount=\"" << accessor.mCount << "\">\n";
+
+			// Write vertexbuffer header
+			std::string hasPositionsText = "\"true\""; // Assume there are always positions, right?
+			std::string hasNormalsText = "\"true\"";
+			std::string hasTangentsText = "\"true\"";
+			//std::string numTextCoordsText = "\"1\""; // Assume there is at least one
+			std::string numTextCoordsText = "\"0\"";
+			if (primitive.mNormalAccessorDerived < 0)
+				hasNormalsText = "\"false\"";
+			if (primitive.mTangentAccessorDerived < 0)
+				hasTangentsText = "\"false\"";
+			if (primitive.mTexcoord_0AccessorDerived > -1)
+				numTextCoordsText = "\"1\"";
+			if (primitive.mTexcoord_0AccessorDerived > -1 && primitive.mTexcoord_1AccessorDerived > -1)
+				numTextCoordsText = "\"2\"";
+
+			dst << TABx4 << "<vertexbuffer positions = " << hasPositionsText <<
+				" normals = " << hasNormalsText;
+
+			// Colours
+			if (primitive.mColor_0AccessorDerived > -1)
+				dst << " colours_diffuse = \"true\"";
+
+			// Texture coordinate dimensions (assume float2 for now)
+			if (primitive.mTexcoord_0AccessorDerived > -1)
+				dst << " texture_coord_dimensions_0 = \"float2\"";
+			if (primitive.mTexcoord_0AccessorDerived > -1 && primitive.mTexcoord_1AccessorDerived > -1)
+				dst << " texture_coord_dimensions_1 = \"float2\"";
+
+			// Tangents
+			dst << " tangents = " << hasTangentsText;
+			if (primitive.mTangentAccessorDerived > -1)
+				" tangent_dimensions = \"4\"";
+
+			// Texcoords
+			dst << " texture_coords = " << numTextCoordsText <<
+				">\n";
+
+			// Write vertices
+			writeVertices(dst, primitive, accessorMap, data, startBinaryBuffer);
+
+			// Closing tags
+			dst << TABx4 << "</vertexbuffer>\n";
+			dst << TABx3 << "</geometry>\n";
+		}
+		// TODO: Finsih it !
+
+		dst << TABx2 << "</submesh>\n";
+	}
+
 	return true;
 }
 
@@ -480,7 +389,7 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (positionAccessor.mType == "VEC3" && positionAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec3Struct pos = readVec3FromFloatBuffer(buffer, i, positionAccessor);
+			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, i, positionAccessor);
 			mPositionsMap[i] = pos;
 		}
 	}
@@ -508,7 +417,7 @@ void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& p
 		// A normal  must be a VEC3/Float, otherwise it doesn't get read
 		if (normalAccessor.mType == "VEC3" && normalAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec3Struct pos = readVec3FromFloatBuffer(buffer, i, normalAccessor);
+			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, i, normalAccessor);
 			mNormalsMap[i] = pos;
 		}
 	}
@@ -536,7 +445,7 @@ void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& 
 		// A tangent must be a VEC4/Float, otherwise it doesn't get read
 		if (tangentAccessor.mType == "VEC4" && tangentAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec4Struct pos = readVec4FromFloatBuffer(buffer, i, tangentAccessor);
+			Vec4Struct pos = mBufferReader.readVec4FromFloatBuffer(buffer, i, tangentAccessor);
 			mTangentsMap[i] = pos;
 		}
 	}
@@ -564,7 +473,7 @@ void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& pr
 		// A colour can be a VEC3 (Float)
 		if (mColor_0Accessor.mType == "VEC3")
 		{
-			Vec3Struct v3 = readVec3FromFloatBuffer(buffer, i, mColor_0Accessor);
+			Vec3Struct v3 = mBufferReader.readVec3FromFloatBuffer(buffer, i, mColor_0Accessor);
 			Vec4Struct col;
 			col.r = v3.x;
 			col.g = v3.y;
@@ -574,7 +483,7 @@ void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& pr
 		}
 		else if (mColor_0Accessor.mType == "VEC4")
 		{
-			Vec4Struct col = readVec4FromFloatBuffer(buffer, i, mColor_0Accessor);
+			Vec4Struct col = mBufferReader.readVec4FromFloatBuffer(buffer, i, mColor_0Accessor);
 			mColor_0AccessorMap[i] = col;
 		}
 	}
@@ -600,17 +509,17 @@ void gLTFImportOgreMeshCreator::readIndicesFromUriOrFile (const gLTFPrimitive& p
 	if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = readFromUnsignedByteBuffer(buffer, i, indicesAccessor);
+			mIndicesMap[i] = mBufferReader.readFromUnsignedByteBuffer(buffer, i, indicesAccessor);
 	}
 	else if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = readFromUnsignedShortBuffer(buffer, i, indicesAccessor);
+			mIndicesMap[i] = mBufferReader.readFromUnsignedShortBuffer(buffer, i, indicesAccessor);
 	}
 	else if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_INT)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = readFromUnsignedIntBuffer(buffer, i, indicesAccessor);
+			mIndicesMap[i] = mBufferReader.readFromUnsignedIntBuffer(buffer, i, indicesAccessor);
 	}
 
 	delete[] buffer;
@@ -636,17 +545,17 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = readVec2FromFloatBuffer(buffer, i, mTexcoord_0Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, i, mTexcoord_0Accessor);
 			mTexcoords_0Map[i] = pos;
 		}
 		else if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 		{
-			Vec2Struct pos = readVec2FromUnsignedByteBuffer(buffer, i, mTexcoord_0Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, i, mTexcoord_0Accessor);
 			mTexcoords_0Map[i] = pos;
 		}
 		else if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 		{
-			Vec2Struct pos = readVec2FromUnsignedShortBuffer(buffer, i, mTexcoord_0Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, i, mTexcoord_0Accessor);
 			mTexcoords_0Map[i] = pos;
 		}
 	}
@@ -674,17 +583,17 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3, otherwise it doesn't get read
 		if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = readVec2FromFloatBuffer(buffer, i, mTexcoord_1Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, i, mTexcoord_1Accessor);
 			mTexcoords_1Map[i] = pos;
 		}
 		else if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 		{
-			Vec2Struct pos = readVec2FromUnsignedByteBuffer(buffer, i, mTexcoord_1Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, i, mTexcoord_1Accessor);
 			mTexcoords_1Map[i] = pos;
 		}
 		else if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 		{
-			Vec2Struct pos = readVec2FromUnsignedShortBuffer(buffer, i, mTexcoord_1Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, i, mTexcoord_1Accessor);
 			mTexcoords_1Map[i] = pos;
 		}
 	}
@@ -735,197 +644,4 @@ char* gLTFImportOgreMeshCreator::getBufferChunk (const std::string& uri,
 	}
 	
 	return buffer;
-}
-
-//---------------------------------------------------------------------
-unsigned char gLTFImportOgreMeshCreator::readFromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor)
-{
-	unsigned char scalar;
-	int unsignedCharSize = sizeof(unsigned char);
-	memcpy(&scalar, &buffer[count * unsignedCharSize], unsignedCharSize);
-
-	// Correct with min/max
-	if (accessor.mMinAvailable)
-		scalar = scalar < accessor.mMinInt[0] ? accessor.mMinInt[0] : scalar;
-	if (accessor.mMaxAvailable)
-		scalar = scalar > accessor.mMaxInt[0] ? accessor.mMaxInt[0] : scalar;
-	return scalar;
-}
-
-//---------------------------------------------------------------------
-unsigned short gLTFImportOgreMeshCreator::readFromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor)
-{
-	unsigned short scalar;
-	int unsignedShortSize = sizeof(unsigned short);
-	memcpy(&scalar, &buffer[count * unsignedShortSize], unsignedShortSize);
-
-	// Correct with min/max
-	if (accessor.mMinAvailable)
-		scalar = scalar < (unsigned short)accessor.mMinInt[0] ? (unsigned short)accessor.mMinInt[0] : scalar;
-	if (accessor.mMaxAvailable)
-		scalar = scalar >(unsigned short)accessor.mMaxInt[0] ? (unsigned short)accessor.mMaxInt[0] : scalar;
-	return scalar;
-}
-
-//---------------------------------------------------------------------
-unsigned int gLTFImportOgreMeshCreator::readFromUnsignedIntBuffer (char* buffer, int count, gLTFAccessor accessor)
-{
-	unsigned int scalar;
-	int unsignedIntSize = sizeof(unsigned int);
-	memcpy(&scalar, &buffer[count * unsignedIntSize], unsignedIntSize);
-
-	// Correct with min/max
-	if (accessor.mMinAvailable)
-		scalar = scalar < (unsigned int)accessor.mMinInt[0] ? (unsigned int)accessor.mMinInt[0] : scalar;
-	if (accessor.mMaxAvailable)
-		scalar = scalar >(unsigned int)accessor.mMaxInt[0] ? (unsigned int)accessor.mMaxInt[0] : scalar;
-	return scalar;
-}
-
-//---------------------------------------------------------------------
-const gLTFImportOgreMeshCreator::Vec2Struct& gLTFImportOgreMeshCreator::readVec2FromFloatBuffer (char* buffer, 
-	int count,
-	gLTFAccessor accessor)
-{
-	float fRaw;
-	int floatSize = sizeof(float);
-	int vec2Size = 2 * floatSize;
-	memcpy(&fRaw, &buffer[count * vec2Size], floatSize);
-	mHelperVec2Struct.u = fRaw;
-	memcpy(&fRaw, &buffer[count * vec2Size + floatSize], floatSize);
-	mHelperVec2Struct.v = fRaw;
-	
-	// Correct with min/max
-	correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
-	/*
-	if (accessor.mMinAvailable)
-	{
-		mHelperVec2Struct.u = mHelperVec2Struct.u < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : mHelperVec2Struct.u;
-		mHelperVec2Struct.v = mHelperVec2Struct.v < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : mHelperVec2Struct.v;
-	}
-	if (accessor.mMaxAvailable)
-	{
-		mHelperVec2Struct.u = mHelperVec2Struct.u > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : mHelperVec2Struct.u;
-		mHelperVec2Struct.v = mHelperVec2Struct.v > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : mHelperVec2Struct.v;
-	}
-	*/
-	return mHelperVec2Struct;
-}
-
-//---------------------------------------------------------------------
-const gLTFImportOgreMeshCreator::Vec2Struct& gLTFImportOgreMeshCreator::readVec2FromUnsignedByteBuffer(char* buffer,
-	int count,
-	gLTFAccessor accessor)
-{
-	unsigned char raw;
-	int unsignedCharSize = sizeof(unsigned char);
-	int vec2Size = 2 * unsignedCharSize;
-	memcpy(&raw, &buffer[count * vec2Size], unsignedCharSize);
-	mHelperVec2Struct.u = raw;
-	memcpy(&raw, &buffer[count * vec2Size + unsignedCharSize], unsignedCharSize);
-	mHelperVec2Struct.v = raw;
-
-	// Correct with min/max
-	correctVec2StructWithMinMax (accessor, &mHelperVec2Struct);
-	return mHelperVec2Struct;
-}
-
-//---------------------------------------------------------------------
-const gLTFImportOgreMeshCreator::Vec2Struct& gLTFImportOgreMeshCreator::readVec2FromUnsignedShortBuffer(char* buffer,
-	int count,
-	gLTFAccessor accessor)
-{
-	unsigned short raw;
-	int unsignedShortSize = sizeof(unsigned short);
-	int vec2Size = 2 * unsignedShortSize;
-	memcpy(&raw, &buffer[count * vec2Size], unsignedShortSize);
-	mHelperVec2Struct.u = raw;
-	memcpy(&raw, &buffer[count * vec2Size + unsignedShortSize], unsignedShortSize);
-	mHelperVec2Struct.v = raw;
-
-	// Correct with min/max
-	correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
-	return mHelperVec2Struct;
-}
-
-//---------------------------------------------------------------------
-void gLTFImportOgreMeshCreator::correctVec2StructWithMinMax (gLTFAccessor accessor, gLTFImportOgreMeshCreator::Vec2Struct* vec2Struct)
-{
-	// Correct with min/max
-	if (accessor.mMinAvailable)
-	{
-		vec2Struct->u = vec2Struct->u < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : vec2Struct->u;
-		vec2Struct->v = vec2Struct->v < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : vec2Struct->v;
-	}
-	if (accessor.mMaxAvailable)
-	{
-		vec2Struct->u = vec2Struct->u > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : vec2Struct->u;
-		vec2Struct->v = vec2Struct->v > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : vec2Struct->v;
-	}
-}
-
-//---------------------------------------------------------------------
-const gLTFImportOgreMeshCreator::Vec3Struct& gLTFImportOgreMeshCreator::readVec3FromFloatBuffer (char* buffer,
-	int count, 
-	gLTFAccessor accessor)
-{
-	float fRaw;
-	int floatSize = sizeof(float);
-	int vec3Size = 3 * floatSize;
-	memcpy(&fRaw, &buffer[count * vec3Size], floatSize);
-	mHelperVec3Struct.x = fRaw;
-	memcpy(&fRaw, &buffer[count * vec3Size + floatSize], floatSize);
-	mHelperVec3Struct.y = fRaw;
-	memcpy(&fRaw, &buffer[count * vec3Size + 2 * floatSize], floatSize);
-	mHelperVec3Struct.z = fRaw;
-
-	// Correct with min/max
-	if (accessor.mMinAvailable)
-	{
-		mHelperVec3Struct.x = mHelperVec3Struct.x < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : mHelperVec3Struct.x;
-		mHelperVec3Struct.y = mHelperVec3Struct.y < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : mHelperVec3Struct.y;
-		mHelperVec3Struct.z = mHelperVec3Struct.z < accessor.mMinFloat[2] ? accessor.mMinFloat[2] : mHelperVec3Struct.z;
-	}
-	if (accessor.mMaxAvailable)
-	{
-		mHelperVec3Struct.x = mHelperVec3Struct.x > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : mHelperVec3Struct.x;
-		mHelperVec3Struct.y = mHelperVec3Struct.y > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : mHelperVec3Struct.y;
-		mHelperVec3Struct.z = mHelperVec3Struct.z > accessor.mMaxFloat[2] ? accessor.mMaxFloat[2] : mHelperVec3Struct.z;
-	}
-	return mHelperVec3Struct;
-}
-
-//---------------------------------------------------------------------
-const gLTFImportOgreMeshCreator::Vec4Struct& gLTFImportOgreMeshCreator::readVec4FromFloatBuffer(char* buffer,
-	int count,
-	gLTFAccessor accessor)
-{
-	float fRaw;
-	int floatSize = sizeof(float);
-	int vec4Size = 4 * floatSize;
-	memcpy(&fRaw, &buffer[count * vec4Size], floatSize);
-	mHelperVec4Struct.r = fRaw;
-	memcpy(&fRaw, &buffer[count * vec4Size + floatSize], floatSize);
-	mHelperVec4Struct.g = fRaw;
-	memcpy(&fRaw, &buffer[count * vec4Size + 2 * floatSize], floatSize);
-	mHelperVec4Struct.b = fRaw;
-	memcpy(&fRaw, &buffer[count * vec4Size + 3 * floatSize], floatSize);
-	mHelperVec4Struct.a = fRaw;
-
-	// Correct with min/max
-	if (accessor.mMinAvailable)
-	{
-		mHelperVec4Struct.r = mHelperVec4Struct.r < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : mHelperVec4Struct.r;
-		mHelperVec4Struct.g = mHelperVec4Struct.g < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : mHelperVec4Struct.g;
-		mHelperVec4Struct.b = mHelperVec4Struct.b < accessor.mMinFloat[2] ? accessor.mMinFloat[2] : mHelperVec4Struct.b;
-		mHelperVec4Struct.a = mHelperVec4Struct.a < accessor.mMinFloat[3] ? accessor.mMinFloat[3] : mHelperVec4Struct.a;
-	}
-	if (accessor.mMaxAvailable)
-	{
-		mHelperVec4Struct.r = mHelperVec4Struct.r > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : mHelperVec4Struct.r;
-		mHelperVec4Struct.g = mHelperVec4Struct.g > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : mHelperVec4Struct.g;
-		mHelperVec4Struct.b = mHelperVec4Struct.b > accessor.mMaxFloat[2] ? accessor.mMaxFloat[2] : mHelperVec4Struct.b;
-		mHelperVec4Struct.a = mHelperVec4Struct.a > accessor.mMaxFloat[3] ? accessor.mMaxFloat[3] : mHelperVec4Struct.a;
-	}
-	return mHelperVec4Struct;
 }

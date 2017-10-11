@@ -139,6 +139,7 @@
     <ClInclude Include="include\gLTFImage.h" />
     <ClInclude Include="include\gLTFImportAccessorsParser.h" />
     <ClInclude Include="include\gLTFImportBuffersParser.h" />
+    <ClInclude Include="include\gLTFImportBufferReader.h" />
     <ClInclude Include="include\gLTFImportBufferViewsParser.h" />
     <ClInclude Include="include\gLTFImportConstants.h" />
     <ClInclude Include="include\gLTFImportExecutor.h" />
@@ -201,6 +202,7 @@
     <ClCompile Include="src\gLTFImage.cpp" />
     <ClCompile Include="src\gLTFImportAccessorsParser.cpp" />
     <ClCompile Include="src\gLTFImportBuffersParser.cpp" />
+    <ClCompile Include="src\gLTFImportBufferReader.cpp" />
     <ClCompile Include="src\gLTFImportBufferViewsParser.cpp" />
     <ClCompile Include="src\gLTFImportDll.cpp" />
     <ClCompile Include="src\gLTFImportExecutor.cpp" />

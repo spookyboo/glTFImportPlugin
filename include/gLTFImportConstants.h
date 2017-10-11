@@ -45,7 +45,7 @@ struct Devnull : std::ostream, std::streambuf
 
 //---------------------------------------------------------------------
 // Disable the line below when using gLTFTEST, because otherwise Ogre::Image (used for texture transformation) does not work
-#define TEXTURE_TRANSFORMATION 1
+//#define TEXTURE_TRANSFORMATION 1
 
 //---------------------------------------------------------------------
 static const std::string TAB = "  ";
@@ -58,6 +58,26 @@ static const std::string TABx7 = TAB + TABx6;
 
 static std::string gFileExtension = "";
 static std::string gJsonString = "";
+
+//---------------------------------------------------------------------
+struct Vec2Struct
+{
+	float u;
+	float v;
+};
+struct Vec3Struct
+{
+	float x;
+	float y;
+	float z;
+};
+struct Vec4Struct
+{
+	float r;
+	float g;
+	float b;
+	float a;
+};
 
 //---------------------------------------------------------------------
 static const std::string& getFileExtension (const std::string& fileName)

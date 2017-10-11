@@ -155,6 +155,7 @@
     <ClCompile Include="..\src\gLTFBufferView.cpp" />
     <ClCompile Include="..\src\gLTFImage.cpp" />
     <ClCompile Include="..\src\gLTFImportAccessorsParser.cpp" />
+    <ClCompile Include="..\src\gLTFImportBufferReader.cpp" />
     <ClCompile Include="..\src\gLTFImportBuffersParser.cpp" />
     <ClCompile Include="..\src\gLTFImportBufferViewsParser.cpp" />
     <ClCompile Include="..\src\gLTFImportExecutor.cpp" />
