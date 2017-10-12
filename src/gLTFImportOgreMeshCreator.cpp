@@ -100,6 +100,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 	}
 
 	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
+	setMeshFileNamePropertyValue(data, ogreFullyQualifiedMeshMeshFileName);
 	return true;
 }
 
@@ -179,6 +180,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	dst.close();
 	OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
+	setMeshFileNamePropertyValue(data, ogreFullyQualifiedMeshMeshFileName);
 
 	return true;
 }
@@ -447,7 +449,10 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 		if (positionAccessor.mType == "VEC3" && positionAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
 			// Perform the transformation; use Ogre's classes, becaus they are proven
-			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, i, positionAccessor);
+			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, 
+				i, 
+				positionAccessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			Ogre::Vector3 oPos (pos.x, pos.y, pos.z);
 			Ogre::Vector3 oTranslation (translation.x, translation.y, translation.z);
 			Ogre::Quaternion oRotation (rotation.w, rotation.x, rotation.y, rotation.z);
@@ -488,7 +493,10 @@ void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& p
 		// A normal  must be a VEC3/Float, otherwise it doesn't get read
 		if (normalAccessor.mType == "VEC3" && normalAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, i, normalAccessor);
+			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, 
+				i, 
+				normalAccessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mNormalsMap[i] = pos;
 		}
 	}
@@ -516,7 +524,10 @@ void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& 
 		// A tangent must be a VEC4/Float, otherwise it doesn't get read
 		if (tangentAccessor.mType == "VEC4" && tangentAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec4Struct pos = mBufferReader.readVec4FromFloatBuffer(buffer, i, tangentAccessor);
+			Vec4Struct pos = mBufferReader.readVec4FromFloatBuffer(buffer, 
+				i, 
+				tangentAccessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mTangentsMap[i] = pos;
 		}
 	}
@@ -544,7 +555,10 @@ void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& pr
 		// A colour can be a VEC3 (Float)
 		if (mColor_0Accessor.mType == "VEC3")
 		{
-			Vec3Struct v3 = mBufferReader.readVec3FromFloatBuffer(buffer, i, mColor_0Accessor);
+			Vec3Struct v3 = mBufferReader.readVec3FromFloatBuffer(buffer, 
+				i, 
+				mColor_0Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			Vec4Struct col;
 			col.r = v3.x;
 			col.g = v3.y;
@@ -554,7 +568,10 @@ void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& pr
 		}
 		else if (mColor_0Accessor.mType == "VEC4")
 		{
-			Vec4Struct col = mBufferReader.readVec4FromFloatBuffer(buffer, i, mColor_0Accessor);
+			Vec4Struct col = mBufferReader.readVec4FromFloatBuffer(buffer, 
+				i, 
+				mColor_0Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mColor_0AccessorMap[i] = col;
 		}
 	}
@@ -580,17 +597,26 @@ void gLTFImportOgreMeshCreator::readIndicesFromUriOrFile (const gLTFPrimitive& p
 	if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = mBufferReader.readFromUnsignedByteBuffer(buffer, i, indicesAccessor);
+			mIndicesMap[i] = mBufferReader.readFromUnsignedByteBuffer(buffer, 
+				i, 
+				indicesAccessor,
+				getCorrectForMinMaxPropertyValue(data));
 	}
 	else if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = mBufferReader.readFromUnsignedShortBuffer(buffer, i, indicesAccessor);
+			mIndicesMap[i] = mBufferReader.readFromUnsignedShortBuffer(buffer, 
+				i, 
+				indicesAccessor,
+				getCorrectForMinMaxPropertyValue(data));
 	}
 	else if (indicesAccessor.mType == "SCALAR" && indicesAccessor.mComponentType == gLTFAccessor::UNSIGNED_INT)
 	{
 		for (int i = 0; i < indicesAccessor.mCount; i++)
-			mIndicesMap[i] = mBufferReader.readFromUnsignedIntBuffer(buffer, i, indicesAccessor);
+			mIndicesMap[i] = mBufferReader.readFromUnsignedIntBuffer(buffer, 
+				i, 
+				indicesAccessor,
+				getCorrectForMinMaxPropertyValue(data));
 	}
 
 	delete[] buffer;
@@ -616,17 +642,26 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, i, mTexcoord_0Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, 
+				i, 
+				mTexcoord_0Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mTexcoords_0Map[i] = pos;
 		}
 		else if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, i, mTexcoord_0Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, 
+				i, 
+				mTexcoord_0Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mTexcoords_0Map[i] = pos;
 		}
 		else if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, i, mTexcoord_0Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, 
+				i, 
+				mTexcoord_0Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mTexcoords_0Map[i] = pos;
 		}
 	}
@@ -654,17 +689,26 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3, otherwise it doesn't get read
 		if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, i, mTexcoord_1Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, 
+				i, 
+				mTexcoord_1Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mTexcoords_1Map[i] = pos;
 		}
 		else if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, i, mTexcoord_1Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, 
+				i, 
+				mTexcoord_1Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mTexcoords_1Map[i] = pos;
 		}
 		else if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, i, mTexcoord_1Accessor);
+			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, 
+				i, 
+				mTexcoord_1Accessor, 
+				getCorrectForMinMaxPropertyValue(data));
 			mTexcoords_1Map[i] = pos;
 		}
 	}
@@ -750,3 +794,37 @@ bool gLTFImportOgreMeshCreator::convertXmlFileToMesh (Ogre::HlmsEditorPluginData
 	return true;
 }
 
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::getCorrectForMinMaxPropertyValue (Ogre::HlmsEditorPluginData* data)
+{
+	// First get the property value (from the HLMS Editor)
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY>::iterator it = properties.find("correct_min_max");
+	if (it != properties.end())
+	{
+		// Property found; determine its value
+		return (it->second).boolValue;
+	}
+
+	return false;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::setMeshFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName)
+{
+	Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY property;
+	property.propertyName = "load_mesh";
+	property.type = Ogre::HlmsEditorPluginData::STRING;
+	property.stringValue = fileName;
+	data->mOutReferencesMap[property.propertyName] = property;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::setProjectFileNamePropertyValue(Ogre::HlmsEditorPluginData* data, const std::string& fileName)
+{
+	Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY property;
+	property.propertyName = "load_project";
+	property.type = Ogre::HlmsEditorPluginData::STRING;
+	property.stringValue = fileName;
+	data->mOutReferencesMap[property.propertyName] = property;
+}

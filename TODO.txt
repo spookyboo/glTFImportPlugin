@@ -6,7 +6,8 @@ HLMS Editor:
 
 Plugin:
 ======
-- Test transparent materials
+- Implement matrix transformation
+- Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly nodes, scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
@@ -30,3 +31,4 @@ DONE:
 - Add possibility to process embedded base64 data in gTLF files
 - gLTFImportAccessorsParser --> parse and implement min/max in Accessors
 - colours_diffuse should be implemented in the mesh xml file (it is specified in Ogre xml). This is mapped to COLOR_0
+- Test transparent materials --> Polly material seems sort of ok. More testing is needed, but I need other models for it (ongoing effort)

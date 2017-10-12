@@ -29,54 +29,67 @@
 #include "gLTFImportBufferReader.h"
 
 //---------------------------------------------------------------------
-unsigned char gLTFImportBufferReader::readFromUnsignedByteBuffer(char* buffer, int count, gLTFAccessor accessor)
+unsigned char gLTFImportBufferReader::readFromUnsignedByteBuffer(char* buffer, int count, gLTFAccessor accessor, bool applyMinMax)
 {
 	unsigned char scalar;
 	int unsignedCharSize = sizeof(unsigned char);
 	memcpy(&scalar, &buffer[count * unsignedCharSize], unsignedCharSize);
 
 	// Correct with min/max
-	if (accessor.mMinAvailable)
-		scalar = scalar < accessor.mMinInt[0] ? accessor.mMinInt[0] : scalar;
-	if (accessor.mMaxAvailable)
-		scalar = scalar > accessor.mMaxInt[0] ? accessor.mMaxInt[0] : scalar;
+	if (applyMinMax)
+	{
+		if (accessor.mMinAvailable)
+			scalar = scalar < accessor.mMinInt[0] ? accessor.mMinInt[0] : scalar;
+		if (accessor.mMaxAvailable)
+			scalar = scalar > accessor.mMaxInt[0] ? accessor.mMaxInt[0] : scalar;
+	}
+
 	return scalar;
 }
 
 //---------------------------------------------------------------------
-unsigned short gLTFImportBufferReader::readFromUnsignedShortBuffer(char* buffer, int count, gLTFAccessor accessor)
+unsigned short gLTFImportBufferReader::readFromUnsignedShortBuffer(char* buffer, int count, gLTFAccessor accessor, bool applyMinMax)
 {
 	unsigned short scalar;
 	int unsignedShortSize = sizeof(unsigned short);
 	memcpy(&scalar, &buffer[count * unsignedShortSize], unsignedShortSize);
 
 	// Correct with min/max
-	if (accessor.mMinAvailable)
-		scalar = scalar < (unsigned short)accessor.mMinInt[0] ? (unsigned short)accessor.mMinInt[0] : scalar;
-	if (accessor.mMaxAvailable)
-		scalar = scalar >(unsigned short)accessor.mMaxInt[0] ? (unsigned short)accessor.mMaxInt[0] : scalar;
+	if (applyMinMax)
+	{
+		if (accessor.mMinAvailable)
+			scalar = scalar < (unsigned short)accessor.mMinInt[0] ? (unsigned short)accessor.mMinInt[0] : scalar;
+		if (accessor.mMaxAvailable)
+			scalar = scalar > (unsigned short)accessor.mMaxInt[0] ? (unsigned short)accessor.mMaxInt[0] : scalar;
+	}
+	
 	return scalar;
 }
 
 //---------------------------------------------------------------------
-unsigned int gLTFImportBufferReader::readFromUnsignedIntBuffer(char* buffer, int count, gLTFAccessor accessor)
+unsigned int gLTFImportBufferReader::readFromUnsignedIntBuffer(char* buffer, int count, gLTFAccessor accessor, bool applyMinMax)
 {
 	unsigned int scalar;
 	int unsignedIntSize = sizeof(unsigned int);
 	memcpy(&scalar, &buffer[count * unsignedIntSize], unsignedIntSize);
 
 	// Correct with min/max
-	if (accessor.mMinAvailable)
-		scalar = scalar < (unsigned int)accessor.mMinInt[0] ? (unsigned int)accessor.mMinInt[0] : scalar;
-	if (accessor.mMaxAvailable)
-		scalar = scalar >(unsigned int)accessor.mMaxInt[0] ? (unsigned int)accessor.mMaxInt[0] : scalar;
+	if (applyMinMax)
+	{
+		if (accessor.mMinAvailable)
+			scalar = scalar < (unsigned int)accessor.mMinInt[0] ? (unsigned int)accessor.mMinInt[0] : scalar;
+		if (accessor.mMaxAvailable)
+			scalar = scalar > (unsigned int)accessor.mMaxInt[0] ? (unsigned int)accessor.mMaxInt[0] : scalar;
+	}
+	
 	return scalar;
 }
 
 //---------------------------------------------------------------------
 const Vec2Struct& gLTFImportBufferReader::readVec2FromFloatBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	float fRaw;
 	int floatSize = sizeof(float);
@@ -87,14 +100,17 @@ const Vec2Struct& gLTFImportBufferReader::readVec2FromFloatBuffer(char* buffer,
 	mHelperVec2Struct.v = fRaw;
 
 	// Correct with min/max
-	correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+	if (applyMinMax)
+		correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+	
 	return mHelperVec2Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedByteBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	unsigned char raw;
 	int unsignedCharSize = sizeof(unsigned char);
@@ -105,14 +121,17 @@ const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedByteBuffer(char* b
 	mHelperVec2Struct.v = raw;
 
 	// Correct with min/max
-	correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+	if (applyMinMax)
+		correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+	
 	return mHelperVec2Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedShortBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	unsigned short raw;
 	int unsignedShortSize = sizeof(unsigned short);
@@ -123,14 +142,17 @@ const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedShortBuffer(char* 
 	mHelperVec2Struct.v = raw;
 
 	// Correct with min/max
-	correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+	if (applyMinMax)
+		correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+	
 	return mHelperVec2Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec3Struct& gLTFImportBufferReader::readVec3FromFloatBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	float fRaw;
 	int floatSize = sizeof(float);
@@ -143,14 +165,17 @@ const Vec3Struct& gLTFImportBufferReader::readVec3FromFloatBuffer(char* buffer,
 	mHelperVec3Struct.z = fRaw;
 
 	// Correct with min/max
-	correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+	if (applyMinMax)
+		correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+	
 	return mHelperVec3Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedByteBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	unsigned char raw;
 	int unsingedCharSize = sizeof(unsigned char);
@@ -163,14 +188,17 @@ const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedByteBuffer(char* b
 	mHelperVec3Struct.z = raw;
 
 	// Correct with min/max
-	correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+	if (applyMinMax)
+		correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+	
 	return mHelperVec3Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedShortBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	unsigned short raw;
 	int unsingedShortSize = sizeof(unsigned short);
@@ -183,14 +211,17 @@ const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedShortBuffer(char* 
 	mHelperVec3Struct.z = raw;
 
 	// Correct with min/max
-	correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+	if (applyMinMax)
+		correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+	
 	return mHelperVec3Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec4Struct& gLTFImportBufferReader::readVec4FromFloatBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	float fRaw;
 	int floatSize = sizeof(float);
@@ -205,14 +236,17 @@ const Vec4Struct& gLTFImportBufferReader::readVec4FromFloatBuffer(char* buffer,
 	mHelperVec4Struct.a = fRaw;
 
 	// Correct with min/max
-	correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+	if (applyMinMax)
+		correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+	
 	return mHelperVec4Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	unsigned char raw;
 	int unsignedByteSize = sizeof(unsigned char);
@@ -227,14 +261,17 @@ const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char* b
 	mHelperVec4Struct.a = raw;
 
 	// Correct with min/max
-	correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+	if (applyMinMax)
+		correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+	
 	return mHelperVec4Struct;
 }
 
 //---------------------------------------------------------------------
 const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedShortBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor)
+	gLTFAccessor accessor, 
+	bool applyMinMax)
 {
 	unsigned short raw;
 	int unsignedShortSize = sizeof(unsigned short);
@@ -249,7 +286,9 @@ const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedShortBuffer(char* 
 	mHelperVec4Struct.a = raw;
 
 	// Correct with min/max
-	correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+	if (applyMinMax)
+		correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+	
 	return mHelperVec4Struct;
 }
 

@@ -139,6 +139,10 @@ class gLTFImportOgreMeshCreator
 		bool convertXmlFileToMesh (Ogre::HlmsEditorPluginData* data, 
 			const std::string& xmlFileName, 
 			const std::string& meshFileName);
+
+		bool getCorrectForMinMaxPropertyValue(Ogre::HlmsEditorPluginData* data);
+		bool setMeshFileNamePropertyValue(Ogre::HlmsEditorPluginData* data, const std::string& fileName);
+		bool setProjectFileNamePropertyValue(Ogre::HlmsEditorPluginData* data, const std::string& fileName);
 	
 	private:
 		std::string mHelperString;

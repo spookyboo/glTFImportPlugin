@@ -98,9 +98,14 @@ namespace Ogre
 	{
 		// 1. Open a dialog to read the gLTF file
 		// 2. Create a directory in the import directory with the base name of the selected file
+		// 3. Open a properties dialog to pass additional property data to the plugin
+		// 4. Open a project after import; mOutReferencesMap contains the reference
+		// 5. Open a mesh after import; mOutReferencesMap contains the reference
 		return	PAF_PRE_IMPORT_OPEN_FILE_DIALOG |
 			PAF_PRE_IMPORT_MK_DIR |
-			PAF_PRE_ACTION_SETTINGS_DIALOG;
+			PAF_PRE_ACTION_SETTINGS_DIALOG |
+			PAF_POST_IMPORT_OPEN_PROJECT_MAPREF |
+			PAF_POST_IMPORT_LOAD_MESH_MAPREF;
 	}
 
 	//---------------------------------------------------------------------
@@ -140,6 +145,15 @@ namespace Ogre
 		property.info = "";
 		property.type = HlmsEditorPluginData::BOOL;
 		property.boolValue = true;
+		mProperties[property.propertyName] = property;
+
+		// Correct for min/max
+		// Accessors have an optional min/max array, but for some models applying this results in misformed vertices
+		property.propertyName = "correct_min_max";
+		property.labelName = "Correct for min/max";
+		property.info = "gLTF accessors may have min/max values defined, but some models become misformed when applied";
+		property.type = HlmsEditorPluginData::BOOL;
+		property.boolValue = false;
 		mProperties[property.propertyName] = property;
 
 		return mProperties;

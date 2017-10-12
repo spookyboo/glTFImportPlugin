@@ -40,24 +40,51 @@ class gLTFImportBufferReader
 		virtual ~gLTFImportBufferReader(void) {};
 
 		// Read scalar
-		unsigned char readFromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor);
-		unsigned short readFromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor);
-		unsigned int readFromUnsignedIntBuffer (char* buffer, int count, gLTFAccessor accessor);
+		unsigned char readFromUnsignedByteBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
+		unsigned short readFromUnsignedShortBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
+		unsigned int readFromUnsignedIntBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
 
 		// Read Vec2
-		const Vec2Struct& readVec2FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor);
-		const Vec2Struct& readVec2FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor);
-		const Vec2Struct& readVec2FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor);
+		const Vec2Struct& readVec2FromUnsignedByteBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
+		const Vec2Struct& readVec2FromUnsignedShortBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
+		const Vec2Struct& readVec2FromFloatBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
 
 		// Read Vec3
-		const Vec3Struct& readVec3FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor);
-		const Vec3Struct& readVec3FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor);
-		const Vec3Struct& readVec3FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor);
+		const Vec3Struct& readVec3FromUnsignedByteBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
+		const Vec3Struct& readVec3FromUnsignedShortBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
+		const Vec3Struct& readVec3FromFloatBuffer (char* buffer, 
+			int count, 
+			gLTFAccessor accessor, 
+			bool applyMinMax = false);
 
 		// Read Vec4
-		const Vec4Struct& readVec4FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor);
-		const Vec4Struct& readVec4FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor);
-		const Vec4Struct& readVec4FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor);
+		const Vec4Struct& readVec4FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
+		const Vec4Struct& readVec4FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
+		const Vec4Struct& readVec4FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
 
 		// Min/Max corrections
 		void correctVec2StructWithMinMax (gLTFAccessor accessor, Vec2Struct* vec2Struct);
