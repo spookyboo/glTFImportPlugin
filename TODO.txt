@@ -1,15 +1,12 @@
 HLMS Editor:
 ===========
-- After importing a gltf, load the HLMS material and load (import) the Mesh.
-- After importing a gltf, create a project with all the materials in the material browser.
-  - Change interface; add map 'references' with key/value pairs (e.g. 'mesh' --> meshfile.xml; 'material' --> material file; 'project' --> project file, etc.)
 
 Plugin:
 ======
 - Implement matrix transformation
 - Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
-- Parse animations, assets and skins, possibly nodes, scene, ...
+- Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
 - Init gLTF so texture tranformation is possible
 - Bytestride is not used to jump in a buffer; currently is assumed that data is aligned
@@ -32,3 +29,7 @@ DONE:
 - gLTFImportAccessorsParser --> parse and implement min/max in Accessors
 - colours_diffuse should be implemented in the mesh xml file (it is specified in Ogre xml). This is mapped to COLOR_0
 - Test transparent materials --> Polly material seems sort of ok. More testing is needed, but I need other models for it (ongoing effort)
+- Parse nodes
+- After importing a gltf, load the HLMS material and load (import) the Mesh.
+- After importing a gltf, create a project with all the materials in the material browser.
+  - Change interface; add map 'references' with key/value pairs (e.g. 'mesh' --> meshfile.xml; 'material' --> material file; 'project' --> project file, etc.)

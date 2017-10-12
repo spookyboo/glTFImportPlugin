@@ -100,6 +100,7 @@ class gLTFImportExecutor
 			const std::string&  materialName,
 			int textureIndex,
 			int startBinaryBuffer);
+		bool setProjectFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
 
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
@@ -152,6 +153,11 @@ class gLTFImportExecutor
 		// Creator classes
 		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;
 		gLTFImportOgreMeshCreator mOgreMeshCreator;
+
+		// Filenames project
+		std::string mHlmsProjectFileName;
+		std::string mMaterialsConfigFileName;
+		std::string mTexturesConfigFileName;
 };
 
 #endif

@@ -38,6 +38,13 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 
 	bool result = true;
 
+	// Determine filenames
+	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
+	std::string fullyQualifiedBaseName = fullyQualifiedImportPath + data->mInFileDialogBaseName;
+	mHlmsProjectFileName = fullyQualifiedBaseName + ".hlmp";
+	mMaterialsConfigFileName = fullyQualifiedBaseName + "_materials.cfg";
+	mTexturesConfigFileName = fullyQualifiedBaseName + "_textures.cfg";
+
 	// Determine type of file
 	int startBinaryBuffer = 0;
 	std::string fileName = data->mInFileDialogPath + data->mInFileDialogName;
@@ -71,6 +78,14 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 			mAccessorsMap, 
 			startBinaryBuffer);
 	}
+
+	// Create the HLMSEditor project file
+	std::ofstream dst(mHlmsProjectFileName);
+	dst << "hlmsEditor v1.0\n";
+	dst << mMaterialsConfigFileName << "\n";
+	dst << mTexturesConfigFileName << "\n";
+	dst.close();
+	setProjectFileNamePropertyValue(data, mHlmsProjectFileName);
 
 	return result;
 }
@@ -298,9 +313,29 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 	std::string uriImage;
 	int textureIndex;
 	int sampler;
+	int matCount = 4;
+	int texCount = 4;
+	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
+	std::string ogreFullyQualifiedMaterialFileName;
+	std::string ogreMaterialFileName;
+
+	// Create the materials config file
+	std::ofstream matFile(mMaterialsConfigFileName);
+	matFile << "1	0	1	1	PBS	PBS\n";
+
+	// Create the textures config file
+	std::ofstream texFile(mTexturesConfigFileName);
+	texFile << "3	0	3	1	Textures	Textures\n";
+
 	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
 	{
 		materialName = (itMaterials->second).mName;
+
+		// Write and entry in the materials config file
+		ogreFullyQualifiedMaterialFileName = fullyQualifiedImportPath + materialName + ".material.json";
+		ogreMaterialFileName = materialName + ".material.json";
+		matFile << "1	1	" << matCount << "	3	";
+		matFile << ogreMaterialFileName << "	" << ogreFullyQualifiedMaterialFileName << "\n";
 
 		/* For each texture index it must be determined whether the uri of the image refers to a binary file
 		* containing an image, a link to an image file or to embeded base64 encoded data in the uri itself.
@@ -311,21 +346,45 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex;
 		uriImage = prepareUri("baseColorTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uriImage;
+		if (uriImage != "")
+		{
+			texFile << "3	3	" << texCount << "	3	";
+			texFile << uriImage << "	" << uriImage << "\n";
+			texCount++;
+		}
 
 		// 1. emissiveTexture
 		textureIndex = (itMaterials->second).mEmissiveTexture.mIndex;
 		uriImage = prepareUri("emissiveTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mEmissiveTexture.mUri = uriImage;
+		if (uriImage != "")
+		{
+			texFile << "3	3	" << texCount << "	3	";
+			texFile << uriImage << "	" << uriImage << "\n";
+			texCount++;
+		}
 
 		// 2. normalTexture
 		textureIndex = (itMaterials->second).mNormalTexture.mIndex;
 		uriImage = prepareUri("normalTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mNormalTexture.mUri = uriImage;
+		if (uriImage != "")
+		{
+			texFile << "3	3	" << texCount << "	3	";
+			texFile << uriImage << "	" << uriImage << "\n";
+			texCount++;
+		}
 
 		// 3. mOcclusionTexture
 		textureIndex = (itMaterials->second).mOcclusionTexture.mIndex;
 		uriImage = prepareUri("occlusionTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mOcclusionTexture.mUri = uriImage;
+		if (uriImage != "")
+		{
+			texFile << "3	3	" << texCount << "	3	";
+			texFile << uriImage << "	" << uriImage << "\n";
+			texCount++;
+		}
 
 		// Occlusion is represented by the R channel
 		convertTexture(uriImage, TTF_R_2_GB_INV); // Convert the image file into a usable occlusion texture
@@ -335,13 +394,25 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
 		uriImage = prepareUri("metallicRoughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uriImage;
+		if (uriImage != "")
+		{
+			texFile << "3	3	" << texCount << "	3	";
+			texFile << uriImage << "	" << uriImage << "\n";
+			texCount++;
+		}
 
 		// 5. metallicTexture (copy of metallicRoughnessTexture)
 		// The metallicRoughnessTexture is used as if it was a metallicTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
 		uriImage = prepareUri("metallicTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mUri = uriImage;
-		
+		if (uriImage != "")
+		{
+			texFile << "3	3	" << texCount << "	3	";
+			texFile << uriImage << "	" << uriImage << "\n";
+			texCount++;
+		}
+
 		// Convert to Metallic texture. Metallic is represented by the B channel
 		convertTexture(uriImage, TTF_G_2_RBA); // Convert the image file into a usable metallic texture
 
@@ -350,6 +421,12 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
 		uriImage = prepareUri("roughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mUri = uriImage;
+		if (uriImage != "")
+		{
+			texFile << "3	3	" << texCount << "	3	";
+			texFile << uriImage << "	" << uriImage << "\n";
+			texCount++;
+		}
 
 		// Convert to Roughness texture. Roughness is represented by the G channel
 		convertTexture(uriImage, TTF_G_2_RBA); // Convert the image file into a usable roughness texture
@@ -367,7 +444,13 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler = sampler;
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mSampler = sampler;
 		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mSampler = sampler;
+
+		matCount++;
 	}
+
+	texFile.close();
+	matFile << "2	0	2	1	Unlit	Unlit\n";
+	matFile.close();
 
 	return true;
 }
@@ -456,6 +539,8 @@ bool gLTFImportExecutor::propagateNodes(Ogre::HlmsEditorPluginData* data)
 		mesh = mMeshesMap[itNodes->second.mMesh];
 		itNodes->second.mMeshDerived = mesh;
 	}
+
+	return true;
 }
 
 //---------------------------------------------------------------------
@@ -814,5 +899,16 @@ bool gLTFImportExecutor::convertTexture (const std::string& fileName, TextureTra
 	image.save(fileName);
 #endif // DEBUG
 
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::setProjectFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName)
+{
+	Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY property;
+	property.propertyName = "load_project";
+	property.type = Ogre::HlmsEditorPluginData::STRING;
+	property.stringValue = fileName;
+	data->mOutReferencesMap[property.propertyName] = property;
 	return true;
 }

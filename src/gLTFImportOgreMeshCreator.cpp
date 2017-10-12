@@ -817,14 +817,6 @@ bool gLTFImportOgreMeshCreator::setMeshFileNamePropertyValue (Ogre::HlmsEditorPl
 	property.type = Ogre::HlmsEditorPluginData::STRING;
 	property.stringValue = fileName;
 	data->mOutReferencesMap[property.propertyName] = property;
-}
-
-//---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::setProjectFileNamePropertyValue(Ogre::HlmsEditorPluginData* data, const std::string& fileName)
-{
-	Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY property;
-	property.propertyName = "load_project";
-	property.type = Ogre::HlmsEditorPluginData::STRING;
-	property.stringValue = fileName;
-	data->mOutReferencesMap[property.propertyName] = property;
+	
+	return true;
 }
