@@ -1,17 +1,18 @@
 HLMS Editor:
 ===========
+- When loading a mesh, first delete the mesh with the same name
 
 Plugin:
 ======
 - Implement matrix transformation
+- Check rotation transformation?
 - Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
 - Init gLTF so texture tranformation is possible
-- Bytestride is not used to jump in a buffer; currently is assumed that data is aligned
+- Bytestride is not used to jump in a buffer; currently is assumed that data is aligned per type (positions together, normals together, ..); interleaved data is more efficient to store vertices
 - Level of detail implemented in gLTF?
-- Godot engine swaps the v2 and v3 indexed in a face (swap around indices, convert ccw to cw for front face). Test this in the plugin
 - Add KHR_ extensions to read Unity gLTF models and materials
 - Vertex count is derived from position vertices. Validate whether this is correct
 - Implement (morph) targets in Primitives
@@ -32,4 +33,8 @@ DONE:
 - Parse nodes
 - After importing a gltf, load the HLMS material and load (import) the Mesh.
 - After importing a gltf, create a project with all the materials in the material browser.
-  - Change interface; add map 'references' with key/value pairs (e.g. 'mesh' --> meshfile.xml; 'material' --> material file; 'project' --> project file, etc.)
+- Change interface; add map 'references' with key/value pairs (e.g. 'mesh' --> meshfile.xml; 'material' --> material file; 'project' --> project file, etc.)
+- Godot engine swaps the v2 and v3 indexed in a face (swap around indices, convert ccw to cw for front face). Test this in the plugin --> This implies the addition
+  of a makroblock with the setting 'anticlockwise'. Therefor we do not swap indexes 2 and 3!
+
+

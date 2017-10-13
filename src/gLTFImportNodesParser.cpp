@@ -79,9 +79,9 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 				const rapidjson::Value& matrixArray = it->value;
 				for (rapidjson::SizeType j = 0; j < matrixArray.Size(); j++)
 				{
-					if (matrixArray[j].IsFloat())
+					if (matrixArray[j].IsNumber())
 					{
-						node.mMatrix[j] = matrixArray[j].GetFloat();
+						node.mMatrix[j] = matrixArray[j].GetDouble();
 						node.mHasMatrix = true;
 						OUT << TABx2 << "value ==> " << node.mMatrix[j] << "\n";
 					}
@@ -99,9 +99,9 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 				const rapidjson::Value& rotationArray = it->value;
 				for (rapidjson::SizeType j = 0; j < rotationArray.Size(); j++)
 				{
-					if (rotationArray[j].IsFloat())
+					if (rotationArray[j].IsNumber())
 					{
-						node.mRotation[j] = rotationArray[j].GetFloat();
+						node.mRotation[j] = rotationArray[j].GetDouble();
 						node.mHasRotation = true;
 						OUT << TABx2 << "value ==> " << node.mRotation[j] << "\n";
 					}
@@ -113,9 +113,9 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 				const rapidjson::Value& scaleArray = it->value;
 				for (rapidjson::SizeType j = 0; j < scaleArray.Size(); j++)
 				{
-					if (scaleArray[j].IsFloat())
+					if (scaleArray[j].IsNumber())
 					{
-						node.mScale[j] = scaleArray[j].GetFloat();
+						node.mScale[j] = scaleArray[j].GetDouble();
 						node.mHasScale = true;
 						OUT << TABx2 << "value ==> " << node.mScale[j] << "\n";
 					}
@@ -127,9 +127,9 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 				const rapidjson::Value& translationArray = it->value;
 				for (rapidjson::SizeType j = 0; j < translationArray.Size(); j++)
 				{
-					if (translationArray[j].IsFloat())
+					if (translationArray[j].IsNumber())
 					{
-						node.mTranslation[j] = translationArray[j].GetFloat();
+						node.mTranslation[j] = translationArray[j].GetDouble();
 						node.mHasTranslation = true;
 						OUT << TABx2 << "value ==> " << node.mTranslation[j] << "\n";
 					}

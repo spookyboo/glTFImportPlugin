@@ -527,20 +527,165 @@ bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data)
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::propagateNodes(Ogre::HlmsEditorPluginData* data)
 {
-	// Propagate the mesh to the node
 	OUT << TABx3 << "Perform gLTFImportExecutor::propagateNodes\n";
-	std::map<int, gLTFNode>::iterator itNodes;
-	gLTFMesh mesh;
-	gLTFNode node;
 
-	// Iterate though the nodes and set the derived mesh object
-	for (itNodes = mNodesMap.begin(); itNodes != mNodesMap.end(); itNodes++)
+	// Propagate the mesh to the node and the transformations to child nodes
+	std::map<int, gLTFNode>::iterator itNodes;
+	std::map<int, gLTFNode>::iterator itNodesEnd = mNodesMap.end();
+	gLTFMesh mesh;
+
+	// Iterate though the nodes, propagate transformation to childres and set the derived mesh object
+	for (itNodes = mNodesMap.begin(); itNodes != itNodesEnd; itNodes++)
 	{
+		gLTFNode* node = &itNodes->second;
+		propagateNodeTransformsToChildren(&(itNodes->second));
 		mesh = mMeshesMap[itNodes->second.mMesh];
 		itNodes->second.mMeshDerived = mesh;
 	}
 
 	return true;
+}
+
+//---------------------------------------------------------------------
+void gLTFImportExecutor::propagateNodeTransformsToChildren (gLTFNode* node)
+{
+	std::vector<int>::iterator itChildNodes;
+	std::vector<int>::iterator itChildNodesEnd;
+	gLTFNode* childNode;
+	int count;
+
+	itChildNodesEnd = node->mChildren.end();
+	count = 0;
+	for (itChildNodes = node->mChildren.begin(); itChildNodes != itChildNodesEnd; itChildNodes++)
+	{
+		childNode = findNodeByIndex(node->mChildren[count]);
+		if (childNode && !childNode->mTransformationDerived)
+		{
+			inheritTransforms(node, childNode);
+			propagateNodeTransformsToChildren(childNode); // Propagate to the lower tree
+		}
+		count++;
+	}
+}
+
+//---------------------------------------------------------------------
+void gLTFImportExecutor::inheritTransforms (gLTFNode* parentNode, gLTFNode* childNode)
+{
+	//OUT << "inheritTransforms for parent " << parentNode->mName << " and child " << childNode->mName << "\n";
+
+	OUT << "gLTFImportExecutor::inheritTransforms\n";
+	Ogre::Matrix4 matrixParent;
+	Ogre::Vector3 scaleParent = Ogre::Vector3(1.0f, 1.0f, 1.0f);
+	Ogre::Quaternion rotationParent = Ogre::Quaternion::IDENTITY;
+	Ogre::Vector3 translationParent = Ogre::Vector3::ZERO;
+	Ogre::Matrix4 matrixChild;
+	Ogre::Vector3 scaleChild = Ogre::Vector3(1.0f, 1.0f, 1.0f);
+	Ogre::Quaternion rotationChild = Ogre::Quaternion::IDENTITY;
+	Ogre::Vector3 translationChild = Ogre::Vector3::ZERO;
+
+	// First translate everything to matrix4
+	if (parentNode->mHasMatrix)
+	{
+		// Parent has a matrix4
+		matrixParent = Ogre::Matrix4(
+			parentNode->mMatrix[0], parentNode->mMatrix[4], parentNode->mMatrix[8], parentNode->mMatrix[12],
+			parentNode->mMatrix[1], parentNode->mMatrix[5], parentNode->mMatrix[9], parentNode->mMatrix[13],
+			parentNode->mMatrix[2], parentNode->mMatrix[6], parentNode->mMatrix[10], parentNode->mMatrix[14],
+			parentNode->mMatrix[3], parentNode->mMatrix[7], parentNode->mMatrix[11], parentNode->mMatrix[15]);
+	}
+	else
+	{
+		// Parent has TRS
+		if (parentNode->mHasScale)
+			scaleParent = Ogre::Vector3(parentNode->mScale[0], parentNode->mScale[1], parentNode->mScale[2]);
+		if (parentNode->mHasRotation)
+			rotationParent = Ogre::Quaternion(parentNode->mRotation[3], parentNode->mRotation[0], parentNode->mRotation[1], parentNode->mRotation[2]);
+		if (parentNode->mHasTranslation)
+			translationParent = Ogre::Vector3(parentNode->mTranslation[0], parentNode->mTranslation[1], parentNode->mTranslation[2]);
+		matrixParent.makeTransform(translationParent, scaleParent, rotationParent);
+	}
+
+	if (childNode->mHasMatrix)
+	{
+		// Child has a matrix4
+		matrixChild = Ogre::Matrix4(
+			childNode->mMatrix[0], childNode->mMatrix[4], childNode->mMatrix[8], childNode->mMatrix[12],
+			childNode->mMatrix[1], childNode->mMatrix[5], childNode->mMatrix[9], childNode->mMatrix[13],
+			childNode->mMatrix[2], childNode->mMatrix[6], childNode->mMatrix[10], childNode->mMatrix[14],
+			childNode->mMatrix[3], childNode->mMatrix[7], childNode->mMatrix[11], childNode->mMatrix[15]);
+	}
+	else
+	{
+		// Child has TRS
+		if (childNode->mHasScale)
+			scaleChild = Ogre::Vector3(childNode->mScale[0], childNode->mScale[1], childNode->mScale[2]);
+		if (childNode->mHasRotation)
+			rotationChild = Ogre::Quaternion(childNode->mRotation[3], childNode->mRotation[0], childNode->mRotation[1], childNode->mRotation[2]);
+		if (childNode->mHasTranslation)
+			translationChild = Ogre::Vector3(childNode->mTranslation[0], childNode->mTranslation[1], childNode->mTranslation[2]);
+		matrixChild.makeTransform(translationChild, scaleChild, rotationChild);
+	}
+
+	// Perform matrix transformation
+	matrixChild = matrixParent * matrixChild;
+
+	// Set result back to the childNode
+	childNode->mMatrix[0] = matrixChild[0][0];
+	childNode->mMatrix[1] = matrixChild[1][0];
+	childNode->mMatrix[2] = matrixChild[2][0];
+	childNode->mMatrix[3] = matrixChild[3][0];
+	childNode->mMatrix[4] = matrixChild[0][1];
+	childNode->mMatrix[5] = matrixChild[1][1];
+	childNode->mMatrix[6] = matrixChild[2][1];
+	childNode->mMatrix[7] = matrixChild[3][1];
+	childNode->mMatrix[8] = matrixChild[0][2];
+	childNode->mMatrix[9] = matrixChild[1][2];
+	childNode->mMatrix[10] = matrixChild[2][2];
+	childNode->mMatrix[11] = matrixChild[3][2];
+	childNode->mMatrix[12] = matrixChild[0][3];
+	childNode->mMatrix[13] = matrixChild[1][3];
+	childNode->mMatrix[14] = matrixChild[2][3];
+	childNode->mMatrix[15] = matrixChild[3][3];
+	if (childNode->mHasMatrix)
+	{
+		childNode->mHasMatrix = true;
+	}
+	else
+	{
+		// Set all 3 TRS elements
+		// Any unused elements have a 'neutral'  value (e.g. translation of Vector3::Zero or an Identity Quaternion)
+		matrixChild.decomposition(translationChild, scaleChild, rotationChild);
+		childNode->mScale[0] = scaleChild.x;
+		childNode->mScale[1] = scaleChild.y;
+		childNode->mScale[2] = scaleChild.z;
+		childNode->mHasScale = true;
+
+		childNode->mRotation[0] = rotationChild.x;
+		childNode->mRotation[1] = rotationChild.y;
+		childNode->mRotation[2] = rotationChild.z;
+		childNode->mRotation[3] = rotationChild.w;
+		childNode->mHasRotation = true;
+
+		childNode->mTranslation[0] = translationChild.x;
+		childNode->mTranslation[1] = translationChild.y;
+		childNode->mTranslation[2] = translationChild.z;
+		childNode->mHasTranslation = true;
+	}
+
+	childNode->mTransformationDerived = true;
+}
+
+//---------------------------------------------------------------------
+gLTFNode* gLTFImportExecutor::findNodeByIndex (int nodeIndex)
+{
+	std::map<int, gLTFNode>::iterator it = mNodesMap.find(nodeIndex);
+	if (it != mNodesMap.end())
+	{
+		// Found the node
+		return &(it->second);
+	}
+	
+	return 0;
 }
 
 //---------------------------------------------------------------------
@@ -783,7 +928,7 @@ const std::string& gLTFImportExecutor::writeImageFile (const std::string& textur
 	Ogre::HlmsEditorPluginData* data,
 	const std::string& materialName,
 	char* imageBlock,
-	int byteLength)
+	size_t byteLength)
 {
 	// Write the image file
 	// TODO: Check on existence of the image file or just overwrite?

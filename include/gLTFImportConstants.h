@@ -45,7 +45,7 @@ struct Devnull : std::ostream, std::streambuf
 
 //---------------------------------------------------------------------
 // Disable the line below when using gLTFTEST, because otherwise Ogre::Image (used for texture transformation) does not work
-#define TEXTURE_TRANSFORMATION 1
+//#define TEXTURE_TRANSFORMATION 1
 
 //---------------------------------------------------------------------
 static const std::string TAB = "  ";
@@ -64,13 +64,6 @@ struct Vec2Struct
 {
 	float u = 0.0f;
 	float v = 0.0f;
-
-	Vec2Struct operator+(const Vec2Struct& v2)
-	{
-		u += v2.u;
-		v += v2.v;
-		return *this;
-	}
 };
 
 struct Vec3Struct
@@ -94,6 +87,27 @@ struct QuaternionStruct
 	float x = 0.0f;
 	float y = 0.0f;
 	float z = 0.0f;
+};
+
+struct Mat2Struct
+{
+	float m00 = 0.0f, m01 = 0.0f;
+	float m10 = 0.0f, m11 = 0.0f;
+};
+
+struct Mat3Struct
+{
+	float m00 = 0.0f, m01 = 0.0f, m02 = 0.0f;
+	float m10 = 0.0f, m11 = 0.0f, m12 = 0.0f;
+	float m20 = 0.0f, m21 = 0.0f, m22 = 0.0f;
+};
+
+struct Mat4Struct
+{
+	float m00 = 1.0f, m01 = 0.0f, m02 = 0.0f, m03 = 0.0f;
+	float m10 = 0.0f, m11 = 1.0f, m12 = 0.0f, m13 = 0.0f;
+	float m20 = 0.0f, m21 = 0.0f, m22 = 1.0f, m23 = 0.0f;
+	float m30 = 0.0f, m31 = 0.0f, m32 = 0.0f, m33 = 1.0f;
 };
 
 //---------------------------------------------------------------------

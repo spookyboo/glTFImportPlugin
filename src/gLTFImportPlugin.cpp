@@ -120,7 +120,7 @@ namespace Ogre
 		property.info = "gLTF distinguishes meshes and primitives. Meshes are transformed to Ogre meshes, while primitives are transformed into OgresubMeshes\n.\
 						 If this property is set, each gLTF mesh is transformed to a submesh. This results in one Ogre mesh per import.";
 		property.type = HlmsEditorPluginData::BOOL;
-		property.boolValue = false;
+		property.boolValue = true;
 		mProperties[property.propertyName] = property;
 
 		// Generate tangents

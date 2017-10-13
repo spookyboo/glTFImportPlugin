@@ -71,9 +71,11 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data,
 			std::map<int, gLTFAccessor> accessorMap,
 			int startBinaryBuffer,
+			bool hasTrs = true,								// If true, the translation, rotation and scale args are used
 			Vec3Struct translation = Vec3Struct(),
 			QuaternionStruct rotation = QuaternionStruct(),
-			Vec3Struct scale = Vec3Struct());
+			Vec3Struct scale = Vec3Struct(),
+			Mat4Struct matrix = Mat4Struct());
 
 		bool writeFaces (std::ofstream& dst,
 			const gLTFPrimitive& primitive,
@@ -87,18 +89,22 @@ class gLTFImportOgreMeshCreator
 			gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer,
+			bool hasTrs = true,
 			Vec3Struct translation = Vec3Struct(),
 			QuaternionStruct rotation = QuaternionStruct(),
-			Vec3Struct scale = Vec3Struct()); // Write all vertices
+			Vec3Struct scale = Vec3Struct(),
+			Mat4Struct matrix = Mat4Struct()); // Write all vertices
 		
 		// Read attributes from buffer
 		void readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer,
+			bool hasTrs = true,
 			Vec3Struct translation = Vec3Struct(),
 			QuaternionStruct rotation = QuaternionStruct(),
-			Vec3Struct scale = Vec3Struct()); // Read the positions
+			Vec3Struct scale = Vec3Struct(),
+			Mat4Struct matrix = Mat4Struct()); // Read the positions
 
 		void readNormalsFromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,

@@ -51,20 +51,21 @@ class gLTFNode
 		int mCamera; // unused for now
 		std::vector<int> mChildren;
 		int mSkin;
-		float mMatrix[16];
+		double mMatrix[16];
 		bool mHasMatrix;
 		int mMesh;
-		float mRotation[4];
+		double mRotation[4];
 		bool mHasRotation;
-		float mScale[3];
+		double mScale[3];
 		bool mHasScale;
-		float mTranslation[3];
+		double mTranslation[3];
 		bool mHasTranslation;
 		std::vector<float> mWeights;
 		std::string mName;
 
-		// Derived data (from Mesh)
-		gLTFMesh mMeshDerived;
+		// Derived data
+		gLTFMesh mMeshDerived; // from mesh
+		bool mTransformationDerived;
 };
 
 #endif

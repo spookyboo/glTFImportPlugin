@@ -88,6 +88,8 @@ class gLTFImportExecutor
 		//bool propagateMeshes (Ogre::HlmsEditorPluginData* data, int startBinaryBuffer); // Primitives are enriched with data from Materials and Accessors
 		bool propagateMeshes (Ogre::HlmsEditorPluginData* data); // Primitives are enriched with data from Materials and Accessors
 		bool propagateNodes(Ogre::HlmsEditorPluginData* data);
+		void propagateNodeTransformsToChildren (gLTFNode* node); // Transforms are inherited from the parent
+		void inheritTransforms (gLTFNode* parentNode, gLTFNode* childNode);
 		
 		// Utils
 		const gLTFImage& getImageByTextureIndex (int index);
@@ -101,6 +103,7 @@ class gLTFImportExecutor
 			int textureIndex,
 			int startBinaryBuffer);
 		bool setProjectFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
+		gLTFNode* findNodeByIndex (int nodeIndex);
 
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
@@ -122,7 +125,7 @@ class gLTFImportExecutor
 			Ogre::HlmsEditorPluginData* data,
 			const std::string& materialName,
 			char* imageBlock,
-			int byteLength);
+			size_t byteLength);
 
 	private:
 		std::string mHelperString;

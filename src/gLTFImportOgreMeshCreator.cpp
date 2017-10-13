@@ -30,6 +30,7 @@
 #include "rapidjson/document.h"
 #include "OgreVector3.h"
 #include "OgreQuaternion.h"
+#include "OgreMatrix4.h"
 #include "base64.h"
 
 //---------------------------------------------------------------------
@@ -90,7 +91,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		dst << "<mesh>\n";
 		dst << TAB << "<submeshes>\n";
 
-		writeSubmesh(dst, mesh, data, accessorMap, startBinaryBuffer);
+		writeSubmesh(dst, mesh, data, accessorMap, startBinaryBuffer); // Do not perform any transformation
 		
 		dst << TAB << "</submeshes>\n";
 		dst << "</mesh>\n";
@@ -131,7 +132,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	dst << "<mesh>\n";
 	dst << TAB << "<submeshes>\n";
 
-	// Iterate through nodes and add the geometry data of the related meshes
+	// Iterate through all nodes and write the geometry data (vertices) of the related meshes
 	for (it = nodesMap.begin(); it != nodesMap.end(); it++)
 	{
 		node = it->second;
@@ -139,39 +140,71 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 		{
 			mesh = node.mMeshDerived;
 
-			// Iterate through primitives (each gLTF mesh is a submesh)
-			// Apply transformation of the node
+			// Apply transformation of the node to the position vector
 			Vec3Struct translation;
 			QuaternionStruct rotation;
 			Vec3Struct scale;
-			if (node.mHasTranslation)
+			Mat4Struct matrix;
+			if (node.mHasMatrix)
 			{
-				translation.x = node.mTranslation[0];
-				translation.y = node.mTranslation[1];
-				translation.z = node.mTranslation[2];
-			}
-			if (node.mHasRotation)
-			{
-				rotation.x = node.mRotation[0];
-				rotation.y = node.mRotation[1];
-				rotation.z = node.mRotation[2];
-				rotation.w = node.mRotation[3];
-			}
-			if (node.mHasScale)
-			{
-				scale.x = node.mScale[0];
-				scale.y = node.mScale[1];
-				scale.z = node.mScale[2];
-			}
+				matrix.m00 = (float)node.mMatrix[0];
+				matrix.m10 = (float)node.mMatrix[1];
+				matrix.m20 = (float)node.mMatrix[2];
+				matrix.m30 = (float)node.mMatrix[3];
 
+				matrix.m01 = (float)node.mMatrix[4];
+				matrix.m11 = (float)node.mMatrix[5];
+				matrix.m21 = (float)node.mMatrix[6];
+				matrix.m31 = (float)node.mMatrix[7];
+
+				matrix.m02 = (float)node.mMatrix[8];
+				matrix.m12 = (float)node.mMatrix[9];
+				matrix.m22 = (float)node.mMatrix[10];
+				matrix.m32 = (float)node.mMatrix[11];
+
+				matrix.m03 = (float)node.mMatrix[12];
+				matrix.m13 = (float)node.mMatrix[13];
+				matrix.m23 = (float)node.mMatrix[14];
+				matrix.m33 = (float)node.mMatrix[15];
+			}
+			else
+			{
+				if (node.mHasTranslation)
+				{
+					translation.x = (float)node.mTranslation[0];
+					translation.y = (float)node.mTranslation[1];
+					translation.z = (float)node.mTranslation[2];
+				}
+				if (node.mHasRotation)
+				{
+					rotation.x = (float)node.mRotation[0];
+					rotation.y = (float)node.mRotation[1];
+					rotation.z = (float)node.mRotation[2];
+					rotation.w = (float)node.mRotation[3];
+				}
+				if (node.mHasScale)
+				{
+					scale.x = (float)node.mScale[0];
+					scale.y = (float)node.mScale[1];
+					scale.z = (float)node.mScale[2];
+				}
+				else
+				{
+					scale.x = 1.0f;
+					scale.y = 1.0f;
+					scale.z = 1.0f;
+				}
+			}
 			writeSubmesh(dst, 
 				mesh, 
 				data, 
 				accessorMap, 
 				startBinaryBuffer, 
+				!node.mHasMatrix,	// It has either a matrix or the trs elements
 				translation,
 				rotation,
-				scale);
+				scale,
+				matrix);
 		}
 	}
 
@@ -191,9 +224,11 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 	Ogre::HlmsEditorPluginData* data,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
+	bool hasTrs,
 	Vec3Struct translation,
 	QuaternionStruct rotation,
-	Vec3Struct scale)
+	Vec3Struct scale,
+	Mat4Struct matrix)
 {
 	std::map<int, gLTFPrimitive>::iterator itPrimitives;
 	gLTFPrimitive primitive;
@@ -291,7 +326,14 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 				">\n";
 
 			// Write vertices
-			writeVertices(dst, primitive, accessorMap, data, startBinaryBuffer, translation, rotation, scale);
+			writeVertices(dst, primitive, accessorMap, 
+				data, 
+				startBinaryBuffer, 
+				hasTrs, 
+				translation, 
+				rotation, 
+				scale, 
+				matrix);
 
 			// Closing tags
 			dst << TABx4 << "</vertexbuffer>\n";
@@ -328,11 +370,11 @@ bool gLTFImportOgreMeshCreator::writeFaces (std::ofstream& dst,
 			"\" v2 = \"" << mIndicesMap[i + 1] <<
 			"\" v3 = \"" << mIndicesMap[i + 2] << "\" />\n";
 
-		// TODO: swap around indices, convert ccw to cw for front face??????
+		// For anticlockwise, swap around indices; convert ccw to cw for front face
 		/*
 		dst << TABx4 << "<face v1 = \"" << mIndicesMap[i] <<
-			"\" v2 = \"" << mIndicesMap[i + 1] <<
-			"\" v3 = \"" << mIndicesMap[i + 2] << "\" />\n";
+			"\" v2 = \"" << mIndicesMap[i + 2] <<
+			"\" v3 = \"" << mIndicesMap[i + 1] << "\" />\n";
 		*/
 	}
 
@@ -348,18 +390,22 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
+	bool hasTrs,
 	Vec3Struct translation,
 	QuaternionStruct rotation,
-	Vec3Struct scale)
+	Vec3Struct scale,
+	Mat4Struct matrix)
 {
 	// Read positions, normals, tangents,... etc.
 	readPositionsFromUriOrFile(primitive, 
 		accessorMap, 
 		data, 
 		startBinaryBuffer, 
+		hasTrs,
 		translation,
 		rotation,
-		scale); // Read the positions
+		scale,
+		matrix); // Read the positions
 	readNormalsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the normals
 	readTangentsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the tangents
 	readColorsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the diffuse colours
@@ -433,9 +479,11 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
+	bool hasTrs,
 	Vec3Struct translation,
 	QuaternionStruct rotation,
-	Vec3Struct scale)
+	Vec3Struct scale,
+	Mat4Struct matrix)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived];
@@ -453,19 +501,34 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 				i, 
 				positionAccessor, 
 				getCorrectForMinMaxPropertyValue(data));
-			Ogre::Vector3 oPos (pos.x, pos.y, pos.z);
-			Ogre::Vector3 oTranslation (translation.x, translation.y, translation.z);
-			Ogre::Quaternion oRotation (rotation.w, rotation.x, rotation.y, rotation.z);
-			Ogre::Vector3 oScale (scale.x, scale.y, scale.z);
-			
-			oPos += oTranslation;
-			if (oRotation != Ogre::Quaternion::IDENTITY)
-				oPos = oRotation * oPos;
-			if (oScale != Ogre::Vector3::ZERO)
-				oPos *= oScale;
-			pos.x = oPos.x;
-			pos.y = oPos.y;
-			pos.z = oPos.z;
+
+			Ogre::Vector3 oPos(pos.x, pos.y, pos.z);
+			if (hasTrs)
+			{
+				// T*R*S transformation
+				Ogre::Vector3 oTranslation(translation.x, translation.y, translation.z);
+				Ogre::Quaternion oRotation(rotation.w, rotation.x, rotation.y, rotation.z);
+				Ogre::Vector3 oScale(scale.x, scale.y, scale.z);
+				if (oScale != Ogre::Vector3::ZERO)
+					oPos = oScale * oPos;
+				if (oRotation != Ogre::Quaternion::IDENTITY)
+					oPos = oRotation * oPos;
+				oPos += oTranslation;
+				pos.x = oPos.x;
+				pos.y = oPos.y;
+				pos.z = oPos.z;
+			}
+			else
+			{
+				// Matrix transformation
+				Ogre::Matrix4 oMatrix(
+					matrix.m00, matrix.m01, matrix.m02, matrix.m03,
+					matrix.m10, matrix.m11, matrix.m12, matrix.m13,
+					matrix.m20, matrix.m21, matrix.m22, matrix.m23,
+					matrix.m30, matrix.m31, matrix.m32, matrix.m33);
+				oPos = oMatrix * oPos;
+			}
+
 			mPositionsMap[i] = pos;
 		}
 	}
