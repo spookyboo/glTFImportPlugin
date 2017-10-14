@@ -141,58 +141,52 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 			mesh = node.mMeshDerived;
 
 			// Apply transformation of the node to the position vector
-			Vec3Struct translation;
-			QuaternionStruct rotation;
-			Vec3Struct scale;
-			Mat4Struct matrix;
+			Ogre::Vector3 translation = Ogre::Vector3::ZERO;
+			Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
+			Ogre::Vector3 scale = Ogre::Vector3(1.0f, 1.0f, 1.0f);
+			Ogre::Matrix4 matrix;
 			if (node.mHasMatrix)
 			{
-				matrix.m00 = (float)node.mMatrix[0];
-				matrix.m10 = (float)node.mMatrix[1];
-				matrix.m20 = (float)node.mMatrix[2];
-				matrix.m30 = (float)node.mMatrix[3];
-
-				matrix.m01 = (float)node.mMatrix[4];
-				matrix.m11 = (float)node.mMatrix[5];
-				matrix.m21 = (float)node.mMatrix[6];
-				matrix.m31 = (float)node.mMatrix[7];
-
-				matrix.m02 = (float)node.mMatrix[8];
-				matrix.m12 = (float)node.mMatrix[9];
-				matrix.m22 = (float)node.mMatrix[10];
-				matrix.m32 = (float)node.mMatrix[11];
-
-				matrix.m03 = (float)node.mMatrix[12];
-				matrix.m13 = (float)node.mMatrix[13];
-				matrix.m23 = (float)node.mMatrix[14];
-				matrix.m33 = (float)node.mMatrix[15];
+				matrix[0][0] = node.mMatrix[0];
+				matrix[1][0] = node.mMatrix[1];
+				matrix[2][0] = node.mMatrix[2];
+				matrix[3][0] = node.mMatrix[3];
+				
+				matrix[0][1] = node.mMatrix[4];
+				matrix[1][1] = node.mMatrix[5];
+				matrix[2][1] = node.mMatrix[6];
+				matrix[3][1] = node.mMatrix[7];
+				
+				matrix[0][2] = node.mMatrix[8];
+				matrix[1][2] = node.mMatrix[9];
+				matrix[2][2] = node.mMatrix[10];
+				matrix[3][2] = node.mMatrix[11];
+				
+				matrix[0][3] = node.mMatrix[12];
+				matrix[1][3] = node.mMatrix[13];
+				matrix[2][3] = node.mMatrix[14];
+				matrix[3][3] = node.mMatrix[15];
 			}
 			else
 			{
 				if (node.mHasTranslation)
 				{
-					translation.x = (float)node.mTranslation[0];
-					translation.y = (float)node.mTranslation[1];
-					translation.z = (float)node.mTranslation[2];
+					translation.x = node.mTranslation[0];
+					translation.y = node.mTranslation[1];
+					translation.z = node.mTranslation[2];
 				}
 				if (node.mHasRotation)
 				{
-					rotation.x = (float)node.mRotation[0];
-					rotation.y = (float)node.mRotation[1];
-					rotation.z = (float)node.mRotation[2];
-					rotation.w = (float)node.mRotation[3];
+					rotation.x = node.mRotation[0];
+					rotation.y = node.mRotation[1];
+					rotation.z = node.mRotation[2];
+					rotation.w = node.mRotation[3];
 				}
 				if (node.mHasScale)
 				{
-					scale.x = (float)node.mScale[0];
-					scale.y = (float)node.mScale[1];
-					scale.z = (float)node.mScale[2];
-				}
-				else
-				{
-					scale.x = 1.0f;
-					scale.y = 1.0f;
-					scale.z = 1.0f;
+					scale.x = node.mScale[0];
+					scale.y = node.mScale[1];
+					scale.z = node.mScale[2];
 				}
 			}
 			writeSubmesh(dst, 
@@ -225,10 +219,10 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
 	bool hasTrs,
-	Vec3Struct translation,
-	QuaternionStruct rotation,
-	Vec3Struct scale,
-	Mat4Struct matrix)
+	Ogre::Vector3 translation,
+	Ogre::Quaternion rotation,
+	Ogre::Vector3 scale,
+	Ogre::Matrix4 matrix)
 {
 	std::map<int, gLTFPrimitive>::iterator itPrimitives;
 	gLTFPrimitive primitive;
@@ -391,10 +385,10 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
 	bool hasTrs,
-	Vec3Struct translation,
-	QuaternionStruct rotation,
-	Vec3Struct scale,
-	Mat4Struct matrix)
+	Ogre::Vector3 translation,
+	Ogre::Quaternion rotation,
+	Ogre::Vector3 scale,
+	Ogre::Matrix4 matrix)
 {
 	// Read positions, normals, tangents,... etc.
 	readPositionsFromUriOrFile(primitive, 
@@ -421,7 +415,7 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 		dst << TABx5 << "<vertex>\n";
 		
 		// Position
-		Vec3Struct vec3 = mPositionsMap[i];
+		Ogre::Vector3 vec3 = mPositionsMap[i];
 		dst << TABx6 << "<position x=\"" << vec3.x << "\" y=\"" << vec3.y << "\" z=\"" << vec3.z << "\" />\n";
 
 		// Normal
@@ -434,37 +428,37 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 		// Tangent
 		if (mTangentsMap.size() > 0)
 		{
-			Vec4Struct vec4 = mTangentsMap[i];
+			Ogre::Vector4 vec4 = mTangentsMap[i];
 			// Take value 'a' (= w) into account for handedness
-			dst << TABx6 << "<tangent x=\"" << vec4.r << 
-				"\" y=\"" << vec4.r << 
-				"\" z=\"" << vec4.b << 
-				"\" w=\"" << vec4.a <<
+			dst << TABx6 << "<tangent x=\"" << vec4.x << 
+				"\" y=\"" << vec4.y << 
+				"\" z=\"" << vec4.z << 
+				"\" w=\"" << vec4.w <<
 				"\" />\n";
 		}
 
 		// Diffuse color
 		if (mColor_0AccessorMap.size() > 0)
 		{
-			Vec4Struct vec4 = mColor_0AccessorMap[i];
-			dst << TABx6 << "<colour_diffuse value=\"" << vec4.r << " " <<
-				vec4.g << " " <<
-				vec4.b << " " <<
-				vec4.a << "\" />\n";
+			Ogre::Vector4 vec4 = mColor_0AccessorMap[i];
+			dst << TABx6 << "<colour_diffuse value=\"" << vec4.x << " " <<
+				vec4.y << " " <<
+				vec4.z << " " <<
+				vec4.w << "\" />\n";
 		}
 
 		// Texcoord 0
 		if (mTexcoords_0Map.size() > 0)
 		{
-			Vec2Struct vec2 = mTexcoords_0Map[i];
-			dst << TABx6 << "<texcoord u=\"" << vec2.u << "\" v=\"" << vec2.v << "\" />\n";
+			Ogre::Vector2 vec2 = mTexcoords_0Map[i];
+			dst << TABx6 << "<texcoord u=\"" << vec2.x << "\" v=\"" << vec2.y << "\" />\n";
 		}
 
 		// Texcoord 1
 		if (mTexcoords_1Map.size() > 0)
 		{
-			Vec2Struct vec2 = mTexcoords_1Map[i];
-			dst << TABx6 << "<texcoord u=\"" << vec2.u << "\" v=\"" << vec2.v << "\" />\n";
+			Ogre::Vector2 vec2 = mTexcoords_1Map[i];
+			dst << TABx6 << "<texcoord u=\"" << vec2.x << "\" v=\"" << vec2.y << "\" />\n";
 		}
 
 		// Close vertex
@@ -480,10 +474,10 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
 	bool hasTrs,
-	Vec3Struct translation,
-	QuaternionStruct rotation,
-	Vec3Struct scale,
-	Mat4Struct matrix)
+	Ogre::Vector3 translation,
+	Ogre::Quaternion rotation,
+	Ogre::Vector3 scale,
+	Ogre::Matrix4 matrix)
 {
 	// Open the buffer file and read positions
 	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived];
@@ -497,7 +491,7 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 		if (positionAccessor.mType == "VEC3" && positionAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
 			// Perform the transformation; use Ogre's classes, becaus they are proven
-			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, 
+			Ogre::Vector3 pos = mBufferReader.readVec3FromFloatBuffer(buffer,
 				i, 
 				positionAccessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -506,14 +500,9 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 			if (hasTrs)
 			{
 				// T*R*S transformation
-				Ogre::Vector3 oTranslation(translation.x, translation.y, translation.z);
-				Ogre::Quaternion oRotation(rotation.w, rotation.x, rotation.y, rotation.z);
-				Ogre::Vector3 oScale(scale.x, scale.y, scale.z);
-				if (oScale != Ogre::Vector3::ZERO)
-					oPos = oScale * oPos;
-				if (oRotation != Ogre::Quaternion::IDENTITY)
-					oPos = oRotation * oPos;
-				oPos += oTranslation;
+				oPos = scale * oPos;
+				oPos = rotation * oPos;
+				oPos = translation + oPos;
 				pos.x = oPos.x;
 				pos.y = oPos.y;
 				pos.z = oPos.z;
@@ -521,12 +510,7 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 			else
 			{
 				// Matrix transformation
-				Ogre::Matrix4 oMatrix(
-					matrix.m00, matrix.m01, matrix.m02, matrix.m03,
-					matrix.m10, matrix.m11, matrix.m12, matrix.m13,
-					matrix.m20, matrix.m21, matrix.m22, matrix.m23,
-					matrix.m30, matrix.m31, matrix.m32, matrix.m33);
-				oPos = oMatrix * oPos;
+				oPos = matrix * oPos;
 			}
 
 			mPositionsMap[i] = pos;
@@ -556,7 +540,7 @@ void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& p
 		// A normal  must be a VEC3/Float, otherwise it doesn't get read
 		if (normalAccessor.mType == "VEC3" && normalAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec3Struct pos = mBufferReader.readVec3FromFloatBuffer(buffer, 
+			Ogre::Vector3 pos = mBufferReader.readVec3FromFloatBuffer(buffer,
 				i, 
 				normalAccessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -587,7 +571,7 @@ void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& 
 		// A tangent must be a VEC4/Float, otherwise it doesn't get read
 		if (tangentAccessor.mType == "VEC4" && tangentAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec4Struct pos = mBufferReader.readVec4FromFloatBuffer(buffer, 
+			Ogre::Vector4 pos = mBufferReader.readVec4FromFloatBuffer(buffer,
 				i, 
 				tangentAccessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -618,20 +602,20 @@ void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& pr
 		// A colour can be a VEC3 (Float)
 		if (mColor_0Accessor.mType == "VEC3")
 		{
-			Vec3Struct v3 = mBufferReader.readVec3FromFloatBuffer(buffer, 
+			Ogre::Vector3 v3 = mBufferReader.readVec3FromFloatBuffer(buffer,
 				i, 
 				mColor_0Accessor, 
 				getCorrectForMinMaxPropertyValue(data));
-			Vec4Struct col;
-			col.r = v3.x;
-			col.g = v3.y;
-			col.b = v3.z;
-			col.a = 1.0f;
+			Ogre::Vector4 col;
+			col.x = v3.x;
+			col.y = v3.y;
+			col.z = v3.z;
+			col.w = 1.0f;
 			mColor_0AccessorMap[i] = col;
 		}
 		else if (mColor_0Accessor.mType == "VEC4")
 		{
-			Vec4Struct col = mBufferReader.readVec4FromFloatBuffer(buffer, 
+			Ogre::Vector4 col = mBufferReader.readVec4FromFloatBuffer(buffer,
 				i, 
 				mColor_0Accessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -705,7 +689,7 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, 
+			Ogre::Vector2 pos = mBufferReader.readVec2FromFloatBuffer(buffer,
 				i, 
 				mTexcoord_0Accessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -713,7 +697,7 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 		}
 		else if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, 
+			Ogre::Vector2 pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer,
 				i, 
 				mTexcoord_0Accessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -721,7 +705,7 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 		}
 		else if (mTexcoord_0Accessor.mType == "VEC2" && mTexcoord_0Accessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, 
+			Ogre::Vector2 pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer,
 				i, 
 				mTexcoord_0Accessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -752,7 +736,7 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive
 		// A position must be a VEC3, otherwise it doesn't get read
 		if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromFloatBuffer(buffer, 
+			Ogre::Vector2 pos = mBufferReader.readVec2FromFloatBuffer(buffer,
 				i, 
 				mTexcoord_1Accessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -760,7 +744,7 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive
 		}
 		else if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer, 
+			Ogre::Vector2 pos = mBufferReader.readVec2FromUnsignedByteBuffer(buffer,
 				i, 
 				mTexcoord_1Accessor, 
 				getCorrectForMinMaxPropertyValue(data));
@@ -768,7 +752,7 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive
 		}
 		else if (mTexcoord_1Accessor.mType == "VEC2" && mTexcoord_1Accessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
 		{
-			Vec2Struct pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer, 
+			Ogre::Vector2 pos = mBufferReader.readVec2FromUnsignedShortBuffer(buffer,
 				i, 
 				mTexcoord_1Accessor, 
 				getCorrectForMinMaxPropertyValue(data));

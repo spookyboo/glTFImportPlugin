@@ -35,6 +35,10 @@ THE SOFTWARE.
 #include "gLTFAccessor.h"
 #include "hlms_editor_plugin.h"
 #include "gLTFImportBufferReader.h"
+#include "OgreVector2.h"
+#include "OgreVector3.h"
+#include "OgreVector4.h"
+#include "OgreMatrix4.h"
 
 /** Class responsible for creation of Ogre meshes */
 class gLTFImportOgreMeshCreator
@@ -72,10 +76,10 @@ class gLTFImportOgreMeshCreator
 			std::map<int, gLTFAccessor> accessorMap,
 			int startBinaryBuffer,
 			bool hasTrs = true,								// If true, the translation, rotation and scale args are used
-			Vec3Struct translation = Vec3Struct(),
-			QuaternionStruct rotation = QuaternionStruct(),
-			Vec3Struct scale = Vec3Struct(),
-			Mat4Struct matrix = Mat4Struct());
+			Ogre::Vector3 translation = Ogre::Vector3(),
+			Ogre::Quaternion rotation = Ogre::Quaternion(),
+			Ogre::Vector3 scale = Ogre::Vector3(),
+			Ogre::Matrix4 matrix = Ogre::Matrix4());
 
 		bool writeFaces (std::ofstream& dst,
 			const gLTFPrimitive& primitive,
@@ -90,10 +94,10 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer,
 			bool hasTrs = true,
-			Vec3Struct translation = Vec3Struct(),
-			QuaternionStruct rotation = QuaternionStruct(),
-			Vec3Struct scale = Vec3Struct(),
-			Mat4Struct matrix = Mat4Struct()); // Write all vertices
+			Ogre::Vector3 translation = Ogre::Vector3(),
+			Ogre::Quaternion rotation = Ogre::Quaternion(),
+			Ogre::Vector3 scale = Ogre::Vector3(),
+			Ogre::Matrix4 matrix = Ogre::Matrix4()); // Write all vertices
 		
 		// Read attributes from buffer
 		void readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
@@ -101,10 +105,10 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer,
 			bool hasTrs = true,
-			Vec3Struct translation = Vec3Struct(),
-			QuaternionStruct rotation = QuaternionStruct(),
-			Vec3Struct scale = Vec3Struct(),
-			Mat4Struct matrix = Mat4Struct()); // Read the positions
+			Ogre::Vector3 translation = Ogre::Vector3(),
+			Ogre::Quaternion rotation = Ogre::Quaternion(),
+			Ogre::Vector3 scale = Ogre::Vector3(),
+			Ogre::Matrix4 matrix = Ogre::Matrix4()); // Read the positions
 
 		void readNormalsFromUriOrFile (const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
@@ -152,16 +156,16 @@ class gLTFImportOgreMeshCreator
 	private:
 		std::string mHelperString;
 		std::string fileNameBufferHelper;
-		std::map <int, Vec3Struct> mPositionsMap;
-		std::map <int, Vec3Struct> mNormalsMap;
-		std::map <int, Vec4Struct> mTangentsMap;
-		std::map <int, Vec4Struct> mColor_0AccessorMap;
-		std::map <int, Vec2Struct> mTexcoords_0Map;
-		std::map <int, Vec2Struct> mTexcoords_1Map;
+		std::map <int, Ogre::Vector3> mPositionsMap;
+		std::map <int, Ogre::Vector3> mNormalsMap;
+		std::map <int, Ogre::Vector4> mTangentsMap;
+		std::map <int, Ogre::Vector4> mColor_0AccessorMap;
+		std::map <int, Ogre::Vector2> mTexcoords_0Map;
+		std::map <int, Ogre::Vector2> mTexcoords_1Map;
 		std::map <int, unsigned int> mIndicesMap;
-		Vec4Struct mHelperVec4Struct;
-		Vec3Struct mHelperVec3Struct;
-		Vec2Struct mHelperVec2Struct;
+		Ogre::Vector4 mHelperVec4Struct;
+		Ogre::Vector3 mHelperVec3Struct;
+		Ogre::Vector2 mHelperVec2Struct;
 		gLTFImportBufferReader mBufferReader;
 };
 

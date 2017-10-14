@@ -628,26 +628,27 @@ void gLTFImportExecutor::inheritTransforms (gLTFNode* parentNode, gLTFNode* chil
 
 	// Perform matrix transformation
 	matrixChild = matrixParent * matrixChild;
+	matrixChild.decomposition(translationChild, scaleChild, rotationChild);
 
 	// Set result back to the childNode
-	childNode->mMatrix[0] = matrixChild[0][0];
-	childNode->mMatrix[1] = matrixChild[1][0];
-	childNode->mMatrix[2] = matrixChild[2][0];
-	childNode->mMatrix[3] = matrixChild[3][0];
-	childNode->mMatrix[4] = matrixChild[0][1];
-	childNode->mMatrix[5] = matrixChild[1][1];
-	childNode->mMatrix[6] = matrixChild[2][1];
-	childNode->mMatrix[7] = matrixChild[3][1];
-	childNode->mMatrix[8] = matrixChild[0][2];
-	childNode->mMatrix[9] = matrixChild[1][2];
-	childNode->mMatrix[10] = matrixChild[2][2];
-	childNode->mMatrix[11] = matrixChild[3][2];
-	childNode->mMatrix[12] = matrixChild[0][3];
-	childNode->mMatrix[13] = matrixChild[1][3];
-	childNode->mMatrix[14] = matrixChild[2][3];
-	childNode->mMatrix[15] = matrixChild[3][3];
 	if (childNode->mHasMatrix)
 	{
+		childNode->mMatrix[0] = matrixChild[0][0];
+		childNode->mMatrix[1] = matrixChild[1][0];
+		childNode->mMatrix[2] = matrixChild[2][0];
+		childNode->mMatrix[3] = matrixChild[3][0];
+		childNode->mMatrix[4] = matrixChild[0][1];
+		childNode->mMatrix[5] = matrixChild[1][1];
+		childNode->mMatrix[6] = matrixChild[2][1];
+		childNode->mMatrix[7] = matrixChild[3][1];
+		childNode->mMatrix[8] = matrixChild[0][2];
+		childNode->mMatrix[9] = matrixChild[1][2];
+		childNode->mMatrix[10] = matrixChild[2][2];
+		childNode->mMatrix[11] = matrixChild[3][2];
+		childNode->mMatrix[12] = matrixChild[0][3];
+		childNode->mMatrix[13] = matrixChild[1][3];
+		childNode->mMatrix[14] = matrixChild[2][3];
+		childNode->mMatrix[15] = matrixChild[3][3];
 		childNode->mHasMatrix = true;
 	}
 	else
@@ -678,6 +679,8 @@ void gLTFImportExecutor::inheritTransforms (gLTFNode* parentNode, gLTFNode* chil
 //---------------------------------------------------------------------
 gLTFNode* gLTFImportExecutor::findNodeByIndex (int nodeIndex)
 {
+	OUT << TABx4 << "gLTFImportExecutor::findNodeByIndex\n";
+
 	std::map<int, gLTFNode>::iterator it = mNodesMap.find(nodeIndex);
 	if (it != mNodesMap.end())
 	{

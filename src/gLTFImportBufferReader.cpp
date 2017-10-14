@@ -86,28 +86,28 @@ unsigned int gLTFImportBufferReader::readFromUnsignedIntBuffer(char* buffer, int
 }
 
 //---------------------------------------------------------------------
-const Vec2Struct& gLTFImportBufferReader::readVec2FromFloatBuffer(char* buffer,
+const Ogre::Vector2& gLTFImportBufferReader::readVec2FromFloatBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
 {
-	float fRaw;
+	float raw;
 	int floatSize = sizeof(float);
 	int vec2Size = 2 * floatSize;
-	memcpy(&fRaw, &buffer[count * vec2Size], floatSize);
-	mHelperVec2Struct.u = fRaw;
-	memcpy(&fRaw, &buffer[count * vec2Size + floatSize], floatSize);
-	mHelperVec2Struct.v = fRaw;
+	memcpy(&raw, &buffer[count * vec2Size], floatSize);
+	mHelperVec2.x = raw;
+	memcpy(&raw, &buffer[count * vec2Size + floatSize], floatSize);
+	mHelperVec2.y = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+		correctVec2WithMinMax(accessor, &mHelperVec2);
 	
-	return mHelperVec2Struct;
+	return mHelperVec2;
 }
 
 //---------------------------------------------------------------------
-const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedByteBuffer(char* buffer,
+const Ogre::Vector2& gLTFImportBufferReader::readVec2FromUnsignedByteBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
@@ -116,19 +116,19 @@ const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedByteBuffer(char* b
 	int unsignedCharSize = sizeof(unsigned char);
 	int vec2Size = 2 * unsignedCharSize;
 	memcpy(&raw, &buffer[count * vec2Size], unsignedCharSize);
-	mHelperVec2Struct.u = raw;
+	mHelperVec2.x = raw;
 	memcpy(&raw, &buffer[count * vec2Size + unsignedCharSize], unsignedCharSize);
-	mHelperVec2Struct.v = raw;
+	mHelperVec2.y = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+		correctVec2WithMinMax(accessor, &mHelperVec2);
 	
-	return mHelperVec2Struct;
+	return mHelperVec2;
 }
 
 //---------------------------------------------------------------------
-const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedShortBuffer(char* buffer,
+const Ogre::Vector2& gLTFImportBufferReader::readVec2FromUnsignedShortBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
@@ -137,42 +137,42 @@ const Vec2Struct& gLTFImportBufferReader::readVec2FromUnsignedShortBuffer(char* 
 	int unsignedShortSize = sizeof(unsigned short);
 	int vec2Size = 2 * unsignedShortSize;
 	memcpy(&raw, &buffer[count * vec2Size], unsignedShortSize);
-	mHelperVec2Struct.u = raw;
+	mHelperVec2.x = raw;
 	memcpy(&raw, &buffer[count * vec2Size + unsignedShortSize], unsignedShortSize);
-	mHelperVec2Struct.v = raw;
+	mHelperVec2.y = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec2StructWithMinMax(accessor, &mHelperVec2Struct);
+		correctVec2WithMinMax(accessor, &mHelperVec2);
 	
-	return mHelperVec2Struct;
+	return mHelperVec2;
 }
 
 //---------------------------------------------------------------------
-const Vec3Struct& gLTFImportBufferReader::readVec3FromFloatBuffer(char* buffer,
+const Ogre::Vector3& gLTFImportBufferReader::readVec3FromFloatBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
 {
-	float fRaw;
+	float raw;
 	int floatSize = sizeof(float);
 	int vec3Size = 3 * floatSize;
-	memcpy(&fRaw, &buffer[count * vec3Size], floatSize);
-	mHelperVec3Struct.x = fRaw;
-	memcpy(&fRaw, &buffer[count * vec3Size + floatSize], floatSize);
-	mHelperVec3Struct.y = fRaw;
-	memcpy(&fRaw, &buffer[count * vec3Size + 2 * floatSize], floatSize);
-	mHelperVec3Struct.z = fRaw;
+	memcpy(&raw, &buffer[count * vec3Size], floatSize);
+	mHelperVec3.x = raw;
+	memcpy(&raw, &buffer[count * vec3Size + floatSize], floatSize);
+	mHelperVec3.y = raw;
+	memcpy(&raw, &buffer[count * vec3Size + 2 * floatSize], floatSize);
+	mHelperVec3.z = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+		correctVec3WithMinMax(accessor, &mHelperVec3);
 	
-	return mHelperVec3Struct;
+	return mHelperVec3;
 }
 
 //---------------------------------------------------------------------
-const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedByteBuffer(char* buffer,
+const Ogre::Vector3& gLTFImportBufferReader::readVec3FromUnsignedByteBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
@@ -181,21 +181,21 @@ const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedByteBuffer(char* b
 	int unsingedCharSize = sizeof(unsigned char);
 	int vec3Size = 3 * unsingedCharSize;
 	memcpy(&raw, &buffer[count * vec3Size], unsingedCharSize);
-	mHelperVec3Struct.x = raw;
+	mHelperVec3.x = raw;
 	memcpy(&raw, &buffer[count * vec3Size + unsingedCharSize], unsingedCharSize);
-	mHelperVec3Struct.y = raw;
+	mHelperVec3.y = raw;
 	memcpy(&raw, &buffer[count * vec3Size + 2 * unsingedCharSize], unsingedCharSize);
-	mHelperVec3Struct.z = raw;
+	mHelperVec3.z = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+		correctVec3WithMinMax(accessor, &mHelperVec3);
 	
-	return mHelperVec3Struct;
+	return mHelperVec3;
 }
 
 //---------------------------------------------------------------------
-const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedShortBuffer(char* buffer,
+const Ogre::Vector3& gLTFImportBufferReader::readVec3FromUnsignedShortBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
@@ -204,46 +204,46 @@ const Vec3Struct& gLTFImportBufferReader::readVec3FromUnsignedShortBuffer(char* 
 	int unsingedShortSize = sizeof(unsigned short);
 	int vec3Size = 3 * unsingedShortSize;
 	memcpy(&raw, &buffer[count * vec3Size], unsingedShortSize);
-	mHelperVec3Struct.x = raw;
+	mHelperVec3.x = raw;
 	memcpy(&raw, &buffer[count * vec3Size + unsingedShortSize], unsingedShortSize);
-	mHelperVec3Struct.y = raw;
+	mHelperVec3.y = raw;
 	memcpy(&raw, &buffer[count * vec3Size + 2 * unsingedShortSize], unsingedShortSize);
-	mHelperVec3Struct.z = raw;
+	mHelperVec3.z = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec3StructWithMinMax(accessor, &mHelperVec3Struct);
+		correctVec3WithMinMax(accessor, &mHelperVec3);
 	
-	return mHelperVec3Struct;
+	return mHelperVec3;
 }
 
 //---------------------------------------------------------------------
-const Vec4Struct& gLTFImportBufferReader::readVec4FromFloatBuffer(char* buffer,
+const Ogre::Vector4& gLTFImportBufferReader::readVec4FromFloatBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
 {
-	float fRaw;
+	float raw;
 	int floatSize = sizeof(float);
 	int vec4Size = 4 * floatSize;
-	memcpy(&fRaw, &buffer[count * vec4Size], floatSize);
-	mHelperVec4Struct.r = fRaw;
-	memcpy(&fRaw, &buffer[count * vec4Size + floatSize], floatSize);
-	mHelperVec4Struct.g = fRaw;
-	memcpy(&fRaw, &buffer[count * vec4Size + 2 * floatSize], floatSize);
-	mHelperVec4Struct.b = fRaw;
-	memcpy(&fRaw, &buffer[count * vec4Size + 3 * floatSize], floatSize);
-	mHelperVec4Struct.a = fRaw;
+	memcpy(&raw, &buffer[count * vec4Size], floatSize);
+	mHelperVec4.x = raw;
+	memcpy(&raw, &buffer[count * vec4Size + floatSize], floatSize);
+	mHelperVec4.y = raw;
+	memcpy(&raw, &buffer[count * vec4Size + 2 * floatSize], floatSize);
+	mHelperVec4.z = raw;
+	memcpy(&raw, &buffer[count * vec4Size + 3 * floatSize], floatSize);
+	mHelperVec4.w = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+		correctVec4WithMinMax(accessor, &mHelperVec4);
 	
-	return mHelperVec4Struct;
+	return mHelperVec4;
 }
 
 //---------------------------------------------------------------------
-const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char* buffer,
+const Ogre::Vector4& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
@@ -252,23 +252,23 @@ const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char* b
 	int unsignedByteSize = sizeof(unsigned char);
 	int vec4Size = 4 * unsignedByteSize;
 	memcpy(&raw, &buffer[count * vec4Size], unsignedByteSize);
-	mHelperVec4Struct.r = raw;
+	mHelperVec4.x = raw;
 	memcpy(&raw, &buffer[count * vec4Size + unsignedByteSize], unsignedByteSize);
-	mHelperVec4Struct.g = raw;
+	mHelperVec4.y = raw;
 	memcpy(&raw, &buffer[count * vec4Size + 2 * unsignedByteSize], unsignedByteSize);
-	mHelperVec4Struct.b = raw;
+	mHelperVec4.z = raw;
 	memcpy(&raw, &buffer[count * vec4Size + 3 * unsignedByteSize], unsignedByteSize);
-	mHelperVec4Struct.a = raw;
+	mHelperVec4.w = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+		correctVec4WithMinMax(accessor, &mHelperVec4);
 	
-	return mHelperVec4Struct;
+	return mHelperVec4;
 }
 
 //---------------------------------------------------------------------
-const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedShortBuffer(char* buffer,
+const Ogre::Vector4& gLTFImportBufferReader::readVec4FromUnsignedShortBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor, 
 	bool applyMinMax)
@@ -277,69 +277,69 @@ const Vec4Struct& gLTFImportBufferReader::readVec4FromUnsignedShortBuffer(char* 
 	int unsignedShortSize = sizeof(unsigned short);
 	int vec4Size = 4 * unsignedShortSize;
 	memcpy(&raw, &buffer[count * vec4Size], unsignedShortSize);
-	mHelperVec4Struct.r = raw;
+	mHelperVec4.x = raw;
 	memcpy(&raw, &buffer[count * vec4Size + unsignedShortSize], unsignedShortSize);
-	mHelperVec4Struct.g = raw;
+	mHelperVec4.y = raw;
 	memcpy(&raw, &buffer[count * vec4Size + 2 * unsignedShortSize], unsignedShortSize);
-	mHelperVec4Struct.b = raw;
+	mHelperVec4.z = raw;
 	memcpy(&raw, &buffer[count * vec4Size + 3 * unsignedShortSize], unsignedShortSize);
-	mHelperVec4Struct.a = raw;
+	mHelperVec4.w = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
-		correctVec4StructWithMinMax(accessor, &mHelperVec4Struct);
+		correctVec4WithMinMax(accessor, &mHelperVec4);
 	
-	return mHelperVec4Struct;
+	return mHelperVec4;
 }
 
 //---------------------------------------------------------------------
-void gLTFImportBufferReader::correctVec2StructWithMinMax(gLTFAccessor accessor, Vec2Struct* vec2Struct)
+void gLTFImportBufferReader::correctVec2WithMinMax(gLTFAccessor accessor, Ogre::Vector2* vec2)
 {
 	// Correct with min/max
 	if (accessor.mMinAvailable)
 	{
-		vec2Struct->u = vec2Struct->u < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : vec2Struct->u;
-		vec2Struct->v = vec2Struct->v < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : vec2Struct->v;
+		vec2->x = vec2->x < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : vec2->x;
+		vec2->y = vec2->y < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : vec2->y;
 	}
 	if (accessor.mMaxAvailable)
 	{
-		vec2Struct->u = vec2Struct->u > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : vec2Struct->u;
-		vec2Struct->v = vec2Struct->v > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : vec2Struct->v;
+		vec2->x = vec2->x > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : vec2->x;
+		vec2->y = vec2->y > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : vec2->y;
 	}
 }
 
 //---------------------------------------------------------------------
-void gLTFImportBufferReader::correctVec3StructWithMinMax(gLTFAccessor accessor, Vec3Struct* vec3Struct)
+void gLTFImportBufferReader::correctVec3WithMinMax(gLTFAccessor accessor, Ogre::Vector3* vec3)
 {
 	if (accessor.mMinAvailable)
 	{
-		vec3Struct->x = vec3Struct->x < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : vec3Struct->x;
-		vec3Struct->y = vec3Struct->y < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : vec3Struct->y;
-		vec3Struct->z = vec3Struct->z < accessor.mMinFloat[2] ? accessor.mMinFloat[2] : vec3Struct->z;
+		vec3->x = vec3->x < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : vec3->x;
+		vec3->y = vec3->y < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : vec3->y;
+		vec3->z = vec3->z < accessor.mMinFloat[2] ? accessor.mMinFloat[2] : vec3->z;
 	}
 	if (accessor.mMaxAvailable)
 	{
-		vec3Struct->x = vec3Struct->x > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : vec3Struct->x;
-		vec3Struct->y = vec3Struct->y > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : vec3Struct->y;
-		vec3Struct->z = vec3Struct->z > accessor.mMaxFloat[2] ? accessor.mMaxFloat[2] : vec3Struct->z;
+		vec3->x = vec3->x > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : vec3->x;
+		vec3->y = vec3->y > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : vec3->y;
+		vec3->z = vec3->z > accessor.mMaxFloat[2] ? accessor.mMaxFloat[2] : vec3->z;
 	}
 }
 
 //---------------------------------------------------------------------
-void gLTFImportBufferReader::correctVec4StructWithMinMax(gLTFAccessor accessor, Vec4Struct* vec4Struct)
+void gLTFImportBufferReader::correctVec4WithMinMax(gLTFAccessor accessor, Ogre::Vector4* vec4)
 {
 	if (accessor.mMinAvailable)
 	{
-		vec4Struct->r = vec4Struct->r < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : vec4Struct->r;
-		vec4Struct->g = vec4Struct->g < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : vec4Struct->g;
-		vec4Struct->b = vec4Struct->b < accessor.mMinFloat[2] ? accessor.mMinFloat[2] : vec4Struct->b;
-		vec4Struct->a = vec4Struct->a < accessor.mMinFloat[3] ? accessor.mMinFloat[3] : vec4Struct->a;
+		vec4->x = vec4->x < accessor.mMinFloat[0] ? accessor.mMinFloat[0] : vec4->x;
+		vec4->y = vec4->y < accessor.mMinFloat[1] ? accessor.mMinFloat[1] : vec4->y;
+		vec4->z = vec4->z < accessor.mMinFloat[2] ? accessor.mMinFloat[2] : vec4->z;
+		vec4->w = vec4->w < accessor.mMinFloat[3] ? accessor.mMinFloat[3] : vec4->w;
 	}
 	if (accessor.mMaxAvailable)
 	{
-		vec4Struct->r = vec4Struct->r > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : vec4Struct->r;
-		vec4Struct->g = vec4Struct->g > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : vec4Struct->g;
-		vec4Struct->b = vec4Struct->b > accessor.mMaxFloat[2] ? accessor.mMaxFloat[2] : vec4Struct->b;
-		vec4Struct->a = vec4Struct->a > accessor.mMaxFloat[3] ? accessor.mMaxFloat[3] : vec4Struct->a;
+		vec4->x = vec4->x > accessor.mMaxFloat[0] ? accessor.mMaxFloat[0] : vec4->x;
+		vec4->y = vec4->y > accessor.mMaxFloat[1] ? accessor.mMaxFloat[1] : vec4->y;
+		vec4->z = vec4->z > accessor.mMaxFloat[2] ? accessor.mMaxFloat[2] : vec4->z;
+		vec4->w = vec4->w > accessor.mMaxFloat[3] ? accessor.mMaxFloat[3] : vec4->w;
 	}
 }

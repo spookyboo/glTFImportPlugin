@@ -31,6 +31,9 @@ THE SOFTWARE.
 #include <map>
 #include "gLTFImportConstants.h"
 #include "gLTFAccessor.h"
+#include "OgreVector2.h"
+#include "OgreVector3.h"
+#include "OgreVector4.h"
 
 /** Class responsible for reading a gLTF (binary) Buffer */
 class gLTFImportBufferReader
@@ -54,49 +57,49 @@ class gLTFImportBufferReader
 			bool applyMinMax = false);
 
 		// Read Vec2
-		const Vec2Struct& readVec2FromUnsignedByteBuffer (char* buffer, 
+		const Ogre::Vector2& readVec2FromUnsignedByteBuffer (char* buffer, 
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
-		const Vec2Struct& readVec2FromUnsignedShortBuffer (char* buffer, 
+		const Ogre::Vector2& readVec2FromUnsignedShortBuffer (char* buffer,
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
-		const Vec2Struct& readVec2FromFloatBuffer (char* buffer, 
+		const Ogre::Vector2& readVec2FromFloatBuffer (char* buffer,
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
 
 		// Read Vec3
-		const Vec3Struct& readVec3FromUnsignedByteBuffer (char* buffer, 
+		const Ogre::Vector3& readVec3FromUnsignedByteBuffer (char* buffer,
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
-		const Vec3Struct& readVec3FromUnsignedShortBuffer (char* buffer, 
+		const Ogre::Vector3& readVec3FromUnsignedShortBuffer (char* buffer,
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
-		const Vec3Struct& readVec3FromFloatBuffer (char* buffer, 
+		const Ogre::Vector3& readVec3FromFloatBuffer (char* buffer,
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
 
 		// Read Vec4
-		const Vec4Struct& readVec4FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
-		const Vec4Struct& readVec4FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
-		const Vec4Struct& readVec4FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
+		const Ogre::Vector4& readVec4FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
+		const Ogre::Vector4& readVec4FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
+		const Ogre::Vector4& readVec4FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
 
 		// Min/Max corrections
-		void correctVec2StructWithMinMax (gLTFAccessor accessor, Vec2Struct* vec2Struct);
-		void correctVec3StructWithMinMax (gLTFAccessor accessor, Vec3Struct* vec3Struct);
-		void correctVec4StructWithMinMax (gLTFAccessor accessor, Vec4Struct* vec4Struct);
+		void correctVec2WithMinMax (gLTFAccessor accessor, Ogre::Vector2* vec2);
+		void correctVec3WithMinMax (gLTFAccessor accessor, Ogre::Vector3* vec3);
+		void correctVec4WithMinMax (gLTFAccessor accessor, Ogre::Vector4* vec4);
 
 	//protected:
 
 	private:
-		Vec4Struct mHelperVec4Struct;
-		Vec3Struct mHelperVec3Struct;
-		Vec2Struct mHelperVec2Struct;
+		Ogre::Vector4 mHelperVec4;
+		Ogre::Vector3 mHelperVec3;
+		Ogre::Vector2 mHelperVec2;
 };
 
 #endif

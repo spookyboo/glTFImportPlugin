@@ -51,14 +51,14 @@ class gLTFNode
 		int mCamera; // unused for now
 		std::vector<int> mChildren;
 		int mSkin;
-		double mMatrix[16];
+		float mMatrix[16];
 		bool mHasMatrix;
 		int mMesh;
-		double mRotation[4];
+		float mRotation[4];
 		bool mHasRotation;
-		double mScale[3];
+		float mScale[3];
 		bool mHasScale;
-		double mTranslation[3];
+		float mTranslation[3];
 		bool mHasTranslation;
 		std::vector<float> mWeights;
 		std::string mName;

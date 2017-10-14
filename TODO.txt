@@ -4,14 +4,13 @@ HLMS Editor:
 
 Plugin:
 ======
-- Implement matrix transformation
-- Check rotation transformation?
-- Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
+- Implement (matrix) transformation. Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
+- Bytestride is not used to jump in a buffer; currently is assumed that data is aligned per type (positions together, normals together, ..); 
+  interleaved data is more efficient to store vertices. This is a must-have
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
 - Init gLTF so texture tranformation is possible
-- Bytestride is not used to jump in a buffer; currently is assumed that data is aligned per type (positions together, normals together, ..); interleaved data is more efficient to store vertices
 - Level of detail implemented in gLTF?
 - Add KHR_ extensions to read Unity gLTF models and materials
 - Vertex count is derived from position vertices. Validate whether this is correct
