@@ -1,29 +1,29 @@
 /*
-  -----------------------------------------------------------------------------
-  This source file is part of OGRE
-  (Object-oriented Graphics Rendering Engine)
-  For the latest info, see http://www.ogre3d.org/
+-----------------------------------------------------------------------------
+This source file is part of OGRE
+(Object-oriented Graphics Rendering Engine)
+For the latest info, see http://www.ogre3d.org/
 
-  Copyright (c) 2000-2014 Torus Knot Software Ltd
+Copyright (c) 2000-2014 Torus Knot Software Ltd
 
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files (the "Software"), to deal
-  in the Software without restriction, including without limitation the rights
-  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-  copies of the Software, and to permit persons to whom the Software is
-  furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be included in
-  all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-  THE SOFTWARE.
-  -----------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-----------------------------------------------------------------------------
 */
 
 #include "gLTFImportBufferReader.h"
@@ -33,7 +33,8 @@ unsigned char gLTFImportBufferReader::readFromUnsignedByteBuffer(char* buffer, i
 {
 	unsigned char scalar;
 	int unsignedCharSize = sizeof(unsigned char);
-	memcpy(&scalar, &buffer[count * unsignedCharSize], unsignedCharSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : unsignedCharSize;
+	memcpy(&scalar, &buffer[count * stride], unsignedCharSize);
 
 	// Correct with min/max
 	if (applyMinMax)
@@ -52,7 +53,8 @@ unsigned short gLTFImportBufferReader::readFromUnsignedShortBuffer(char* buffer,
 {
 	unsigned short scalar;
 	int unsignedShortSize = sizeof(unsigned short);
-	memcpy(&scalar, &buffer[count * unsignedShortSize], unsignedShortSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : unsignedShortSize;
+	memcpy(&scalar, &buffer[count * stride], unsignedShortSize);
 
 	// Correct with min/max
 	if (applyMinMax)
@@ -60,9 +62,9 @@ unsigned short gLTFImportBufferReader::readFromUnsignedShortBuffer(char* buffer,
 		if (accessor.mMinAvailable)
 			scalar = scalar < (unsigned short)accessor.mMinInt[0] ? (unsigned short)accessor.mMinInt[0] : scalar;
 		if (accessor.mMaxAvailable)
-			scalar = scalar > (unsigned short)accessor.mMaxInt[0] ? (unsigned short)accessor.mMaxInt[0] : scalar;
+			scalar = scalar >(unsigned short)accessor.mMaxInt[0] ? (unsigned short)accessor.mMaxInt[0] : scalar;
 	}
-	
+
 	return scalar;
 }
 
@@ -71,7 +73,8 @@ unsigned int gLTFImportBufferReader::readFromUnsignedIntBuffer(char* buffer, int
 {
 	unsigned int scalar;
 	int unsignedIntSize = sizeof(unsigned int);
-	memcpy(&scalar, &buffer[count * unsignedIntSize], unsignedIntSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : unsignedIntSize;
+	memcpy(&scalar, &buffer[count * stride], unsignedIntSize);
 
 	// Correct with min/max
 	if (applyMinMax)
@@ -79,216 +82,216 @@ unsigned int gLTFImportBufferReader::readFromUnsignedIntBuffer(char* buffer, int
 		if (accessor.mMinAvailable)
 			scalar = scalar < (unsigned int)accessor.mMinInt[0] ? (unsigned int)accessor.mMinInt[0] : scalar;
 		if (accessor.mMaxAvailable)
-			scalar = scalar > (unsigned int)accessor.mMaxInt[0] ? (unsigned int)accessor.mMaxInt[0] : scalar;
+			scalar = scalar >(unsigned int)accessor.mMaxInt[0] ? (unsigned int)accessor.mMaxInt[0] : scalar;
 	}
-	
+
 	return scalar;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector2& gLTFImportBufferReader::readVec2FromFloatBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	float raw;
 	int floatSize = sizeof(float);
-	int vec2Size = 2 * floatSize;
-	memcpy(&raw, &buffer[count * vec2Size], floatSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 2 * floatSize;
+	memcpy(&raw, &buffer[count * stride], floatSize);
 	mHelperVec2.x = raw;
-	memcpy(&raw, &buffer[count * vec2Size + floatSize], floatSize);
+	memcpy(&raw, &buffer[count * stride + floatSize], floatSize);
 	mHelperVec2.y = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec2WithMinMax(accessor, &mHelperVec2);
-	
+
 	return mHelperVec2;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector2& gLTFImportBufferReader::readVec2FromUnsignedByteBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	unsigned char raw;
 	int unsignedCharSize = sizeof(unsigned char);
-	int vec2Size = 2 * unsignedCharSize;
-	memcpy(&raw, &buffer[count * vec2Size], unsignedCharSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 2 * unsignedCharSize;
+	memcpy(&raw, &buffer[count * stride], unsignedCharSize);
 	mHelperVec2.x = raw;
-	memcpy(&raw, &buffer[count * vec2Size + unsignedCharSize], unsignedCharSize);
+	memcpy(&raw, &buffer[count * stride + unsignedCharSize], unsignedCharSize);
 	mHelperVec2.y = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec2WithMinMax(accessor, &mHelperVec2);
-	
+
 	return mHelperVec2;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector2& gLTFImportBufferReader::readVec2FromUnsignedShortBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	unsigned short raw;
 	int unsignedShortSize = sizeof(unsigned short);
-	int vec2Size = 2 * unsignedShortSize;
-	memcpy(&raw, &buffer[count * vec2Size], unsignedShortSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 2 * unsignedShortSize;
+	memcpy(&raw, &buffer[count * stride], unsignedShortSize);
 	mHelperVec2.x = raw;
-	memcpy(&raw, &buffer[count * vec2Size + unsignedShortSize], unsignedShortSize);
+	memcpy(&raw, &buffer[count * stride + unsignedShortSize], unsignedShortSize);
 	mHelperVec2.y = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec2WithMinMax(accessor, &mHelperVec2);
-	
+
 	return mHelperVec2;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector3& gLTFImportBufferReader::readVec3FromFloatBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	float raw;
 	int floatSize = sizeof(float);
-	int vec3Size = 3 * floatSize;
-	memcpy(&raw, &buffer[count * vec3Size], floatSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 3 * floatSize;
+	memcpy(&raw, &buffer[count * stride], floatSize);
 	mHelperVec3.x = raw;
-	memcpy(&raw, &buffer[count * vec3Size + floatSize], floatSize);
+	memcpy(&raw, &buffer[count * stride + floatSize], floatSize);
 	mHelperVec3.y = raw;
-	memcpy(&raw, &buffer[count * vec3Size + 2 * floatSize], floatSize);
+	memcpy(&raw, &buffer[count * stride + 2 * floatSize], floatSize);
 	mHelperVec3.z = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec3WithMinMax(accessor, &mHelperVec3);
-	
+
 	return mHelperVec3;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector3& gLTFImportBufferReader::readVec3FromUnsignedByteBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	unsigned char raw;
 	int unsingedCharSize = sizeof(unsigned char);
-	int vec3Size = 3 * unsingedCharSize;
-	memcpy(&raw, &buffer[count * vec3Size], unsingedCharSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 3 * unsingedCharSize;
+	memcpy(&raw, &buffer[count * stride], unsingedCharSize);
 	mHelperVec3.x = raw;
-	memcpy(&raw, &buffer[count * vec3Size + unsingedCharSize], unsingedCharSize);
+	memcpy(&raw, &buffer[count * stride + unsingedCharSize], unsingedCharSize);
 	mHelperVec3.y = raw;
-	memcpy(&raw, &buffer[count * vec3Size + 2 * unsingedCharSize], unsingedCharSize);
+	memcpy(&raw, &buffer[count * stride + 2 * unsingedCharSize], unsingedCharSize);
 	mHelperVec3.z = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec3WithMinMax(accessor, &mHelperVec3);
-	
+
 	return mHelperVec3;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector3& gLTFImportBufferReader::readVec3FromUnsignedShortBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	unsigned short raw;
 	int unsingedShortSize = sizeof(unsigned short);
-	int vec3Size = 3 * unsingedShortSize;
-	memcpy(&raw, &buffer[count * vec3Size], unsingedShortSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 3 * unsingedShortSize;
+	memcpy(&raw, &buffer[count * stride], unsingedShortSize);
 	mHelperVec3.x = raw;
-	memcpy(&raw, &buffer[count * vec3Size + unsingedShortSize], unsingedShortSize);
+	memcpy(&raw, &buffer[count * stride + unsingedShortSize], unsingedShortSize);
 	mHelperVec3.y = raw;
-	memcpy(&raw, &buffer[count * vec3Size + 2 * unsingedShortSize], unsingedShortSize);
+	memcpy(&raw, &buffer[count * stride + 2 * unsingedShortSize], unsingedShortSize);
 	mHelperVec3.z = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec3WithMinMax(accessor, &mHelperVec3);
-	
+
 	return mHelperVec3;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector4& gLTFImportBufferReader::readVec4FromFloatBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	float raw;
 	int floatSize = sizeof(float);
-	int vec4Size = 4 * floatSize;
-	memcpy(&raw, &buffer[count * vec4Size], floatSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 4 * floatSize;
+	memcpy(&raw, &buffer[count * stride], floatSize);
 	mHelperVec4.x = raw;
-	memcpy(&raw, &buffer[count * vec4Size + floatSize], floatSize);
+	memcpy(&raw, &buffer[count * stride + floatSize], floatSize);
 	mHelperVec4.y = raw;
-	memcpy(&raw, &buffer[count * vec4Size + 2 * floatSize], floatSize);
+	memcpy(&raw, &buffer[count * stride + 2 * floatSize], floatSize);
 	mHelperVec4.z = raw;
-	memcpy(&raw, &buffer[count * vec4Size + 3 * floatSize], floatSize);
+	memcpy(&raw, &buffer[count * stride + 3 * floatSize], floatSize);
 	mHelperVec4.w = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec4WithMinMax(accessor, &mHelperVec4);
-	
+
 	return mHelperVec4;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector4& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	unsigned char raw;
 	int unsignedByteSize = sizeof(unsigned char);
-	int vec4Size = 4 * unsignedByteSize;
-	memcpy(&raw, &buffer[count * vec4Size], unsignedByteSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 4 * unsignedByteSize;
+	memcpy(&raw, &buffer[count * stride], unsignedByteSize);
 	mHelperVec4.x = raw;
-	memcpy(&raw, &buffer[count * vec4Size + unsignedByteSize], unsignedByteSize);
+	memcpy(&raw, &buffer[count * stride + unsignedByteSize], unsignedByteSize);
 	mHelperVec4.y = raw;
-	memcpy(&raw, &buffer[count * vec4Size + 2 * unsignedByteSize], unsignedByteSize);
+	memcpy(&raw, &buffer[count * stride + 2 * unsignedByteSize], unsignedByteSize);
 	mHelperVec4.z = raw;
-	memcpy(&raw, &buffer[count * vec4Size + 3 * unsignedByteSize], unsignedByteSize);
+	memcpy(&raw, &buffer[count * stride + 3 * unsignedByteSize], unsignedByteSize);
 	mHelperVec4.w = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec4WithMinMax(accessor, &mHelperVec4);
-	
+
 	return mHelperVec4;
 }
 
 //---------------------------------------------------------------------
 const Ogre::Vector4& gLTFImportBufferReader::readVec4FromUnsignedShortBuffer(char* buffer,
 	int count,
-	gLTFAccessor accessor, 
+	gLTFAccessor accessor,
 	bool applyMinMax)
 {
 	unsigned short raw;
 	int unsignedShortSize = sizeof(unsigned short);
-	int vec4Size = 4 * unsignedShortSize;
-	memcpy(&raw, &buffer[count * vec4Size], unsignedShortSize);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 4 * unsignedShortSize;
+	memcpy(&raw, &buffer[count * stride], unsignedShortSize);
 	mHelperVec4.x = raw;
-	memcpy(&raw, &buffer[count * vec4Size + unsignedShortSize], unsignedShortSize);
+	memcpy(&raw, &buffer[count * stride + unsignedShortSize], unsignedShortSize);
 	mHelperVec4.y = raw;
-	memcpy(&raw, &buffer[count * vec4Size + 2 * unsignedShortSize], unsignedShortSize);
+	memcpy(&raw, &buffer[count * stride + 2 * unsignedShortSize], unsignedShortSize);
 	mHelperVec4.z = raw;
-	memcpy(&raw, &buffer[count * vec4Size + 3 * unsignedShortSize], unsignedShortSize);
+	memcpy(&raw, &buffer[count * stride + 3 * unsignedShortSize], unsignedShortSize);
 	mHelperVec4.w = raw;
 
 	// Correct with min/max
 	if (applyMinMax)
 		correctVec4WithMinMax(accessor, &mHelperVec4);
-	
+
 	return mHelperVec4;
 }
 
