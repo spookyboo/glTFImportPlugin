@@ -73,7 +73,8 @@ int main()
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/SmilingFace/glTF/"; // With end slash
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/sexylady/";
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/CesiumMilkTruck/glTF/"; // With end slash
-	pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/warehouse/";
+	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/warehouse/";
+	pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/cartoongirl/";
 	
 	pluginData.mInImportPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/"; // With end slash
 	//pluginData.mInImportPath = "C:/Users/Henry/Downloads/AdamHead/import/"; // With end slash

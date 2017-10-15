@@ -4,15 +4,13 @@ HLMS Editor:
 
 Plugin:
 ======
-- Implement (matrix) transformation. Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
-- Bytestride is not used to jump in a buffer; currently is assumed that data is aligned per type (positions together, normals together, ..); 
-  interleaved data is more efficient to store vertices. This is a must-have
+- Add KHR_ extensions to read Unity gLTF models and materials
+- Bug? Warehouse has a lamp with incorrect transformation. Is not visible in a gLTF loader. Same with the CesiumMilkTruck (has windows floating in the sky)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
-- Init gLTF so texture tranformation is possible
+- Init gLTF in gLTFTest application, so texture tranformation is possible (and the #define can be removed)
 - Level of detail implemented in gLTF?
-- Add KHR_ extensions to read Unity gLTF models and materials
 - Vertex count is derived from position vertices. Validate whether this is correct
 - Implement (morph) targets in Primitives
 - Implement point_list, line_list, triangle_strip and triangle_fan
@@ -20,6 +18,7 @@ Plugin:
 - How to implement reflection? (using dds cubemaps)
 - Determine when to create a metallic texture. This is standard, but doesn't always gives a good result
 - Implement 'out' function for all model classes (primitive, accessor, ...)
+
 
 DONE:
 - Use shared vertices? ==> Not for now; usesharedvertices is always 'false'
@@ -35,5 +34,8 @@ DONE:
 - Change interface; add map 'references' with key/value pairs (e.g. 'mesh' --> meshfile.xml; 'material' --> material file; 'project' --> project file, etc.)
 - Godot engine swaps the v2 and v3 indexed in a face (swap around indices, convert ccw to cw for front face). Test this in the plugin --> This implies the addition
   of a makroblock with the setting 'anticlockwise'. Therefor we do not swap indexes 2 and 3!
+- Implement (matrix) transformation. Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
+- Bytestride is not used to jump in a buffer; currently is assumed that data is aligned per type (positions together, normals together, ..); 
+  interleaved data is more efficient to store vertices. This is a must-have
 
 
