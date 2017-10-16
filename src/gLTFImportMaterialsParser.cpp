@@ -98,8 +98,14 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 				// ******** 9. doubleSided ********
 				material.mDoubleSided = it->value.GetBool();
 			}
+			if (it->value.IsObject() && key == "extensions")
+			{
+				// ******** 10. extensions ********
+				MaterialExtensions extensions = parseExtensions(it);
+				material.mKHR_PbrSpecularGlossiness = extensions.mKHR_PbrSpecularGlossiness;
+			}
 		}
-		
+
 		if (name == "")
 		{
 			// Generate a name if not provided (name is optional in gLTF)
@@ -116,6 +122,71 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 const std::map<std::string, gLTFMaterial> gLTFImportMaterialsParser::getParsedMaterials (void) const
 {
 	return mMaterialsMap;
+}
+
+//---------------------------------------------------------------------
+MaterialExtensions gLTFImportMaterialsParser::parseExtensions (rapidjson::Value::ConstMemberIterator jsonIterator)
+{
+	OUT << TABx2 << "Perform gLTFImportMaterialsParser::parseExtensions\n";
+	rapidjson::Value::ConstMemberIterator it;
+	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
+	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
+	{
+		OUT << TABx3 << "key Extensions ==> " << it->name.GetString() << "\n";
+		std::string key = std::string(it->name.GetString());
+		if (it->value.IsObject() && key == "KHR_materials_pbrSpecularGlossiness")
+		{
+			// ******** KHR_materials_pbrSpecularGlossiness ********
+			mMaterialExtensions.mKHR_PbrSpecularGlossiness = parseKHR_PbrSpecularGlossiness(it);
+			return mMaterialExtensions;
+		}
+	}
+}
+
+//---------------------------------------------------------------------
+KHR_PbrSpecularGlossiness gLTFImportMaterialsParser::parseKHR_PbrSpecularGlossiness (rapidjson::Value::ConstMemberIterator jsonIterator)
+{
+	OUT << TABx2 << "Perform gLTFImportMaterialsParser::parseKHR_PbrSpecularGlossiness\n";
+	rapidjson::Value::ConstMemberIterator it;
+	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
+	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
+	{
+		OUT << TABx3 << "key KHR Extensions ==> " << it->name.GetString() << "\n";
+		std::string key = std::string(it->name.GetString());
+		if (it->value.IsArray() && key == "diffuseFactor")
+		{
+			// ******** diffuseFactor ********
+			Color4 diffuseFactor = parseColor4(it);
+			mKHR_PbrSpecularGlossiness.mKHR_DiffuseFactor = diffuseFactor;
+		}
+		if (it->value.IsArray() && key == "specularFactor")
+		{
+			// ******** specularFactor ********
+			Color3 specularFactor = parseColor3(it);
+			mKHR_PbrSpecularGlossiness.mKHR_SpecularFactor = specularFactor;
+		}
+		if (it->value.IsObject() && key == "diffuseTexture")
+		{
+			// ******** diffuseTexture ********
+			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
+			mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture = texture;
+		}
+		if (it->value.IsNumber() && key == "glossinessFactor")
+		{
+			// ******** glossinessFactor ********
+			mKHR_PbrSpecularGlossiness.mKHR_GlossinessFactor = it->value.GetFloat();
+		}
+		if (it->value.IsObject() && key == "specularGlossinessTexture")
+		{
+			// ******** specularGlossinessTexture ********
+			MaterialGenericTexture texture = parseMaterialGenericTexture(it);
+			mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture = texture;
+			mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture = texture;
+			mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture = texture;
+		}
+	}
+
+	return mKHR_PbrSpecularGlossiness;
 }
 
 //---------------------------------------------------------------------

@@ -48,6 +48,8 @@ class gLTFImportMaterialsParser
 		
 	protected:
 		// Parse level 2
+		MaterialExtensions parseExtensions (rapidjson::Value::ConstMemberIterator jsonIterator);
+		KHR_PbrSpecularGlossiness parseKHR_PbrSpecularGlossiness (rapidjson::Value::ConstMemberIterator jsonIterator);
 		PbrMetallicRoughness parsePbrMetallicRoughness (rapidjson::Value::ConstMemberIterator jsonIterator);
 		NormalTexture parseNormalTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
 		OcclusionTexture parseOcclusionTexture(rapidjson::Value::ConstMemberIterator jsonIterator);
@@ -65,6 +67,8 @@ class gLTFImportMaterialsParser
 		OcclusionTexture mOcclusionTexture;
 		EmissiveTexture mEmissiveTexture;
 		MaterialGenericTexture mMaterialGenericTexture;
+		MaterialExtensions mMaterialExtensions;
+		KHR_PbrSpecularGlossiness mKHR_PbrSpecularGlossiness;
 		Color3 mColor3;
 		Color4 mColor4;
 };

@@ -58,7 +58,7 @@ public:
 class Color4
 {
 public:
-	Color4 (void);
+	Color4(void);
 	virtual ~Color4 (void) {};
 	void out (void);
 
@@ -150,6 +150,39 @@ class EmissiveTexture : public MaterialGenericTexture
 		// ?
 };
 
+/**********************************/
+/** KHR Extension of the material */
+/**********************************/
+class KHR_PbrSpecularGlossiness
+{
+	public:
+		KHR_PbrSpecularGlossiness(void);
+		virtual ~KHR_PbrSpecularGlossiness(void) {};
+		void out(void); // prints the content
+
+		// Public member attributes
+		Color4 mKHR_DiffuseFactor;
+		Color3 mKHR_SpecularFactor;
+		MaterialGenericTexture mKHR_DiffuseTexture;
+		float mKHR_GlossinessFactor;
+		MaterialGenericTexture mKHR_SpecularGlossinessTexture;
+		MaterialGenericTexture mKHR_GlossinessTexture;
+		MaterialGenericTexture mKHR_SpecularTexture;
+};
+
+/******************************/
+/** Extension of the material */
+/******************************/
+class MaterialExtensions
+{
+	public:
+		MaterialExtensions(void) {};
+		virtual ~MaterialExtensions(void) {};
+
+		// Public member attributes
+		KHR_PbrSpecularGlossiness mKHR_PbrSpecularGlossiness;
+};
+
 /*************************************************/
 /** Class responsible that represents a material */
 /*************************************************/
@@ -170,6 +203,10 @@ class gLTFMaterial
 		std::string mAlphaMode;
 		float mAlphaCutoff;
 		bool mDoubleSided;
+
+		// Extensions (KHR Pbr Specular Glossiness)
+		bool mUseKHR_MaterialsPbrSpecularGlossiness;
+		KHR_PbrSpecularGlossiness mKHR_PbrSpecularGlossiness;
 };
 
 #endif

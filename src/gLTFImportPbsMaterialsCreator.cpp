@@ -108,6 +108,11 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		createDetailWeightJsonBlock(&dst, it->second);
 		createEmissiveJsonBlock(&dst, it->second);
 
+		// KHR Extensions
+		//TODO: createKHRDiffuseJsonBlock(&dst, it->second);
+		//TODO: createKHRGlossinessJsonBlock(&dst, it->second);
+		//TODO: createKHRSpecularJsonBlock(&dst, it->second);
+
 		dst << "\n";
 		dst << TABx2 << "}\n";
 		dst << TAB << "}\n";

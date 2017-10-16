@@ -104,6 +104,7 @@ class gLTFImportExecutor
 			int startBinaryBuffer);
 		bool setProjectFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
 		gLTFNode* findNodeByIndex (int nodeIndex);
+		void writeTextureEntryToConfig (std::ofstream& texFile, const std::string& uriImage, int& texCount);
 
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,

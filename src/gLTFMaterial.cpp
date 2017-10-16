@@ -32,7 +32,8 @@
 //---------------------------------------------------------------------
 gLTFMaterial::gLTFMaterial(void) :
 	mAlphaCutoff(0.5f),
-	mDoubleSided(false)
+	mDoubleSided(false),
+	mUseKHR_MaterialsPbrSpecularGlossiness(false)
 {
 	mAlphaMode = "OPAQUE";
 	mEmissiveFactor.mRed = 0.0f;
@@ -53,6 +54,27 @@ void gLTFMaterial::out (void)
 	OUT << "mAlphaMode = " << mAlphaMode << "\n";
 	OUT << "mAlphaCutoff = " << mAlphaCutoff << "\n";
 	OUT << "mDoubleSided = " << mDoubleSided << "\n";
+}
+
+//---------------------------------------------------------------------
+KHR_PbrSpecularGlossiness::KHR_PbrSpecularGlossiness(void) :
+	mKHR_GlossinessFactor(1.0f)
+{
+}
+
+//---------------------------------------------------------------------
+void KHR_PbrSpecularGlossiness::out(void)
+{
+	OUT << "***************** Debug: KHR_PbrSpecularGlossiness *****************\n";
+	OUT << "mKHR_DiffuseFactor = ";
+	mKHR_DiffuseFactor.out();
+	OUT << "mKHR_DiffuseTexture = ";
+	mKHR_DiffuseTexture.out();
+	OUT << "mKHR_GlossinessFactor = " << mKHR_GlossinessFactor << "\n";
+	OUT << "mKHR_SpecularFactor = ";
+	mKHR_SpecularFactor.out();
+	OUT << "mKHR_SpecularGlossinessTexture = ";
+	mKHR_SpecularGlossinessTexture.out();
 }
 
 //---------------------------------------------------------------------

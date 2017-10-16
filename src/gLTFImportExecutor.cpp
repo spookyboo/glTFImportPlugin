@@ -346,45 +346,57 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex;
 		uriImage = prepareUri("baseColorTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		/*
 		if (uriImage != "")
 		{
 			texFile << "3	3	" << texCount << "	3	";
 			texFile << uriImage << "	" << uriImage << "\n";
 			texCount++;
 		}
+		*/
 
 		// 1. emissiveTexture
 		textureIndex = (itMaterials->second).mEmissiveTexture.mIndex;
 		uriImage = prepareUri("emissiveTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mEmissiveTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		/*
 		if (uriImage != "")
 		{
 			texFile << "3	3	" << texCount << "	3	";
 			texFile << uriImage << "	" << uriImage << "\n";
 			texCount++;
 		}
+		*/
 
 		// 2. normalTexture
 		textureIndex = (itMaterials->second).mNormalTexture.mIndex;
 		uriImage = prepareUri("normalTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mNormalTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		/*
 		if (uriImage != "")
 		{
 			texFile << "3	3	" << texCount << "	3	";
 			texFile << uriImage << "	" << uriImage << "\n";
 			texCount++;
 		}
+		*/
 
 		// 3. mOcclusionTexture
 		textureIndex = (itMaterials->second).mOcclusionTexture.mIndex;
 		uriImage = prepareUri("occlusionTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mOcclusionTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		/*
 		if (uriImage != "")
 		{
 			texFile << "3	3	" << texCount << "	3	";
 			texFile << uriImage << "	" << uriImage << "\n";
 			texCount++;
 		}
+		*/
 
 		// Occlusion is represented by the R channel
 		convertTexture(uriImage, TTF_R_2_GB_INV); // Convert the image file into a usable occlusion texture
@@ -394,42 +406,83 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
 		uriImage = prepareUri("metallicRoughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		/*
 		if (uriImage != "")
 		{
 			texFile << "3	3	" << texCount << "	3	";
 			texFile << uriImage << "	" << uriImage << "\n";
 			texCount++;
 		}
+		*/
 
 		// 5. metallicTexture (copy of metallicRoughnessTexture)
 		// The metallicRoughnessTexture is used as if it was a metallicTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
 		uriImage = prepareUri("metallicTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		/*
 		if (uriImage != "")
 		{
 			texFile << "3	3	" << texCount << "	3	";
 			texFile << uriImage << "	" << uriImage << "\n";
 			texCount++;
 		}
+		*/
 
 		// Convert to Metallic texture. Metallic is represented by the B channel
-		convertTexture(uriImage, TTF_G_2_RBA); // Convert the image file into a usable metallic texture
+		convertTexture(uriImage, TTF_B_2_RGA); // Convert the image file into a usable metallic texture
 
 		// 6. roughnessTexture (copy of metallicRoughnessTexture)
 		// The metallicRoughnessTexture is used as if it was a roughnessTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
 		uriImage = prepareUri("roughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
 		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		/*
 		if (uriImage != "")
 		{
 			texFile << "3	3	" << texCount << "	3	";
 			texFile << uriImage << "	" << uriImage << "\n";
 			texCount++;
 		}
+		*/
 
 		// Convert to Roughness texture. Roughness is represented by the G channel
 		convertTexture(uriImage, TTF_G_2_RBA); // Convert the image file into a usable roughness texture
+
+		// 7. Extension: KHR diffuseTexture
+		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mIndex;
+		uriImage = prepareUri("diffuseTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+
+		// 8. Extension: KHR specularGlossinessTexture
+		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mIndex;
+		uriImage = prepareUri("specularGlossinessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+
+		// 9. Extension: glossinessTexture (roughness) (copy of KHR_specularGlossinessTexture)
+		// The specularGlossinessTexture is used as if it was a glossiness texture/roughness texture
+		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mIndex;
+		uriImage = prepareUri("glossinessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		
+		// Convert. Glossiness is represented by the G channel
+		convertTexture(uriImage, TTF_R_2_GB_INV);
+
+		// 10. Extension: KHR specularTexture (copy of KHR_specularGlossinessTexture)
+		// The specularGlossinessTexture is used as if it was a specular texture
+		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mIndex;
+		uriImage = prepareUri("specularTexture", data, materialName, textureIndex, startBinaryBuffer);
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mUri = uriImage;
+		writeTextureEntryToConfig(texFile, uriImage, texCount);
+
+		// Convert. Specular is represented by the B channel
+		convertTexture(uriImage, TTF_B_2_RGA);
 
 		// Add the samplers to the material
 		sampler = getSamplerByTextureIndex((itMaterials->second).mEmissiveTexture.mIndex);
@@ -444,6 +497,14 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mSampler = sampler;
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mSampler = sampler;
 		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mIndex);
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mSampler = sampler;
+		sampler = getSamplerByTextureIndex((itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mIndex);
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mSampler = sampler;
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mSampler = sampler;
+		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mSampler = sampler;
+
+		// TODO: Add sampler for KHR
 
 		matCount++;
 	}
@@ -453,6 +514,17 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 	matFile.close();
 
 	return true;
+}
+
+//---------------------------------------------------------------------
+void gLTFImportExecutor::writeTextureEntryToConfig (std::ofstream& texFile, const std::string& uriImage, int& texCount)
+{
+	if (uriImage != "")
+	{
+		texFile << "3	3	" << texCount << "	3	";
+		texFile << uriImage << "	" << uriImage << "\n";
+		texCount++;
+	}
 }
 
 //---------------------------------------------------------------------
