@@ -471,8 +471,8 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mUri = uriImage;
 		writeTextureEntryToConfig(texFile, uriImage, texCount);
 		
-		// Convert. Glossiness is represented by the G channel
-		convertTexture(uriImage, TTF_R_2_GB_INV);
+		// Convert. Glossiness is represented by the A channel
+		convertTexture(uriImage, TTF_A_2_RGBA);
 
 		// 10. Extension: KHR specularTexture (copy of KHR_specularGlossinessTexture)
 		// The specularGlossinessTexture is used as if it was a specular texture
@@ -481,8 +481,8 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mUri = uriImage;
 		writeTextureEntryToConfig(texFile, uriImage, texCount);
 
-		// Convert. Specular is represented by the B channel
-		convertTexture(uriImage, TTF_B_2_RGA);
+		// Convert. Specular is represented by the RGB channel; just set Alpha to 1.0
+		convertTexture(uriImage, TTF_0001);
 
 		// Add the samplers to the material
 		sampler = getSamplerByTextureIndex((itMaterials->second).mEmissiveTexture.mIndex);
@@ -1051,6 +1051,10 @@ bool gLTFImportExecutor::convertTexture (const std::string& fileName, TextureTra
 					col.b = 0.0f;
 					col.a = 0.0f;
 				}
+				case TTF_0001:
+				{
+					col.a = 1.0f;
+				}
 				break;
 				case TTF_R_2_GB:
 				{
@@ -1110,6 +1114,13 @@ bool gLTFImportExecutor::convertTexture (const std::string& fileName, TextureTra
 					col.r = col.b;
 					col.g = col.b;
 					col.a = col.b;
+				}
+				break;
+				case TTF_A_2_RGBA:
+				{
+					col.r = col.a;
+					col.g = col.a;
+					col.b = col.a;
 				}
 				break;
 			}

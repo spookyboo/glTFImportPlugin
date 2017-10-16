@@ -59,6 +59,7 @@ class gLTFImportExecutor
 		enum TextureTransformation
 		{
 			TTF_R000,				// Leave Red color intact and set Green, Blue and Alpha to zero
+			TTF_0001,				// Set Alpha to 1.0
 			TTF_R_2_GB,				// Green and Blue get the value of Red
 			TTF_G_2_RB,				// Red and Blue get the value of Green
 			TTF_B_2_RG,				// Red and Green get the value of Blue
@@ -68,6 +69,7 @@ class gLTFImportExecutor
 			TTF_R_2_GBA,			// Green, Blue and Alpha get the value of Red
 			TTF_G_2_RBA,			// Red, Blue and Alpha get the value of Green
 			TTF_B_2_RGA,			// Red, Green and Alpha get the value of Blue
+			TTF_A_2_RGBA,			// Red, Green, Blue and Alpha get the value of Alpha
 		};
 
 		// Process the binary file / text file
