@@ -49,7 +49,7 @@ THE SOFTWARE.
 class gLTFImportExecutor
 {
 	public:
-		gLTFImportExecutor (void) {};
+		gLTFImportExecutor (void);
 		virtual ~gLTFImportExecutor(void) {};
 		
 		// Perform the import (called by plugin)
@@ -103,32 +103,40 @@ class gLTFImportExecutor
 			Ogre::HlmsEditorPluginData* data,
 			const std::string&  materialName,
 			int textureIndex,
-			int startBinaryBuffer);
+			int startBinaryBuffer,
+			bool& filewritten);
 		bool setProjectFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
 		gLTFNode* findNodeByIndex (int nodeIndex);
 		void writeTextureEntryToConfig (std::ofstream& texFile, const std::string& uriImage, int& texCount);
+		const std::string& getImageIndexAsString (int textureIndex);
 
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data, 
 			const std::string& materialName,
-			const std::string& uriImage);
+			const std::string& uriImage,
+			bool& fileWritten);
 		const std::string& extractAndCreateImageFromUriByTextureIndex(const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data,
 			const std::string& materialName,
-			int index);
+			int index,
+			bool& filewritten);
 		const std::string& extractAndCreateImageFromFileByTextureIndex (const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data, 
 			const std::string& materialName,
 			int index,
-			int startBinaryBuffer);
-		bool convertTexture (const std::string& fileName, TextureTransformation transformation); // Convert an image file to a roughness file
+			int startBinaryBuffer,
+			bool& filewritten);
+		bool convertTexture (const std::string& fileName, 
+			TextureTransformation transformation); // Convert an image file
 		const std::string& writeImageFile (const std::string& textureName,
 			const std::string& mimeType,
 			Ogre::HlmsEditorPluginData* data,
 			const std::string& materialName,
 			char* imageBlock,
-			size_t byteLength);
+			size_t byteLength,
+			bool& filewritten);
+		bool isDuplicateUri (const std::string& uri); // Check whether the image file was already written/copied
 
 	private:
 		std::string mHelperString;

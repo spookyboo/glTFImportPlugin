@@ -31,6 +31,19 @@
 #include "OgreImage.h"
 #include "base64.h"
 
+
+//---------------------------------------------------------------------
+gLTFImportExecutor::gLTFImportExecutor(void)
+{
+	mHelperString = "";
+	mHelperMaterialNameString = "";
+	mHelperUri = "";
+	mHelperOutputFile = "";
+	mHlmsProjectFileName = "";
+	mMaterialsConfigFileName = "";
+	mTexturesConfigFileName = "";
+}
+
 //---------------------------------------------------------------------
 bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 {
@@ -86,7 +99,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	dst << mTexturesConfigFileName << "\n";
 	dst.close();
 	setProjectFileNamePropertyValue(data, mHlmsProjectFileName);
-
+	
 	return result;
 }
 
@@ -272,7 +285,6 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 	propagateBufferViews();
 	propagateMaterials(data, startBinaryBuffer);
 	propagateAccessors();
-	//propagateMeshes(data, startBinaryBuffer);
 	propagateMeshes(data);
 	propagateNodes(data);
 	return true;
@@ -327,6 +339,9 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 	std::ofstream texFile(mTexturesConfigFileName);
 	texFile << "3	0	3	1	Textures	Textures\n";
 
+	std::string stringTexCount;
+	std::string randomString = generateRandomString();
+	bool fileWritten = false;
 	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
 	{
 		materialName = (itMaterials->second).mName;
@@ -344,145 +359,176 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 
 		// 0. baseColorTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mIndex;
-		uriImage = prepareUri("baseColorTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "baseColorTexture" + stringTexCount,
+			data,
+			materialName,
+			textureIndex,
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mPbrMetallicRoughness.mBaseColorTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		/*
-		if (uriImage != "")
-		{
-			texFile << "3	3	" << texCount << "	3	";
-			texFile << uriImage << "	" << uriImage << "\n";
-			texCount++;
-		}
-		*/
+		if (fileWritten)
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
 		// 1. emissiveTexture
 		textureIndex = (itMaterials->second).mEmissiveTexture.mIndex;
-		uriImage = prepareUri("emissiveTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "emissiveTexture" + stringTexCount,
+			data,
+			materialName,
+			textureIndex,
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mEmissiveTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		/*
-		if (uriImage != "")
-		{
-			texFile << "3	3	" << texCount << "	3	";
-			texFile << uriImage << "	" << uriImage << "\n";
-			texCount++;
-		}
-		*/
+		if (fileWritten)
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
 		// 2. normalTexture
 		textureIndex = (itMaterials->second).mNormalTexture.mIndex;
-		uriImage = prepareUri("normalTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "normalTexture" + stringTexCount,
+			data,
+			materialName,
+			textureIndex,
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mNormalTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		/*
-		if (uriImage != "")
-		{
-			texFile << "3	3	" << texCount << "	3	";
-			texFile << uriImage << "	" << uriImage << "\n";
-			texCount++;
-		}
-		*/
+		if (fileWritten)
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
 		// 3. mOcclusionTexture
 		textureIndex = (itMaterials->second).mOcclusionTexture.mIndex;
-		uriImage = prepareUri("occlusionTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "occlusionTexture" + stringTexCount,
+			data,
+			materialName,
+			textureIndex,
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mOcclusionTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		/*
-		if (uriImage != "")
+		if (fileWritten)
 		{
-			texFile << "3	3	" << texCount << "	3	";
-			texFile << uriImage << "	" << uriImage << "\n";
-			texCount++;
-		}
-		*/
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
-		// Occlusion is represented by the R channel
-		convertTexture(uriImage, TTF_R_2_GB_INV); // Convert the image file into a usable occlusion texture
+			// Occlusion is represented by the R channel
+			convertTexture(uriImage, TTF_R_2_GB_INV); // Convert the image file into a usable occlusion texture
+		}
 
 		// 4. metallicRoughnessTexture
 		// Although not used by Ogre3d materials, they are still copied/extracted and used for metallicTexture and roughnessTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
-		uriImage = prepareUri("metallicRoughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "metallicRoughnessTexture" + stringTexCount,
+			data,
+			materialName,
+			textureIndex,
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		/*
-		if (uriImage != "")
-		{
-			texFile << "3	3	" << texCount << "	3	";
-			texFile << uriImage << "	" << uriImage << "\n";
-			texCount++;
-		}
-		*/
+		if (fileWritten)
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
 		// 5. metallicTexture (copy of metallicRoughnessTexture)
 		// The metallicRoughnessTexture is used as if it was a metallicTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
-		uriImage = prepareUri("metallicTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "metallicTexture" + stringTexCount,
+			data,
+			materialName,
+			textureIndex,
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mPbrMetallicRoughness.mMetallicTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		/*
-		if (uriImage != "")
+		if (fileWritten)
 		{
-			texFile << "3	3	" << texCount << "	3	";
-			texFile << uriImage << "	" << uriImage << "\n";
-			texCount++;
-		}
-		*/
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
-		// Convert to Metallic texture. Metallic is represented by the B channel
-		convertTexture(uriImage, TTF_B_2_RGA); // Convert the image file into a usable metallic texture
+			// Convert to Metallic texture. Metallic is represented by the B channel
+			convertTexture(uriImage, TTF_B_2_RGA); // Convert the image file into a usable metallic texture
+		}
 
 		// 6. roughnessTexture (copy of metallicRoughnessTexture)
 		// The metallicRoughnessTexture is used as if it was a roughnessTexture
 		textureIndex = (itMaterials->second).mPbrMetallicRoughness.mMetallicRoughnessTexture.mIndex;
-		uriImage = prepareUri("roughnessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "roughnessTexture" + stringTexCount,
+			data,
+			materialName,
+			textureIndex,
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mPbrMetallicRoughness.mRoughnessTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		/*
-		if (uriImage != "")
+		if (fileWritten)
 		{
-			texFile << "3	3	" << texCount << "	3	";
-			texFile << uriImage << "	" << uriImage << "\n";
-			texCount++;
-		}
-		*/
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
-		// Convert to Roughness texture. Roughness is represented by the G channel
-		convertTexture(uriImage, TTF_G_2_RBA); // Convert the image file into a usable roughness texture
+			// Convert to Roughness texture. Roughness is represented by the G channel
+			convertTexture(uriImage, TTF_G_2_RBA); // Convert the image file into a usable roughness texture
+		}
 
 		// 7. Extension: KHR diffuseTexture
 		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mIndex;
-		uriImage = prepareUri("diffuseTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "diffuseTexture" + stringTexCount,
+			data, 
+			materialName, 
+			textureIndex, 
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		if (fileWritten)
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
 		// 8. Extension: KHR specularGlossinessTexture
 		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mIndex;
-		uriImage = prepareUri("specularGlossinessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "specularGlossinessTexture" + stringTexCount,
+			data, 
+			materialName, 
+			textureIndex, 
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		if (fileWritten)
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
 		// 9. Extension: glossinessTexture (roughness) (copy of KHR_specularGlossinessTexture)
 		// The specularGlossinessTexture is used as if it was a glossiness texture/roughness texture
 		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mIndex;
-		uriImage = prepareUri("glossinessTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "glossinessTexture" + stringTexCount,
+			data, 
+			materialName, 
+			textureIndex, 
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
-		
-		// Convert. Glossiness is represented by the A channel
-		convertTexture(uriImage, TTF_A_2_RGBA);
+		if (fileWritten)
+		{
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
+
+			// Convert. Glossiness is represented by the A channel
+			convertTexture(uriImage, TTF_A_2_RGBA);
+		}
 
 		// 10. Extension: KHR specularTexture (copy of KHR_specularGlossinessTexture)
 		// The specularGlossinessTexture is used as if it was a specular texture
 		textureIndex = (itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.mIndex;
-		uriImage = prepareUri("specularTexture", data, materialName, textureIndex, startBinaryBuffer);
+		stringTexCount = getImageIndexAsString(textureIndex);
+		uriImage = prepareUri(randomString + "specularTexture" + stringTexCount,
+			data, 
+			materialName, 
+			textureIndex, 
+			startBinaryBuffer,
+			fileWritten);
 		(itMaterials->second).mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mUri = uriImage;
-		writeTextureEntryToConfig(texFile, uriImage, texCount);
+		if (fileWritten)
+		{
+			writeTextureEntryToConfig(texFile, uriImage, texCount);
 
-		// Convert. Specular is represented by the RGB channel; just set Alpha to 1.0
-		convertTexture(uriImage, TTF_0001);
+			// Convert. Specular is represented by the RGB channel; just set Alpha to 1.0
+			convertTexture(uriImage, TTF_0001);
+		}
 
 		// Add the samplers to the material
 		sampler = getSamplerByTextureIndex((itMaterials->second).mEmissiveTexture.mIndex);
@@ -515,6 +561,18 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 
 	return true;
 }
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportExecutor::getImageIndexAsString (int textureIndex)
+{
+	mHelperString = "";
+	int imageIndex = getImageIndexByTextureIndex(textureIndex);
+	if (imageIndex > -1)
+		mHelperString = std::to_string(imageIndex);
+
+	return mHelperString;
+}
+
 
 //---------------------------------------------------------------------
 void gLTFImportExecutor::writeTextureEntryToConfig (std::ofstream& texFile, const std::string& uriImage, int& texCount)
@@ -844,7 +902,8 @@ const std::string& gLTFImportExecutor::getMaterialNameByIndex (int index)
 const std::string&  gLTFImportExecutor::copyImageFile (const std::string& textureName,
 	Ogre::HlmsEditorPluginData* data, 
 	const std::string& materialName,
-	const std::string& uriImage)
+	const std::string& uriImage,
+	bool& fileWritten)
 {
 	OUT << TABx4 << "Perform gLTFImportExecutor::copyImageFile\n";
 	mHelperString = "";
@@ -858,13 +917,13 @@ const std::string&  gLTFImportExecutor::copyImageFile (const std::string& textur
 	{
 		// It is a fully qualified filename
 		fileNameSource = uriImage;
-		OUT << TABx4 << "Copy fully qualified image fileName = " << fileNameSource << "\n";
+		OUT << TABx4 << "To copy fully qualified image fileName = " << fileNameSource << "\n";
 	}
 	else
 	{
 		// It is a relative filename
 		fileNameSource = data->mInFileDialogPath + uriImage;
-		OUT << TABx4 << "Copy relative image fileName = " << fileNameSource << "\n";
+		OUT << TABx4 << "To copy relative image fileName = " << fileNameSource << "\n";
 	}
 	
 	std::string baseName = getBaseFileNameWithExtension(uriImage);
@@ -872,14 +931,22 @@ const std::string&  gLTFImportExecutor::copyImageFile (const std::string& textur
 	mHelperString = data->mInImportPath +
 		data->mInFileDialogBaseName +
 		"/" +
-		materialName +
+		data->mInFileDialogBaseName +
 		"_" +
 		textureName +
 		extension;
 
-	OUT << TABx4 << "Copy to image fileName = " << mHelperString << "\n";
+	OUT << TABx4 << "To copy to image fileName = " << mHelperString << "\n";
 
-	copyFile(fileNameSource, mHelperString);
+	if (fileExists(mHelperString))
+	{
+		fileWritten = false;
+	}
+	else
+	{
+		copyFile(fileNameSource, mHelperString);
+		fileWritten = true;
+	}
 	return mHelperString;
 }
 
@@ -889,19 +956,29 @@ const std::string& gLTFImportExecutor::prepareUri (const std::string&  textureNa
 	Ogre::HlmsEditorPluginData* data,
 	const std::string&  materialName,
 	int textureIndex, 
-	int startBinaryBuffer)
+	int startBinaryBuffer,
+	bool& filewritten)
 {
 	mHelperUri = "";
 	if (getImageByTextureIndex(textureIndex).mBufferView == -1)
 	{
 		mHelperUri = getImageUriByTextureIndex(textureIndex);
 		if (isUriEmbeddedBase64(mHelperUri))
-			mHelperUri = extractAndCreateImageFromUriByTextureIndex(textureName, data, materialName, textureIndex);
+			mHelperUri = extractAndCreateImageFromUriByTextureIndex(textureName, 
+				data, 
+				materialName, 
+				textureIndex, 
+				filewritten);
 		else
-			mHelperUri = copyImageFile(textureName, data, materialName, mHelperUri);
+			mHelperUri = copyImageFile(textureName, data, materialName, mHelperUri, filewritten);
 	}
 	else
-		mHelperUri = extractAndCreateImageFromFileByTextureIndex(textureName, data, materialName, textureIndex, startBinaryBuffer);
+		mHelperUri = extractAndCreateImageFromFileByTextureIndex(textureName, 
+			data, 
+			materialName, 
+			textureIndex, 
+			startBinaryBuffer,
+			filewritten);
 
 	return mHelperUri;
 }
@@ -910,7 +987,8 @@ const std::string& gLTFImportExecutor::prepareUri (const std::string&  textureNa
 const std::string& gLTFImportExecutor::extractAndCreateImageFromUriByTextureIndex (const std::string& textureName,
 	Ogre::HlmsEditorPluginData* data,
 	const std::string& materialName,
-	int index)
+	int index,
+	bool& filewritten)
 {
 	OUT << TABx4 << "Perform gLTFImportExecutor::extractAndCreateImageFromUriByTextureIndex\n";
 	mHelperString = "";
@@ -938,7 +1016,7 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromUriByTextureInde
 	iss.read(imageBlock, imageBuffer.size());
 
 	// Write the image file
-	mHelperString = writeImageFile(textureName, image.mMimeType, data, materialName, imageBlock, imageBuffer.size());
+	mHelperString = writeImageFile(textureName, image.mMimeType, data, materialName, imageBlock, imageBuffer.size(), filewritten);
 	delete[] imageBlock;
 	return mHelperString;
 }
@@ -948,7 +1026,8 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromFileByTextureInd
 	Ogre::HlmsEditorPluginData* data, 
 	const std::string& materialName, 
 	int index,
-	int startBinaryBuffer)
+	int startBinaryBuffer,
+	bool& filewritten)
 {
 	OUT << TABx4 << "Perform gLTFImportExecutor::extractAndCreateImageFromFileByTextureIndex\n";
 	mHelperString = "";
@@ -992,7 +1071,7 @@ const std::string& gLTFImportExecutor::extractAndCreateImageFromFileByTextureInd
 	ifs.close();
 
 	// Write the image file
-	mHelperString = writeImageFile(textureName, image.mMimeType, data, materialName, imageBlock, bufferView.mByteLength);
+	mHelperString = writeImageFile(textureName, image.mMimeType, data, materialName, imageBlock, bufferView.mByteLength, filewritten);
 	delete[] imageBlock;
 	return mHelperString;
 }
@@ -1003,7 +1082,8 @@ const std::string& gLTFImportExecutor::writeImageFile (const std::string& textur
 	Ogre::HlmsEditorPluginData* data,
 	const std::string& materialName,
 	char* imageBlock,
-	size_t byteLength)
+	size_t byteLength,
+	bool& filewritten)
 {
 	// Write the image file
 	// TODO: Check on existence of the image file or just overwrite?
@@ -1011,19 +1091,29 @@ const std::string& gLTFImportExecutor::writeImageFile (const std::string& textur
 	mHelperOutputFile = data->mInImportPath +
 		data->mInFileDialogBaseName +
 		"/" +
-		materialName +
+		data->mInFileDialogBaseName +
 		"_" +
 		textureName +
 		extension;
-	std::ofstream ofs(mHelperOutputFile, std::ios::binary);
-	ofs.write(imageBlock, byteLength);
-	OUT << TABx4 << "Written image file " << mHelperOutputFile << "\n";
-	ofs.close();
+
+	if (fileExists(mHelperOutputFile))
+	{
+		filewritten = false;
+	}
+	else
+	{
+		std::ofstream ofs(mHelperOutputFile, std::ios::binary);
+		ofs.write(imageBlock, byteLength);
+		OUT << TABx4 << "Written image file " << mHelperOutputFile << "\n";
+		ofs.close();
+		filewritten = true;
+	}
 	return mHelperOutputFile;
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::convertTexture (const std::string& fileName, TextureTransformation transformation)
+bool gLTFImportExecutor::convertTexture (const std::string& fileName, 
+	TextureTransformation transformation)
 {
 #ifdef TEXTURE_TRANSFORMATION
 	OUT << TABx4 << "Perform gLTFImportExecutor::convertTexture\n";

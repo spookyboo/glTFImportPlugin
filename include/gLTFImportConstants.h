@@ -97,6 +97,13 @@ static const std::string& getJsonAsString (const std::string& jsonFileName)
 }
 
 //---------------------------------------------------------------------
+static bool fileExists (const std::string& fileName)
+{
+	struct stat fileInfo;
+	return stat(fileName.c_str(), &fileInfo) == 0;
+}
+
+//---------------------------------------------------------------------
 static bool isUriEmbeddedBase64 (std::string uri)
 {
 	std::size_t found = uri.find(";base64,");
