@@ -507,7 +507,7 @@ bool gLTFImportPbsMaterialsCreator::createKHRDiffuseJsonBlock(std::ofstream* dst
 	}
 
 	*dst << "\n";
-	*dst << TABx3 << "}," << "\n";
+	*dst << TABx3 << "}";
 
 	return true;
 }
@@ -515,6 +515,7 @@ bool gLTFImportPbsMaterialsCreator::createKHRDiffuseJsonBlock(std::ofstream* dst
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createKHRSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
 {
+	*dst << "," << "\n";
 	*dst << TABx3 << "\"specular\" :\n";
 	*dst << TABx3 << "{\n";
 
@@ -526,7 +527,6 @@ bool gLTFImportPbsMaterialsCreator::createKHRSpecularJsonBlock (std::ofstream* d
 		", " <<
 		material.mKHR_PbrSpecularGlossiness.mKHR_SpecularFactor.mBlue <<
 		"]";
-	*dst << TABx3 << "}";
 
 	// Specular texture
 	if (material.mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.isTextureAvailable())
@@ -540,7 +540,7 @@ bool gLTFImportPbsMaterialsCreator::createKHRSpecularJsonBlock (std::ofstream* d
 	}
 	
 	*dst << "\n";
-	*dst << TABx3 << "}," << "\n";
+	*dst << TABx3 << "}";
 	
 	return true;
 }
@@ -549,22 +549,19 @@ bool gLTFImportPbsMaterialsCreator::createKHRSpecularJsonBlock (std::ofstream* d
 bool gLTFImportPbsMaterialsCreator::createKHRGlossinessJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
 	// Set the fresnel value
+	*dst << "," << "\n";
 	*dst << TABx3 << "\"fresnel\" :\n";
 	*dst << TABx3 << "{\n";
 	
-	*dst << TABx4 << "\"value\" :" << material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessFactor << "\n";
+	*dst << TABx4 << "\"value\" :" << material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessFactor << ",\n";
 	*dst << TABx4 << "\"mode\" : \"coeff\"\n";
-
-	*dst << "\n";
 	*dst << TABx3 << "}," << "\n";
 
 	// Set the Glossiness map as a Roughness map (is this correct?)
-	*dst << "," << "\n";
 	*dst << TABx3 << "\"roughness\" :\n";
 	*dst << TABx3 << "{\n";
 	if (material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.isTextureAvailable())
 	{
-		*dst << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mUri);
 		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
