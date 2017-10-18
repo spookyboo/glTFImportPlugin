@@ -101,7 +101,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 			if (it->value.IsObject() && key == "extensions")
 			{
 				// ******** 10. extensions ********
-				MaterialExtensions extensions = parseExtensions(it);
+				MaterialExtensions extensions = parseExtensions(it, material);
 				material.mKHR_PbrSpecularGlossiness = extensions.mKHR_PbrSpecularGlossiness;
 			}
 		}
@@ -125,7 +125,8 @@ const std::map<std::string, gLTFMaterial> gLTFImportMaterialsParser::getParsedMa
 }
 
 //---------------------------------------------------------------------
-MaterialExtensions gLTFImportMaterialsParser::parseExtensions (rapidjson::Value::ConstMemberIterator jsonIterator)
+MaterialExtensions gLTFImportMaterialsParser::parseExtensions (rapidjson::Value::ConstMemberIterator jsonIterator,
+	gLTFMaterial& material)
 {
 	OUT << TABx2 << "Perform gLTFImportMaterialsParser::parseExtensions\n";
 	rapidjson::Value::ConstMemberIterator it;
@@ -138,6 +139,7 @@ MaterialExtensions gLTFImportMaterialsParser::parseExtensions (rapidjson::Value:
 		{
 			// ******** KHR_materials_pbrSpecularGlossiness ********
 			mMaterialExtensions.mKHR_PbrSpecularGlossiness = parseKHR_PbrSpecularGlossiness(it);
+			material.mUseKHR_MaterialsPbrSpecularGlossiness = true;
 			return mMaterialExtensions;
 		}
 	}

@@ -68,18 +68,20 @@ class gLTFImportPbsMaterialsCreator
 		bool createBlendJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
 
 		// Pbs
-		bool createTransparencyJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createDiffuseJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createSpecularJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createMetalnessJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createFresnelJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createRoughnessJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createReflectionJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailDiffuseJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createDetailWeightJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
-		bool createEmissiveJsonBlock(std::ofstream* dst, const gLTFMaterial& material);
+		bool createTransparencyJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createMetalnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createRoughnessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createReflectionJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailNormalJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createDetailWeightJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createEmissiveJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createKHRDiffuseJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createKHRSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
+		bool createKHRGlossinessJsonBlock (std::ofstream* dst, const gLTFMaterial& material);
 
 		// Generic
 		const std::string getUvString (int texCoord);

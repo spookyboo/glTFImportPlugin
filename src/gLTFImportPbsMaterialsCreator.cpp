@@ -82,7 +82,14 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 
 		dst << TABx3 << "\"shadow_const_bias\" : 0.01,\n"; // Default value
 
-		dst << TABx3 << "\"workflow\" : \"metallic\",\n"; // Default workflow of gLTF is metallic
+		// Determine workflow. Default is metallic, but if the KHR PbrSpecularGlossiness extensions is used,
+		// the workflow is specular_ogre
+		if (material.mUseKHR_MaterialsPbrSpecularGlossiness)
+			dst << TABx3 << "\"workflow\" : \"specular_ogre\",\n"; // Default workflow of gLTF is metallic
+		else
+			dst << TABx3 << "\"workflow\" : \"metallic\",\n"; // Default workflow of gLTF is metallic
+
+		// Define macro- and blendblocks
 		dst << TABx3 << "\"macroblock\" : \"Macroblock_0\",\n"; // Use a default macroblock (for now)
 		dst << TABx3 << "\"blendblock\" : \"Blendblock_0\",\n"; // Use a default blendblock (for now)
 
@@ -96,12 +103,24 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		createTransparencyJsonBlock(&dst, it->second);
 
 		// 'textures'
-		createDiffuseJsonBlock(&dst, it->second);
-		createSpecularJsonBlock(&dst, it->second);
-		createMetalnessJsonBlock(&dst, it->second);
-		createFresnelJsonBlock(&dst, it->second);
+		if (material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.isTextureAvailable())
+			createKHRDiffuseJsonBlock(&dst, it->second); // KHR extension
+		else
+			createDiffuseJsonBlock(&dst, it->second);
+
+		if (material.mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.isTextureAvailable())
+		{
+			createKHRSpecularJsonBlock(&dst, it->second); // KHR extension, specular workflow
+			createKHRGlossinessJsonBlock(&dst, it->second); // KHR extension, specular workflow
+		}
+		else
+		{
+			createSpecularJsonBlock(&dst, it->second); // Default, metallic workflow
+			createMetalnessJsonBlock(&dst, it->second); // Default, metallic workflow
+			createRoughnessJsonBlock(&dst, it->second); // Default, metallic workflow
+		}
+
 		createNormalJsonBlock(&dst, it->second);
-		createRoughnessJsonBlock(&dst, it->second);
 		createReflectionJsonBlock(&dst, it->second);
 		createDetailDiffuseJsonBlock(&dst, it->second);
 		createDetailNormalJsonBlock(&dst, it->second);
@@ -109,9 +128,7 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		createEmissiveJsonBlock(&dst, it->second);
 
 		// KHR Extensions
-		//TODO: createKHRDiffuseJsonBlock(&dst, it->second);
 		//TODO: createKHRGlossinessJsonBlock(&dst, it->second);
-		//TODO: createKHRSpecularJsonBlock(&dst, it->second);
 
 		dst << "\n";
 		dst << TABx2 << "}\n";
@@ -306,14 +323,6 @@ bool gLTFImportPbsMaterialsCreator::createMetalnessJsonBlock(std::ofstream* dst,
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportPbsMaterialsCreator::createFresnelJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
-{
-	// Specular workflow is not supported in gLTF by default
-
-	return false;
-}
-
-//---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createNormalJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
 	// Return if there is no normal texture
@@ -467,6 +476,106 @@ bool gLTFImportPbsMaterialsCreator::createDetailWeightJsonBlock(std::ofstream* d
 	return true;
 }
 
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::createKHRDiffuseJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
+{
+	*dst << TABx3 << "\"diffuse\" :\n";
+	*dst << TABx3 << "{\n";
+	
+	// Diffuse color
+	*dst << TABx4 << "\"value\" : [" <<
+		material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseFactor.mRed <<
+		", " <<
+		material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseFactor.mGreen <<
+		", " <<
+		material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseFactor.mBlue <<
+		"]";
+
+	// Background colour (TODO: Check if supported in gLTF)
+	*dst << "," << "\n";
+	*dst << TABx4 << "\"background\" : [1, 1, 1, 1]";
+
+	// Diffuse texture
+	if (material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.isTextureAvailable())
+	{
+		*dst << ",\n";
+		std::string baseImageName = getBaseFileNameWithExtension(material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
+		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
+		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mSampler << "\"";
+		*dst << getUvString(material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mTextCoord);
+	}
+
+	*dst << "\n";
+	*dst << TABx3 << "}," << "\n";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::createKHRSpecularJsonBlock (std::ofstream* dst, const gLTFMaterial& material)
+{
+	*dst << TABx3 << "\"specular\" :\n";
+	*dst << TABx3 << "{\n";
+
+	// Diffuse color
+	*dst << TABx4 << "\"value\" : [" <<
+		material.mKHR_PbrSpecularGlossiness.mKHR_SpecularFactor.mRed <<
+		", " <<
+		material.mKHR_PbrSpecularGlossiness.mKHR_SpecularFactor.mGreen <<
+		", " <<
+		material.mKHR_PbrSpecularGlossiness.mKHR_SpecularFactor.mBlue <<
+		"]";
+	*dst << TABx3 << "}";
+
+	// Specular texture
+	if (material.mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.isTextureAvailable())
+	{
+		*dst << ",\n";
+		std::string baseImageName = getBaseFileNameWithExtension(material.mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
+		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
+		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mSampler << "\"";
+		*dst << getUvString(material.mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mTextCoord);
+	}
+	
+	*dst << "\n";
+	*dst << TABx3 << "}," << "\n";
+	
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::createKHRGlossinessJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
+{
+	// Set the fresnel value
+	*dst << TABx3 << "\"fresnel\" :\n";
+	*dst << TABx3 << "{\n";
+	
+	*dst << TABx4 << "\"value\" :" << material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessFactor << "\n";
+	*dst << TABx4 << "\"mode\" : \"coeff\"\n";
+
+	*dst << "\n";
+	*dst << TABx3 << "}," << "\n";
+
+	// Set the Glossiness map as a Roughness map (is this correct?)
+	*dst << "," << "\n";
+	*dst << TABx3 << "\"roughness\" :\n";
+	*dst << TABx3 << "{\n";
+	if (material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.isTextureAvailable())
+	{
+		*dst << ",\n";
+		std::string baseImageName = getBaseFileNameWithExtension(material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mUri);
+		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
+		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
+		*dst << TABx4 << "\"sampler\" : \"Sampler_" << material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mSampler << "\"";
+		*dst << getUvString(material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mTextCoord);
+	}
+	*dst << "\n";
+	*dst << TABx3 << "}";
+	
+	return true;
+}
 
 //---------------------------------------------------------------------
 const std::string gLTFImportPbsMaterialsCreator::getUvString (int texCoord)
