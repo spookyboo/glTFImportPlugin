@@ -203,6 +203,7 @@ class gLTFMaterial
 		std::string mAlphaMode;
 		float mAlphaCutoff;
 		bool mDoubleSided;
+		int mIndex;
 
 		// Extensions (KHR Pbr Specular Glossiness)
 		bool mUseKHR_MaterialsPbrSpecularGlossiness;

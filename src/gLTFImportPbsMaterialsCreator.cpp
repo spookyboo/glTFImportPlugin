@@ -284,7 +284,7 @@ bool gLTFImportPbsMaterialsCreator::createDiffuseJsonBlock(std::ofstream* dst, c
 	}
 
 	*dst << "\n";
-	*dst << TABx3 << "}," << "\n";
+	*dst << TABx3 << "}";
 
 	return true; // There is always a default "value"
 }
@@ -292,6 +292,7 @@ bool gLTFImportPbsMaterialsCreator::createDiffuseJsonBlock(std::ofstream* dst, c
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createSpecularJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
+	*dst << "," << "\n";
 	*dst << TABx3 << "\"specular\" :\n";
 	*dst << TABx3 << "{\n";
 	*dst << TABx4 << "\"value\" : [1, 1, 1]\n"; // Default value of specular color

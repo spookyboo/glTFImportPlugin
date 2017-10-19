@@ -34,6 +34,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 	OUT << TAB << "Perform gLTFImportMaterialsParser::parseMaterials\n";
 
 	std::string name;
+	int count = 0;
 	const rapidjson::Value& array = jsonIterator->value;
 
 	OUT << TAB << "Loop through materials array\n";
@@ -112,7 +113,9 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 			name = "Mat_" + generateRandomString();
 		}
 		
+		material.mIndex = count;
 		mMaterialsMap[name] = material;
+		count++;
 	}
 
 	return true;

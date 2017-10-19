@@ -884,15 +884,13 @@ const std::string& gLTFImportExecutor::getMaterialNameByIndex (int index)
 	mHelperMaterialNameString = "BaseWhite";
 	std::map<std::string, gLTFMaterial>::iterator itMaterials;
 
-	int count = 0;
 	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
 	{
-		if (count == index)
+		if ((itMaterials->second).mIndex == index)
 		{
 			mHelperMaterialNameString = (itMaterials->second).mName;
 			return mHelperMaterialNameString;
 		}
-		count++;
 	}
 
 	return mHelperMaterialNameString;
