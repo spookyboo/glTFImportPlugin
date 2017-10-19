@@ -37,5 +37,6 @@ DONE:
 - Implement (matrix) transformation. Needed to propagate node transformation to child nodes? Some models do not look ok. Maybe the transformation is incorrect (not sure)
 - Bytestride is not used to jump in a buffer; currently is assumed that data is aligned per type (positions together, normals together, ..); 
   interleaved data is more efficient to store vertices. This is a must-have
-
+- Bug: Error in mesh <--> material
+- Bug: Some materials do not have any images, but the PBS json file does have images
 

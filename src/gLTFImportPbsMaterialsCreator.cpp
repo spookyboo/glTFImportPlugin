@@ -102,18 +102,15 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		createTransparencyJsonBlock(&dst, it->second);
 
 		// 'textures'
-		if (material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.isTextureAvailable())
-			createKHRDiffuseJsonBlock(&dst, it->second); // KHR extension
-		else
-			createDiffuseJsonBlock(&dst, it->second);
-
-		if (material.mKHR_PbrSpecularGlossiness.mKHR_SpecularGlossinessTexture.isTextureAvailable())
+		if (material.mUseKHR_MaterialsPbrSpecularGlossiness)
 		{
+			createKHRDiffuseJsonBlock(&dst, it->second); // KHR extension
 			createKHRSpecularJsonBlock(&dst, it->second); // KHR extension, specular workflow
 			createKHRGlossinessJsonBlock(&dst, it->second); // KHR extension, specular workflow
 		}
 		else
 		{
+			createDiffuseJsonBlock(&dst, it->second);
 			createSpecularJsonBlock(&dst, it->second); // Default, metallic workflow
 			createMetalnessJsonBlock(&dst, it->second); // Default, metallic workflow
 			createRoughnessJsonBlock(&dst, it->second); // Default, metallic workflow
@@ -125,9 +122,6 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		createDetailNormalJsonBlock(&dst, it->second);
 		createDetailWeightJsonBlock(&dst, it->second);
 		createEmissiveJsonBlock(&dst, it->second);
-
-		// KHR Extensions
-		//TODO: createKHRGlossinessJsonBlock(&dst, it->second);
 
 		dst << "\n";
 		dst << TABx2 << "}\n";

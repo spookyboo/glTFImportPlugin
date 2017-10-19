@@ -134,6 +134,8 @@ MaterialExtensions gLTFImportMaterialsParser::parseExtensions (rapidjson::Value:
 	OUT << TABx2 << "Perform gLTFImportMaterialsParser::parseExtensions\n";
 	rapidjson::Value::ConstMemberIterator it;
 	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
+	MaterialExtensions emptyMaterialExtensions;
+	mMaterialExtensions = emptyMaterialExtensions;
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
 		OUT << TABx3 << "key Extensions ==> " << it->name.GetString() << "\n";
@@ -154,6 +156,8 @@ KHR_PbrSpecularGlossiness gLTFImportMaterialsParser::parseKHR_PbrSpecularGlossin
 	OUT << TABx2 << "Perform gLTFImportMaterialsParser::parseKHR_PbrSpecularGlossiness\n";
 	rapidjson::Value::ConstMemberIterator it;
 	rapidjson::Value::ConstMemberIterator itEnd = jsonIterator->value.MemberEnd();
+	KHR_PbrSpecularGlossiness emptyKHR_PbrSpecularGlossiness;
+	mKHR_PbrSpecularGlossiness = emptyKHR_PbrSpecularGlossiness;
 	for (it = jsonIterator->value.MemberBegin(); it != itEnd; ++it)
 	{
 		OUT << TABx3 << "key KHR Extensions ==> " << it->name.GetString() << "\n";
