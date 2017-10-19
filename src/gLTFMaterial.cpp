@@ -33,7 +33,6 @@
 gLTFMaterial::gLTFMaterial(void) :
 	mAlphaCutoff(0.5f),
 	mDoubleSided(false),
-	mIndex(-1),
 	mUseKHR_MaterialsPbrSpecularGlossiness(false)
 {
 	mAlphaMode = "OPAQUE";

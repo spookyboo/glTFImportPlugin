@@ -261,16 +261,6 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 
 	}
 
-	// Debug
-	/*
-	std::map<std::string, gLTFMaterial>::iterator it;
-	for (it = mMaterialsMap.begin(); it != mMaterialsMap.end(); it++)
-	{
-	OUT << "\n***************** Debug: Material name = " << it->first << " *****************\n";
-	(it->second).out();
-	}
-	*/
-
 	data->mOutSuccessText = "gLTF file succesfully imported in " +
 		data->mInImportPath + data->mInFileDialogBaseName;
 	return true;
@@ -320,7 +310,7 @@ bool gLTFImportExecutor::propagateMaterials (Ogre::HlmsEditorPluginData* data, i
 {
 	// Loop through materials and propagate the data
 	OUT << TABx3 << "Perform gLTFImportExecutor::propagateMaterials\n";
-	std::map<std::string, gLTFMaterial>::iterator itMaterials;
+	std::map<int, gLTFMaterial>::iterator itMaterials;
 	std::string materialName;
 	std::string uriImage;
 	int textureIndex;
@@ -621,6 +611,7 @@ bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data)
 		for (itPrimitives = (itMeshes->second).mPrimitiveMap.begin(); itPrimitives != (itMeshes->second).mPrimitiveMap.end(); itPrimitives++)
 		{
 			(itPrimitives->second).mMaterialNameDerived = getMaterialNameByIndex((itPrimitives->second).mMaterial);
+OUT << TABx4 << "DEBUG: (itPrimitives->second).mMaterialNameDerived " << (itPrimitives->second).mMaterialNameDerived << "\n";
 
 			// Iterate through Attribute map
 			std::map<std::string, int>::iterator itAttr;
@@ -882,15 +873,13 @@ const std::string& gLTFImportExecutor::getMaterialNameByIndex (int index)
 {
 	OUT << TABx4 << "Perform gLTFImportExecutor::getMaterialNameByIndex\n";
 	mHelperMaterialNameString = "BaseWhite";
-	std::map<std::string, gLTFMaterial>::iterator itMaterials;
 
-	for (itMaterials = mMaterialsMap.begin(); itMaterials != mMaterialsMap.end(); itMaterials++)
+	std::map<int, gLTFMaterial>::iterator it = mMaterialsMap.find(index);
+	if (it != mMaterialsMap.end())
 	{
-		if ((itMaterials->second).mIndex == index)
-		{
-			mHelperMaterialNameString = (itMaterials->second).mName;
-			return mHelperMaterialNameString;
-		}
+		// Found the node
+		mHelperMaterialNameString = (it->second).mName;
+		return mHelperMaterialNameString;
 	}
 
 	return mHelperMaterialNameString;

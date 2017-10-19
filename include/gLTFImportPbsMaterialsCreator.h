@@ -49,7 +49,7 @@ class gLTFImportPbsMaterialsCreator
 
 		// Create the Ogre Pbs Material files
 		bool createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* data,
-			std::map<std::string, gLTFMaterial> materialsMap,
+			std::map<int, gLTFMaterial> materialsMap,
 			std::map<int, gLTFTexture> texturesMap,
 			std::map<int, gLTFImage> imagesMap,
 			std::map<int, gLTFSampler> samplersMap); // Creates *.material.json files and copy images

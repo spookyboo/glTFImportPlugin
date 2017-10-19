@@ -241,7 +241,7 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 		 * until proven otherwise.
 		 * We always use 32 bit incices (no 16 bit), even if the gLTF file itself uses 16 bits
 		 */
-		dst << TABx2 << "<submesh material = \"" + primitive.mMaterialNameDerived + "\"";
+		dst << TABx2 << "<submesh material = \"" + materialName + "\"";
 		dst << " usesharedvertices = \"false\" use32bitindexes = \"false\" "; // TODO: Hardcoded?
 
 		// Write operation type

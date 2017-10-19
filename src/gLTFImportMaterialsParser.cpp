@@ -111,10 +111,10 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 		{
 			// Generate a name if not provided (name is optional in gLTF)
 			name = "Mat_" + generateRandomString();
+			material.mName = name;
 		}
 		
-		material.mIndex = count;
-		mMaterialsMap[name] = material;
+		mMaterialsMap[count] = material;
 		count++;
 	}
 
@@ -122,7 +122,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 }
 
 //---------------------------------------------------------------------
-const std::map<std::string, gLTFMaterial> gLTFImportMaterialsParser::getParsedMaterials (void) const
+const std::map<int, gLTFMaterial> gLTFImportMaterialsParser::getParsedMaterials (void) const
 {
 	return mMaterialsMap;
 }

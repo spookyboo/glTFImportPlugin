@@ -44,7 +44,7 @@ class gLTFImportMaterialsParser
 		bool parseMaterials(rapidjson::Value::ConstMemberIterator jsonIterator);
 
 		// Returns the material structure
-		const std::map<std::string, gLTFMaterial> getParsedMaterials(void) const;
+		const std::map<int, gLTFMaterial> getParsedMaterials(void) const;
 		
 	protected:
 		// Parse level 2
@@ -61,7 +61,7 @@ class gLTFImportMaterialsParser
 		Color4 parseColor4 (rapidjson::Value::ConstMemberIterator jsonIterator);
 
 	private:
-		std::map<std::string, gLTFMaterial> mMaterialsMap;
+		std::map<int, gLTFMaterial> mMaterialsMap;
 		PbrMetallicRoughness mPbrMetallicRoughness;
 		NormalTexture mNormalTexture;
 		OcclusionTexture mOcclusionTexture;

@@ -146,7 +146,7 @@ class gLTFImportExecutor
 		std::string mHelperOutputFile;
 		std::map<int, gLTFAccessor> mAccessorsMap;
 		std::map<int, gLTFMesh> mMeshesMap;
-		std::map<std::string, gLTFMaterial> mMaterialsMap;
+		std::map<int, gLTFMaterial> mMaterialsMap;
 		std::map<int, gLTFTexture> mTexturesMap;
 		std::map<int, gLTFImage> mImagesMap;
 		std::map<int, gLTFSampler> mSamplersMap;

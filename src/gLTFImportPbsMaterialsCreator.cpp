@@ -31,7 +31,7 @@
 
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorPluginData* data,
-	std::map<std::string, gLTFMaterial> materialsMap,
+	std::map<int, gLTFMaterial> materialsMap,
 	std::map<int, gLTFTexture> texturesMap,
 	std::map<int, gLTFImage> imagesMap,
 	std::map<int, gLTFSampler> samplersMap)
@@ -43,10 +43,11 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
 
 	// Iterate through materials and create for each material an Ogre Pbs .material.json file
-	std::map<std::string, gLTFMaterial>::iterator it;
+	std::map<int, gLTFMaterial>::iterator it;
 	for (it = materialsMap.begin(); it != materialsMap.end(); it++)
 	{
-		std::string ogreFullyQualifiedMaterialFileName = fullyQualifiedImportPath + it->first + ".material.json";
+		const gLTFMaterial& material = it->second;
+		std::string ogreFullyQualifiedMaterialFileName = fullyQualifiedImportPath + material.mName + ".material.json";
 		OUT << "Create: material file " << ogreFullyQualifiedMaterialFileName << "\n";
 
 		// Create the file
@@ -74,12 +75,10 @@ bool gLTFImportPbsMaterialsCreator::createOgrePbsMaterialFiles(Ogre::HlmsEditorP
 		// ------------- PBS -------------
 		dst << TAB << "\"pbs\" :\n";
 		dst << TAB << "{\n";
-		dst << TABx2 << "\"" << it->first << "\" :\n";
+		dst << TABx2 << "\"" << material.mName << "\" :\n";
 		dst << TABx2 << "{\n";
 
 		// General Pbs datablock properties
-		const gLTFMaterial& material = it->second;
-
 		dst << TABx3 << "\"shadow_const_bias\" : 0.01,\n"; // Default value
 
 		// Determine workflow. Default is metallic, but if the KHR PbrSpecularGlossiness extensions is used,
