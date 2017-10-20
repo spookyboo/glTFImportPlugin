@@ -1,11 +1,13 @@
 HLMS Editor:
 ===========
 - When loading a mesh, first delete the mesh with the same name
+- Bug: Selecting 'edit material of selected (sub)mesh' crashes application in some case (see mode 'varignana')
 
 Plugin:
 ======
 - Add KHR_ extensions to read Unity gLTF models and materials
 - Bug? Warehouse has a lamp with incorrect transformation. Is not visible in a gLTF loader. Same with the CesiumMilkTruck (has windows floating in the sky)
+- Bug: Project Polly is not loaded properly. Same with GearboxAssy and Buggy. Something to do with transformations?
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects

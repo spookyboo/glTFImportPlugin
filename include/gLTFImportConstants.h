@@ -40,8 +40,8 @@ struct Devnull : std::ostream, std::streambuf
 };
 
 // (un)comment first/second line to enable/disable debug to screen
-#define OUT std::cout
-//#define OUT devnull
+//#define OUT std::cout
+#define OUT Devnull()
 
 //---------------------------------------------------------------------
 // Disable the line below when using gLTFTEST, because otherwise Ogre::Image (used for texture transformation) does not work
