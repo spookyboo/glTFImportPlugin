@@ -7,7 +7,6 @@ Plugin:
 ======
 - Add KHR_ extensions to read Unity gLTF models and materials
 - Bug? Warehouse has a lamp with incorrect transformation. Is not visible in a gLTF loader. Same with the CesiumMilkTruck (has windows floating in the sky)
-- Bug: Project Polly is not loaded properly. Same with GearboxAssy and Buggy. Something to do with transformations?
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
@@ -41,4 +40,4 @@ DONE:
   interleaved data is more efficient to store vertices. This is a must-have
 - Bug: Error in mesh <--> material
 - Bug: Some materials do not have any images, but the PBS json file does have images
-
+- Bug: Project Polly is not loaded properly. Same with GearboxAssy and Buggy. Something to do with transformations?

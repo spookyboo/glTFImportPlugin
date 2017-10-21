@@ -34,6 +34,7 @@ bool gLTFImportPrimitivesParser::parsePrimitives (rapidjson::Value::ConstMemberI
 	OUT << TABx3 << "Perform gLTFImportPrimitivesParser::parsePrimitives\n";
 
 	int index = 0;
+	mPrimitivesMap.clear();
 	const rapidjson::Value& array = jsonIterator->value;
 
 	OUT << TABx4 << "Loop through primitives array\n";
