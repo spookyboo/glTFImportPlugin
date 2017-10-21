@@ -1,7 +1,6 @@
 HLMS Editor:
 ===========
 - When loading a mesh, first delete the mesh with the same name
-- Bug: Selecting 'edit material of selected (sub)mesh' crashes application in some case (see mode 'varignana')
 
 Plugin:
 ======
@@ -19,7 +18,9 @@ Plugin:
 - Implement 'out' function for all model classes (primitive, accessor, ...)
 - Bug: Project GearboxAssy and Buggy are not loaded properly. Some parts are missing
 - Bug: Materials of project polly incorrect. Transparent thing in the front is not transparent and the dog is not textured
-- Bug: MAterials of adam head (Unity) incorrect.
+- Bug: Materials of adam head (Unity) incorrect.
+- Bug: Values of min/max are probably implemented incorrect
+- Bug?: The HLMS Editor sometimes crashes when the first import is done. Maybe because some variable is not initialized? Solved?
 
 
 DONE:
@@ -45,3 +46,5 @@ DONE:
 - Bug? Warehouse has a lamp with incorrect transformation. Is not visible in a gLTF loader.
 - Bug: CesiumMilkTruck has windows floating in the sky
 - Add KHR_ extensions to read Unity gLTF models and materials
+- Bug: Selecting 'edit material of selected (sub)mesh' crashes application in some case (see mode 'varignana')
+- Bug: Selecting 'edit material of selected (sub)mesh' crashes when the material is [Default]

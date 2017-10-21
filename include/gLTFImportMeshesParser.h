@@ -38,7 +38,10 @@ THE SOFTWARE.
 class gLTFImportMeshesParser
 {
 	public:
-		gLTFImportMeshesParser (void) {};
+		gLTFImportMeshesParser (void)
+		{
+			mMeshesMap.clear();
+		};
 		virtual ~gLTFImportMeshesParser (void) {};
 
 		// Parse the gLTF Meshes (level 1)

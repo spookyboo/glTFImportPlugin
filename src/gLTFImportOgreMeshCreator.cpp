@@ -33,6 +33,21 @@
 #include "OgreMatrix4.h"
 #include "base64.h"
 
+
+//---------------------------------------------------------------------
+gLTFImportOgreMeshCreator::gLTFImportOgreMeshCreator (void)
+{
+	mHelperString = "";
+	fileNameBufferHelper = "";
+	mPositionsMap.clear();
+	mNormalsMap.clear();
+	mTangentsMap.clear();
+	mColor_0AccessorMap.clear();
+	mTexcoords_0Map.clear();
+	mTexcoords_1Map.clear();
+	mIndicesMap.clear();
+}
+
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData* data,
 	std::map<int, gLTFNode> nodesMap,

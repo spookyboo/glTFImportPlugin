@@ -37,7 +37,10 @@ THE SOFTWARE.
 class gLTFImportImagesParser
 {
 	public:
-		gLTFImportImagesParser (void) {};
+		gLTFImportImagesParser (void)
+		{
+			mImagesMap.clear();
+		};
 		virtual ~gLTFImportImagesParser (void) {};
 
 		// Parse the gLTF images (level 1)

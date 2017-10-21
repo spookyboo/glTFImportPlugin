@@ -37,7 +37,10 @@ THE SOFTWARE.
 class gLTFImportPrimitivesParser
 {
 	public:
-		gLTFImportPrimitivesParser (void) {};
+		gLTFImportPrimitivesParser (void)
+		{
+			mPrimitivesMap.clear();
+		};
 		virtual ~gLTFImportPrimitivesParser (void) {};
 
 		// Parse the gLTF Primitives (level 1)

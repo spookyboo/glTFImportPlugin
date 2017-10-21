@@ -44,6 +44,7 @@ gLTFPrimitive::gLTFPrimitive(void) :
 	mWeights_0AccessorDerived(-1)
 {
 	mMaterialNameDerived = "";
+	mAttributes.clear();
 }
 
 //---------------------------------------------------------------------

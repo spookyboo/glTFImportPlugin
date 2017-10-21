@@ -37,7 +37,9 @@ THE SOFTWARE.
 class gLTFImportAccessorsParser
 {
 	public:
-		gLTFImportAccessorsParser (void) {};
+		gLTFImportAccessorsParser (void) {
+			mAccessorsMap.clear();
+		};
 		virtual ~gLTFImportAccessorsParser (void) {};
 
 		// Parse the gLTF Accessors (level 1)

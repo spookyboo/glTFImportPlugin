@@ -39,6 +39,7 @@ namespace Ogre
 	//---------------------------------------------------------------------
 	gLTFImportPlugin::gLTFImportPlugin()
     {
+		mProperties.clear();
     }
     //---------------------------------------------------------------------
     const String& gLTFImportPlugin::getName() const

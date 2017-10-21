@@ -44,11 +44,7 @@ THE SOFTWARE.
 class gLTFImportOgreMeshCreator
 {
 	public:
-		gLTFImportOgreMeshCreator(void) 
-		{
-			mHelperString = "";
-			fileNameBufferHelper = "";
-		};
+		gLTFImportOgreMeshCreator(void);
 		virtual ~gLTFImportOgreMeshCreator (void) {};
 
 		// Create the Ogre Mesh files

@@ -37,7 +37,10 @@ THE SOFTWARE.
 class gLTFImportNodesParser
 {
 	public:
-		gLTFImportNodesParser (void) {};
+		gLTFImportNodesParser (void)
+		{
+			mNodesMap.clear();
+		};
 		virtual ~gLTFImportNodesParser (void) {};
 
 		// Parse the gLTF Nodes (level 1)

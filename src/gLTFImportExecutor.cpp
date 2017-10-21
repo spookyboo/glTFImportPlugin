@@ -42,6 +42,16 @@ gLTFImportExecutor::gLTFImportExecutor(void)
 	mHlmsProjectFileName = "";
 	mMaterialsConfigFileName = "";
 	mTexturesConfigFileName = "";
+
+	mAccessorsMap.clear();
+	mMeshesMap.clear();
+	mMaterialsMap.clear();
+	mTexturesMap.clear();
+	mImagesMap.clear();
+	mSamplersMap.clear();
+	mBufferViewsMap.clear();
+	mBuffersMap.clear();
+	mNodesMap.clear();
 }
 
 //---------------------------------------------------------------------

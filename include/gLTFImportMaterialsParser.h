@@ -37,7 +37,7 @@ THE SOFTWARE.
 class gLTFImportMaterialsParser
 {
 	public:
-		gLTFImportMaterialsParser(void) {};
+		gLTFImportMaterialsParser(void);
 		virtual ~gLTFImportMaterialsParser(void) {};
 
 		// Parse the gLTF materials (level 1)

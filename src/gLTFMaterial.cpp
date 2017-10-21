@@ -35,6 +35,7 @@ gLTFMaterial::gLTFMaterial(void) :
 	mDoubleSided(false),
 	mUseKHR_MaterialsPbrSpecularGlossiness(false)
 {
+	mName = "";
 	mAlphaMode = "OPAQUE";
 	mEmissiveFactor.mRed = 0.0f;
 	mEmissiveFactor.mGreen = 0.0f;
@@ -142,19 +143,19 @@ void EmissiveTexture::out (void)
 }
 
 //---------------------------------------------------------------------
+Color3::Color3(void) :
+	mRed(1.0f),
+	mBlue(1.0f),
+	mGreen(1.0f)
+{
+}
+
+//---------------------------------------------------------------------
 void Color3::out (void)
 {
 	OUT << "mRed = " << mRed << "\n";
 	OUT << "mGreen = " << mGreen << "\n";
 	OUT << "mBlue = " << mBlue << "\n";
-}
-
-//---------------------------------------------------------------------
-Color3::Color3 (void) :
-	mRed (1.0f),
-	mBlue (1.0f),
-	mGreen (1.0f)
-{
 }
 
 //---------------------------------------------------------------------

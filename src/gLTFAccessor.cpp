@@ -47,6 +47,18 @@ gLTFAccessor::gLTFAccessor (void) :
 	mType = "";
 	mName = "";
 	mUriDerived = "";
+
+	for (int i = 0; i < 16; i++)
+	{
+		mMinByte[i] = 0;
+		mMaxByte[i] = 0;
+		mMinUshort[i] = 0;
+		mMaxUshort[i] = 0;
+		mMinInt[i] = 0;
+		mMaxInt[i] = 0;
+		mMinFloat[i] = 0.0f;
+		mMaxFloat[i] = 0.0f;
+	}
 }
 
 //---------------------------------------------------------------------

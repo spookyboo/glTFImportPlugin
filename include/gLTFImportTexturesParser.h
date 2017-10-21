@@ -37,7 +37,10 @@ THE SOFTWARE.
 class gLTFImportTexturesParser
 {
 	public:
-		gLTFImportTexturesParser (void) {};
+		gLTFImportTexturesParser (void)
+		{
+			mTexturesMap.clear();
+		};
 		virtual ~gLTFImportTexturesParser (void) {};
 
 		// Parse the gLTF Textures (level 1)

@@ -29,6 +29,11 @@
 #include "gLTFImportMaterialsParser.h"
 
 //---------------------------------------------------------------------
+gLTFImportMaterialsParser::gLTFImportMaterialsParser(void)
+{
+}
+
+//---------------------------------------------------------------------
 bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
 	OUT << TAB << "Perform gLTFImportMaterialsParser::parseMaterials\n";

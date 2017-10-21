@@ -43,6 +43,21 @@ gLTFNode::gLTFNode(void) :
 	mChildren.clear();
 	mWeights.clear();
 	mName = "";
+	for (int i = 0; i < 16; ++i)
+		mMatrix[i] = 0.0f;
+
+	mRotation[0] = 0.0f;
+	mRotation[1] = 0.0f;
+	mRotation[2] = 0.0f;
+	mRotation[3] = 1.0f;
+
+	mScale[0] = 1.0f;
+	mScale[1] = 1.0f;
+	mScale[2] = 1.0f;
+
+	mTranslation[0] = 0.0f;
+	mTranslation[1] = 0.0f;
+	mTranslation[2] = 0.0f;
 }
 
 //---------------------------------------------------------------------

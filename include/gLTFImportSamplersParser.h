@@ -37,7 +37,10 @@ THE SOFTWARE.
 class gLTFImportSamplersParser
 {
 	public:
-		gLTFImportSamplersParser (void) {};
+		gLTFImportSamplersParser (void)
+		{
+			mSamplersMap.clear();
+		};
 		virtual ~gLTFImportSamplersParser (void) {};
 
 		// Parse the gLTF Samplers (level 1)

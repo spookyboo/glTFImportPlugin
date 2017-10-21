@@ -37,7 +37,10 @@ THE SOFTWARE.
 class gLTFImportBufferViewsParser
 {
 	public:
-		gLTFImportBufferViewsParser (void) {};
+		gLTFImportBufferViewsParser (void)
+		{
+			mBufferViewsMap.clear();
+		};
 		virtual ~gLTFImportBufferViewsParser (void) {};
 
 		// Parse the gLTF BufferViews (level 1)
