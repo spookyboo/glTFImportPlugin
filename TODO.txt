@@ -5,8 +5,6 @@ HLMS Editor:
 
 Plugin:
 ======
-- Add KHR_ extensions to read Unity gLTF models and materials
-- Bug? Warehouse has a lamp with incorrect transformation. Is not visible in a gLTF loader. Same with the CesiumMilkTruck (has windows floating in the sky)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
@@ -19,6 +17,9 @@ Plugin:
 - How to implement reflection? (using dds cubemaps)
 - Determine when to create a metallic texture. This is standard, but doesn't always gives a good result
 - Implement 'out' function for all model classes (primitive, accessor, ...)
+- Bug: Project GearboxAssy and Buggy are not loaded properly. Some parts are missing
+- Bug: Materials of project polly incorrect. Transparent thing in the front is not transparent and the dog is not textured
+- Bug: MAterials of adam head (Unity) incorrect.
 
 
 DONE:
@@ -41,3 +42,6 @@ DONE:
 - Bug: Error in mesh <--> material
 - Bug: Some materials do not have any images, but the PBS json file does have images
 - Bug: Project Polly is not loaded properly. Same with GearboxAssy and Buggy. Something to do with transformations?
+- Bug? Warehouse has a lamp with incorrect transformation. Is not visible in a gLTF loader.
+- Bug: CesiumMilkTruck has windows floating in the sky
+- Add KHR_ extensions to read Unity gLTF models and materials

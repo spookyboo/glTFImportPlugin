@@ -547,7 +547,6 @@ bool gLTFImportPbsMaterialsCreator::createKHRGlossinessJsonBlock(std::ofstream* 
 	*dst << TABx3 << "\"fresnel\" :\n";
 	*dst << TABx3 << "{\n";
 	
-	*dst << TABx4 << "\"value\" :" << material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessFactor << ",\n";
 	*dst << TABx4 << "\"mode\" : \"coeff\"\n";
 	*dst << TABx3 << "}," << "\n";
 
@@ -556,6 +555,7 @@ bool gLTFImportPbsMaterialsCreator::createKHRGlossinessJsonBlock(std::ofstream* 
 	*dst << TABx3 << "{\n";
 	if (material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.isTextureAvailable())
 	{
+		*dst << TABx4 << "\"value\" : " << material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessFactor << ",\n";
 		std::string baseImageName = getBaseFileNameWithExtension(material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mUri);
 		OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 		*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
