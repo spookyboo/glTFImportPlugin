@@ -148,26 +148,59 @@ bool gLTFImportPbsMaterialsCreator::createSamplerJsonBlock (std::ofstream* dst,
 	const gLTFMaterial& material,
 	std::map<int, gLTFSampler> samplersMap)
 {
+	bool samplerAdded = false;
 	if (samplersMap.size() > 0)
 	{
-		// TODO: Create Samplerblocks, based on the samplersMap
-		*dst << TABx2 << "\"Sampler_0\" :\n";
-		*dst << TABx2 << "{\n";
-		*dst << TABx3 << "\"min\" : \"anisotropic\",\n";
-		*dst << TABx3 << "\"mag\" : \"anisotropic\",\n";
-		*dst << TABx3 << "\"mip\" : \"anisotropic\",\n";
-		*dst << TABx3 << "\"u\" : \"wrap\",\n";
-		*dst << TABx3 << "\"v\" : \"wrap\",\n";
-		*dst << TABx3 << "\"w\" : \"wrap\",\n";
-		*dst << TABx3 << "\"miplodbias\" : 0,\n";
-		*dst << TABx3 << "\"max_anisotropic\" : 1,\n";
-		*dst << TABx3 << "\"compare_function\" : \"disabled\",\n";
-		*dst << TABx3 << "\"border\" : [1, 1, 1, 1],\n";
-		*dst << TABx3 << "\"min_lod\" : -3.40282e+38,\n";
-		*dst << TABx3 << "\"max_lod\" : 3.40282e+38\n";
-		*dst << TABx2 << "}\n";
+		std::map<int, gLTFSampler>::iterator it;
+		std::map<int, gLTFSampler>::iterator itEnd = samplersMap.end();
+		gLTFSampler sampler;
+		int count = 0;
+		bool first = true;
+		std::string addressingMode = "wrap";
+		for (it = samplersMap.begin(); it != itEnd; ++it)
+		{
+			if (samplerInMaterial(count, material))
+			{
+				if (!first)
+				{
+					*dst << ",\n";
+				}
+				sampler = it->second;
+				*dst << TABx2 << "\"Sampler_" << count << "\" :\n";
+				*dst << TABx2 << "{\n";
+				*dst << TABx3 << "\"min\" : \"anisotropic\",\n";
+				*dst << TABx3 << "\"mag\" : \"anisotropic\",\n";
+				*dst << TABx3 << "\"mip\" : \"anisotropic\",\n";
+
+				// Does not pass the 'TextureSettingsTest'
+				if (sampler.mWrapT == gLTFSampler::TW_MIRRORED_REPEAT)
+					addressingMode = "mirror";
+				else if (sampler.mWrapT == gLTFSampler::TW_REPEAT)
+					addressingMode = "wrap";
+				else
+					addressingMode = "clamp";
+				*dst << TABx3 << "\"u\" : \"" << addressingMode << "\",\n";
+				*dst << TABx3 << "\"v\" : \"" << addressingMode << "\",\n";
+				*dst << TABx3 << "\"w\" : \"" << addressingMode << "\",\n";
+				*dst << TABx3 << "\"miplodbias\" : 0,\n";
+				*dst << TABx3 << "\"max_anisotropic\" : 1,\n";
+				*dst << TABx3 << "\"compare_function\" : \"disabled\",\n";
+				*dst << TABx3 << "\"border\" : [1, 1, 1, 1],\n";
+				*dst << TABx3 << "\"min_lod\" : -3.40282e+38,\n";
+				*dst << TABx3 << "\"max_lod\" : 3.40282e+38\n";
+				*dst << TABx2 << "}";
+				samplerAdded = true;
+				first = false;
+			}
+			
+			count++;
+		}
+
+		if (samplerAdded)
+			*dst << "\n";
 	}
-	else
+
+	if (!samplerAdded)
 	{
 		// There are no gLTF texture samplers; use a default
 		*dst << TABx2 << "\"Sampler_0\" :\n";
@@ -188,6 +221,48 @@ bool gLTFImportPbsMaterialsCreator::createSamplerJsonBlock (std::ofstream* dst,
 	}
 
 	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::samplerInMaterial(int samplerIndex, const gLTFMaterial& material)
+{
+	if (material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable() &&
+		material.mPbrMetallicRoughness.mBaseColorTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mPbrMetallicRoughness.mMetallicTexture.isTextureAvailable() &&
+		material.mPbrMetallicRoughness.mMetallicTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mNormalTexture.isTextureAvailable() &&
+		material.mNormalTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mPbrMetallicRoughness.mRoughnessTexture.isTextureAvailable() &&
+		material.mPbrMetallicRoughness.mRoughnessTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mOcclusionTexture.isTextureAvailable() &&
+		material.mOcclusionTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mEmissiveTexture.isTextureAvailable() &&
+		material.mEmissiveTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.isTextureAvailable() &&
+		material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.isTextureAvailable() &&
+		material.mKHR_PbrSpecularGlossiness.mKHR_SpecularTexture.mSampler == samplerIndex)
+		return true;
+
+	if (material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.isTextureAvailable() &&
+		material.mKHR_PbrSpecularGlossiness.mKHR_GlossinessTexture.mSampler == samplerIndex)
+		return true;
+
+	return false;
 }
 
 //---------------------------------------------------------------------
