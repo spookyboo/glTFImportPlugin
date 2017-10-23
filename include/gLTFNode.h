@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <vector>
 #include <iostream>
 #include "gLTFMesh.h"
+#include "OgreMatrix4.h"
 
 /************************************************************************************************
  This file contains the data struture of a gLFTNode.
@@ -66,6 +67,7 @@ class gLTFNode
 		// Derived data
 		gLTFMesh mMeshDerived; // from mesh
 		bool mTransformationDerived;
+		Ogre::Matrix4 mCalculatedTransformation;
 };
 
 #endif

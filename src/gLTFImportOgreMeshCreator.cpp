@@ -156,6 +156,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 			mesh = node.mMeshDerived;
 
 			// Apply transformation of the node to the position vector
+			/*
 			Ogre::Vector3 translation = Ogre::Vector3::ZERO;
 			Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
 			Ogre::Vector3 scale = Ogre::Vector3(1.0f, 1.0f, 1.0f);
@@ -204,15 +205,16 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 					scale.z = node.mScale[2];
 				}
 			}
+			*/
+			Ogre::Vector3 translation = Ogre::Vector3::ZERO;
+			Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
+			Ogre::Vector3 scale = Ogre::Vector3(1.0f, 1.0f, 1.0f);
+			Ogre::Matrix4 matrix = node.mCalculatedTransformation;
 			writeSubmesh(dst, 
 				mesh, 
 				data, 
 				accessorMap, 
 				startBinaryBuffer, 
-				!node.mHasMatrix,	// It has either a matrix or the trs elements
-				translation,
-				rotation,
-				scale,
 				matrix);
 		}
 	}
@@ -233,10 +235,6 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 	Ogre::HlmsEditorPluginData* data,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
-	bool hasTrs,
-	Ogre::Vector3 translation,
-	Ogre::Quaternion rotation,
-	Ogre::Vector3 scale,
 	Ogre::Matrix4 matrix)
 {
 	std::map<int, gLTFPrimitive>::iterator itPrimitives;
@@ -338,10 +336,6 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 			writeVertices(dst, primitive, accessorMap, 
 				data, 
 				startBinaryBuffer, 
-				hasTrs, 
-				translation, 
-				rotation, 
-				scale, 
 				matrix);
 
 			// Closing tags
@@ -399,10 +393,6 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
-	bool hasTrs,
-	Ogre::Vector3 translation,
-	Ogre::Quaternion rotation,
-	Ogre::Vector3 scale,
 	Ogre::Matrix4 matrix)
 {
 	// Read positions, normals, tangents,... etc.
@@ -410,10 +400,6 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 		accessorMap, 
 		data, 
 		startBinaryBuffer, 
-		hasTrs,
-		translation,
-		rotation,
-		scale,
 		matrix); // Read the positions
 	readNormalsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the normals
 	readTangentsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the tangents
@@ -488,10 +474,6 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
-	bool hasTrs,
-	Ogre::Vector3 translation,
-	Ogre::Quaternion rotation,
-	Ogre::Vector3 scale,
 	Ogre::Matrix4 matrix)
 {
 	// Open the buffer file and read positions
@@ -510,24 +492,7 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 				i, 
 				positionAccessor, 
 				getCorrectForMinMaxPropertyValue(data));
-
-			Ogre::Vector3 oPos(pos.x, pos.y, pos.z);
-			if (hasTrs)
-			{
-				// T*R*S transformation
-				oPos = scale * oPos;
-				oPos = rotation * oPos;
-				oPos = translation + oPos;
-				pos.x = oPos.x;
-				pos.y = oPos.y;
-				pos.z = oPos.z;
-			}
-			else
-			{
-				// Matrix transformation
-				oPos = matrix * oPos;
-			}
-
+			pos = matrix * pos;
 			mPositionsMap[i] = pos;
 		}
 	}

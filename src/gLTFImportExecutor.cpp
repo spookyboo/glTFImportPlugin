@@ -702,39 +702,12 @@ void gLTFImportExecutor::propagateNodeTransformsToChildren (gLTFNode* node)
 //---------------------------------------------------------------------
 void gLTFImportExecutor::inheritTransforms (gLTFNode* parentNode, gLTFNode* childNode)
 {
-	//OUT << "inheritTransforms for parent " << parentNode->mName << " and child " << childNode->mName << "\n";
-
 	OUT << "gLTFImportExecutor::inheritTransforms\n";
-	Ogre::Matrix4 matrixParent;
-	Ogre::Vector3 scaleParent = Ogre::Vector3(1.0f, 1.0f, 1.0f);
-	Ogre::Quaternion rotationParent = Ogre::Quaternion::IDENTITY;
-	Ogre::Vector3 translationParent = Ogre::Vector3::ZERO;
+	
 	Ogre::Matrix4 matrixChild;
 	Ogre::Vector3 scaleChild = Ogre::Vector3(1.0f, 1.0f, 1.0f);
 	Ogre::Quaternion rotationChild = Ogre::Quaternion::IDENTITY;
 	Ogre::Vector3 translationChild = Ogre::Vector3::ZERO;
-
-	// First translate everything to matrix4
-	if (parentNode->mHasMatrix)
-	{
-		// Parent has a matrix4
-		matrixParent = Ogre::Matrix4(
-			parentNode->mMatrix[0], parentNode->mMatrix[4], parentNode->mMatrix[8], parentNode->mMatrix[12],
-			parentNode->mMatrix[1], parentNode->mMatrix[5], parentNode->mMatrix[9], parentNode->mMatrix[13],
-			parentNode->mMatrix[2], parentNode->mMatrix[6], parentNode->mMatrix[10], parentNode->mMatrix[14],
-			parentNode->mMatrix[3], parentNode->mMatrix[7], parentNode->mMatrix[11], parentNode->mMatrix[15]);
-	}
-	else
-	{
-		// Parent has TRS
-		if (parentNode->mHasScale)
-			scaleParent = Ogre::Vector3(parentNode->mScale[0], parentNode->mScale[1], parentNode->mScale[2]);
-		if (parentNode->mHasRotation)
-			rotationParent = Ogre::Quaternion(parentNode->mRotation[3], parentNode->mRotation[0], parentNode->mRotation[1], parentNode->mRotation[2]);
-		if (parentNode->mHasTranslation)
-			translationParent = Ogre::Vector3(parentNode->mTranslation[0], parentNode->mTranslation[1], parentNode->mTranslation[2]);
-		matrixParent.makeTransform(translationParent, scaleParent, rotationParent);
-	}
 
 	if (childNode->mHasMatrix)
 	{
@@ -757,53 +730,7 @@ void gLTFImportExecutor::inheritTransforms (gLTFNode* parentNode, gLTFNode* chil
 		matrixChild.makeTransform(translationChild, scaleChild, rotationChild);
 	}
 
-	// Perform matrix transformation
-	matrixChild = matrixParent * matrixChild;
-	matrixChild.decomposition(translationChild, scaleChild, rotationChild);
-
-	// Set result back to the childNode
-	if (childNode->mHasMatrix)
-	{
-		childNode->mMatrix[0] = matrixChild[0][0];
-		childNode->mMatrix[1] = matrixChild[1][0];
-		childNode->mMatrix[2] = matrixChild[2][0];
-		childNode->mMatrix[3] = matrixChild[3][0];
-		childNode->mMatrix[4] = matrixChild[0][1];
-		childNode->mMatrix[5] = matrixChild[1][1];
-		childNode->mMatrix[6] = matrixChild[2][1];
-		childNode->mMatrix[7] = matrixChild[3][1];
-		childNode->mMatrix[8] = matrixChild[0][2];
-		childNode->mMatrix[9] = matrixChild[1][2];
-		childNode->mMatrix[10] = matrixChild[2][2];
-		childNode->mMatrix[11] = matrixChild[3][2];
-		childNode->mMatrix[12] = matrixChild[0][3];
-		childNode->mMatrix[13] = matrixChild[1][3];
-		childNode->mMatrix[14] = matrixChild[2][3];
-		childNode->mMatrix[15] = matrixChild[3][3];
-		childNode->mHasMatrix = true;
-	}
-	else
-	{
-		// Set all 3 TRS elements
-		// Any unused elements have a 'neutral'  value (e.g. translation of Vector3::Zero or an Identity Quaternion)
-		matrixChild.decomposition(translationChild, scaleChild, rotationChild);
-		childNode->mScale[0] = scaleChild.x;
-		childNode->mScale[1] = scaleChild.y;
-		childNode->mScale[2] = scaleChild.z;
-		childNode->mHasScale = true;
-
-		childNode->mRotation[0] = rotationChild.x;
-		childNode->mRotation[1] = rotationChild.y;
-		childNode->mRotation[2] = rotationChild.z;
-		childNode->mRotation[3] = rotationChild.w;
-		childNode->mHasRotation = true;
-
-		childNode->mTranslation[0] = translationChild.x;
-		childNode->mTranslation[1] = translationChild.y;
-		childNode->mTranslation[2] = translationChild.z;
-		childNode->mHasTranslation = true;
-	}
-
+	childNode->mCalculatedTransformation = parentNode->mCalculatedTransformation * matrixChild;
 	childNode->mTransformationDerived = true;
 }
 

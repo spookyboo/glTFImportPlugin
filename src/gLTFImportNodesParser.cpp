@@ -155,7 +155,60 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 				OUT << TABx2 << "value ==> " << node.mName << "\n";
 			}
 		}
+
+		Ogre::Vector3 scale = Ogre::Vector3(1.0f, 1.0f, 1.0f);
+		Ogre::Quaternion rotation = Ogre::Quaternion::IDENTITY;
+		Ogre::Vector3 translation = Ogre::Vector3::ZERO;
+		Ogre::Matrix4 matrix;
+		if (node.mHasMatrix)
+		{
+			// Set the matrix as calculated matrix (will be overruled later in some cases)
+			matrix[0][0] = node.mMatrix[0];
+			matrix[1][0] = node.mMatrix[1];
+			matrix[2][0] = node.mMatrix[2];
+			matrix[3][0] = node.mMatrix[3];
+
+			matrix[0][1] = node.mMatrix[4];
+			matrix[1][1] = node.mMatrix[5];
+			matrix[2][1] = node.mMatrix[6];
+			matrix[3][1] = node.mMatrix[7];
+
+			matrix[0][2] = node.mMatrix[8];
+			matrix[1][2] = node.mMatrix[9];
+			matrix[2][2] = node.mMatrix[10];
+			matrix[3][2] = node.mMatrix[11];
+
+			matrix[0][3] = node.mMatrix[12];
+			matrix[1][3] = node.mMatrix[13];
+			matrix[2][3] = node.mMatrix[14];
+			matrix[3][3] = node.mMatrix[15];
+		}
+		else
+		{
+			// Set all 3 TRS elements as calculated matrix 
+			if (node.mHasTranslation)
+			{
+				translation.x = node.mTranslation[0];
+				translation.y = node.mTranslation[1];
+				translation.z = node.mTranslation[2];
+			}
+			if (node.mHasRotation)
+			{
+				rotation.x = node.mRotation[0];
+				rotation.y = node.mRotation[1];
+				rotation.z = node.mRotation[2];
+				rotation.w = node.mRotation[3];
+			}
+			if (node.mHasScale)
+			{
+				scale.x = node.mScale[0];
+				scale.y = node.mScale[1];
+				scale.z = node.mScale[2];
+			}
+			matrix.makeTransform(translation, scale, rotation);
+		}
 		
+		node.mCalculatedTransformation = matrix;
 		mNodesMap[index] = node;
 		++index;
 	}

@@ -1,9 +1,12 @@
 HLMS Editor:
 ===========
-- When loading a mesh, first delete the mesh with the same name
 
 Plugin:
 ======
+- Bug (sort of): If there is only an emissive map and no other diffuse/detail diffuse maps, don't make the emission map a detail diffuse map, but a regular
+  diffuse map.
+- Instead of setting the PAF_POST_IMPORT_LOAD_MESH flag, create a <project>_meshes.cfg file and extend the projectfile (pending implementation in the 
+  HLMS Editor)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
@@ -19,7 +22,6 @@ Plugin:
 - Bug: Materials of adam head (Unity) incorrect?
 - Bug: Values of min/max are probably implemented incorrect
 - Bug?: The HLMS Editor sometimes crashes when the first import is done. Maybe because some variable is not initialized? Solved?
-
 
 
 DONE:
@@ -47,6 +49,7 @@ DONE:
 - Add KHR_ extensions to read Unity gLTF models and materials
 - Bug: Selecting 'edit material of selected (sub)mesh' crashes application in some case (see mode 'varignana')
 - Bug: Selecting 'edit material of selected (sub)mesh' crashes when the material is [Default]
+- When loading a mesh, first delete the mesh with the same name
 
 Not specified in gLTF:
 - How to implement reflection? (using dds cubemaps)
