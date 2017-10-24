@@ -38,7 +38,7 @@ gLTFNode::gLTFNode(void) :
 	mHasRotation(false),
 	mHasScale(false),
 	mHasTranslation(false),
-	mTransformationDerived(false)
+	mTransformationCalculated(false)
 {
 	mChildren.clear();
 	mWeights.clear();

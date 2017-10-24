@@ -66,7 +66,7 @@ class gLTFNode
 
 		// Derived data
 		gLTFMesh mMeshDerived; // from mesh
-		bool mTransformationDerived;
+		bool mTransformationCalculated;
 		Ogre::Matrix4 mCalculatedTransformation;
 };
 

@@ -3,26 +3,19 @@ HLMS Editor:
 
 Plugin:
 ======
-- Bug (sort of): If there is only an emissive map and no other diffuse/detail diffuse maps, don't make the emission map a detail diffuse map, but a regular
-  diffuse map.
 - Instead of setting the PAF_POST_IMPORT_LOAD_MESH flag, create a <project>_meshes.cfg file and extend the projectfile (pending implementation in the 
   HLMS Editor)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
 - Parse animations, assets and skins, possibly scene, ...
 - Add Sparse class to Accessor and implement Parsing Sparse objects
 - Init gLTF in gLTFTest application, so texture tranformation is possible (and the #define can be removed)
-- Vertex count is derived from position vertices. Validate whether this is correct
 - Implement (morph) targets in Primitives
 - Implement point_list, line_list, triangle_strip and triangle_fan
 - Check whether colours_specular, tangent_dimensions, binormals should be implemented in the mesh xml file (it is specified in Ogre xml)
 - Determine when to create a metallic texture. This is standard, but doesn't always gives a good result
 - Implement 'out' function for all model classes (primitive, accessor, ...)
-- Bug: Project GearboxAssy and Buggy are not loaded properly. Some parts are missing
-- Bug: Materials of project polly incorrect. Transparent thing in the front is not transparent and the dog is not textured
 - Bug: Materials of adam head (Unity) incorrect?
 - Bug: Values of min/max are probably implemented incorrect
-- Bug?: The HLMS Editor sometimes crashes when the first import is done. Maybe because some variable is not initialized? Solved?
-
 
 DONE:
 - Use shared vertices? ==> Not for now; usesharedvertices is always 'false'
@@ -50,6 +43,13 @@ DONE:
 - Bug: Selecting 'edit material of selected (sub)mesh' crashes application in some case (see mode 'varignana')
 - Bug: Selecting 'edit material of selected (sub)mesh' crashes when the material is [Default]
 - When loading a mesh, first delete the mesh with the same name
+- Bug: Project GearboxAssy and Buggy are not loaded properly. Some parts are missing
+- Vertex count is derived from position vertices. Validate whether this is correct (works for all the models)
+- Bug?: The HLMS Editor sometimes crashes when the first import is done. Maybe because some variable is not initialized? Solved?
+- Bug: Materials of project polly incorrect. Transparent thing in the front is not transparent and the dog is not textured. ==> Dog not textured is because
+  of non-generated tangents
+- Bug (sort of): If there is only an emissive map and no other diffuse/detail diffuse maps, don't make the emission map a detail diffuse map, but a regular
+  diffuse map.
 
 Not specified in gLTF:
 - How to implement reflection? (using dds cubemaps)

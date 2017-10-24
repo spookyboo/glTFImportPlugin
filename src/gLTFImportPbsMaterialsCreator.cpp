@@ -514,16 +514,30 @@ bool gLTFImportPbsMaterialsCreator::createDetailNormalJsonBlock(std::ofstream* d
 bool gLTFImportPbsMaterialsCreator::createEmissiveJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
 	/* This function is a placeholder for the future when Ogre does support emissive textures in PBS materials.
-	*  Currently it does not, so an emissiveTexture shows up as an detailed diffuse map, with some boosted weight value.
+	*  Currently it does not, so an emissiveTexture shows up as a (detailed) diffuse map, with some boosted weight value.
 	*/
 	if (!material.mEmissiveTexture.isTextureAvailable())
 		return false;
 
-	*dst << "," << "\n";
-	*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
-	*dst << TABx3 << "{\n";
-	*dst << TABx4 << "\"value\" : 6,\n"; // Pump up the weight a bit
-	*dst << TABx4 << "\"mode\" : \"Add\",\n"; // Use additive blending
+	if (!isDiffuseMapAvailable(material))
+	{
+		// There is no diffuse map at all, only an emissive texture. In that case, the emissive texture becomes
+		// a regular diffuse map
+		*dst << TABx3 << "\"diffuse\" :\n";
+		*dst << TABx3 << "{\n";
+	}
+	else
+	{
+		// The emissive texture becomes a detail diffuse map
+		*dst << "," << "\n";
+		*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
+		*dst << TABx3 << "{\n";
+		*dst << TABx4 << "\"value\" : 6,\n"; // Pump up the weight a bit
+		*dst << TABx4 << "\"mode\" : \"Add\",\n"; // Use additive blending
+
+		++mDetailedDiffuseMapCount;
+	}
+
 	std::string baseImageName = getBaseFileNameWithExtension(material.mEmissiveTexture.mUri);
 	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
 	*dst << TABx4 << "\"texture\" : \"" << baseImageName << "\",\n"; // Don't use a fully qualified image (file) name
@@ -532,8 +546,20 @@ bool gLTFImportPbsMaterialsCreator::createEmissiveJsonBlock(std::ofstream* dst, 
 	*dst << "\n";
 	*dst << TABx3 << "}";
 
-	++mDetailedDiffuseMapCount;
 	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportPbsMaterialsCreator::isDiffuseMapAvailable(const gLTFMaterial& material)
+{
+	if (material.mPbrMetallicRoughness.mBaseColorTexture.isTextureAvailable())
+		return true;
+
+	if (material.mUseKHR_MaterialsPbrSpecularGlossiness &&
+		material.mKHR_PbrSpecularGlossiness.mKHR_DiffuseTexture.isTextureAvailable())
+		return true;
+
+	return false;
 }
 
 //---------------------------------------------------------------------

@@ -656,7 +656,7 @@ OUT << TABx4 << "DEBUG: (itPrimitives->second).mMaterialNameDerived " << (itPrim
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportExecutor::propagateNodes(Ogre::HlmsEditorPluginData* data)
+bool gLTFImportExecutor::propagateNodes (Ogre::HlmsEditorPluginData* data)
 {
 	OUT << TABx3 << "Perform gLTFImportExecutor::propagateNodes\n";
 
@@ -669,6 +669,7 @@ bool gLTFImportExecutor::propagateNodes(Ogre::HlmsEditorPluginData* data)
 	for (itNodes = mNodesMap.begin(); itNodes != itNodesEnd; itNodes++)
 	{
 		gLTFNode* node = &itNodes->second;
+		node = getTopLevelParentNode(node); // Search for the toplevel node in the tree and start from there
 		propagateNodeTransformsToChildren(&(itNodes->second));
 		mesh = mMeshesMap[itNodes->second.mMesh];
 		itNodes->second.mMeshDerived = mesh;
@@ -678,8 +679,43 @@ bool gLTFImportExecutor::propagateNodes(Ogre::HlmsEditorPluginData* data)
 }
 
 //---------------------------------------------------------------------
+gLTFNode* gLTFImportExecutor::getTopLevelParentNode (gLTFNode* childNode)
+{
+	OUT << TABx3 << "Perform gLTFImportExecutor::getTopLevelParentNode\n";
+
+	std::map<int, gLTFNode>::iterator itNodes;
+	std::map<int, gLTFNode>::iterator itNodesEnd = mNodesMap.end();
+	std::vector<int>::iterator itChildNodes;
+	std::vector<int>::iterator itChildNodesEnd;
+	gLTFNode* node;
+	int count;
+
+	// Iterate trough all node to look for the parent of the childNode (there is only one parent according to the specs)
+	for (itNodes = mNodesMap.begin(); itNodes != itNodesEnd; itNodes++)
+	{
+		node = &itNodes->second;
+		itChildNodesEnd = node->mChildren.end();
+		count = 0;
+		for (itChildNodes = node->mChildren.begin(); itChildNodes != itChildNodesEnd; itChildNodes++)
+		{
+			if (childNode == findNodeByIndex(node->mChildren[count]))
+			{
+				// node is the parent of childNode, Search the parent of node recursive
+				node = getTopLevelParentNode(node);
+				return node;
+			}
+			count++;
+		}
+	}
+
+	return childNode; // There is no parent
+}
+
+//---------------------------------------------------------------------
 void gLTFImportExecutor::propagateNodeTransformsToChildren (gLTFNode* node)
 {
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateNodeTransformsToChildren\n";
+
 	std::vector<int>::iterator itChildNodes;
 	std::vector<int>::iterator itChildNodesEnd;
 	gLTFNode* childNode;
@@ -690,48 +726,14 @@ void gLTFImportExecutor::propagateNodeTransformsToChildren (gLTFNode* node)
 	for (itChildNodes = node->mChildren.begin(); itChildNodes != itChildNodesEnd; itChildNodes++)
 	{
 		childNode = findNodeByIndex(node->mChildren[count]);
-		if (childNode && !childNode->mTransformationDerived)
+		if (childNode && !childNode->mTransformationCalculated)
 		{
-			inheritTransforms(node, childNode);
+			childNode->mCalculatedTransformation = node->mCalculatedTransformation * childNode->mCalculatedTransformation;
+			childNode->mTransformationCalculated = true;
 			propagateNodeTransformsToChildren(childNode); // Propagate to the lower tree
 		}
 		count++;
 	}
-}
-
-//---------------------------------------------------------------------
-void gLTFImportExecutor::inheritTransforms (gLTFNode* parentNode, gLTFNode* childNode)
-{
-	OUT << "gLTFImportExecutor::inheritTransforms\n";
-	
-	Ogre::Matrix4 matrixChild;
-	Ogre::Vector3 scaleChild = Ogre::Vector3(1.0f, 1.0f, 1.0f);
-	Ogre::Quaternion rotationChild = Ogre::Quaternion::IDENTITY;
-	Ogre::Vector3 translationChild = Ogre::Vector3::ZERO;
-
-	if (childNode->mHasMatrix)
-	{
-		// Child has a matrix4
-		matrixChild = Ogre::Matrix4(
-			childNode->mMatrix[0], childNode->mMatrix[4], childNode->mMatrix[8], childNode->mMatrix[12],
-			childNode->mMatrix[1], childNode->mMatrix[5], childNode->mMatrix[9], childNode->mMatrix[13],
-			childNode->mMatrix[2], childNode->mMatrix[6], childNode->mMatrix[10], childNode->mMatrix[14],
-			childNode->mMatrix[3], childNode->mMatrix[7], childNode->mMatrix[11], childNode->mMatrix[15]);
-	}
-	else
-	{
-		// Child has TRS
-		if (childNode->mHasScale)
-			scaleChild = Ogre::Vector3(childNode->mScale[0], childNode->mScale[1], childNode->mScale[2]);
-		if (childNode->mHasRotation)
-			rotationChild = Ogre::Quaternion(childNode->mRotation[3], childNode->mRotation[0], childNode->mRotation[1], childNode->mRotation[2]);
-		if (childNode->mHasTranslation)
-			translationChild = Ogre::Vector3(childNode->mTranslation[0], childNode->mTranslation[1], childNode->mTranslation[2]);
-		matrixChild.makeTransform(translationChild, scaleChild, rotationChild);
-	}
-
-	childNode->mCalculatedTransformation = parentNode->mCalculatedTransformation * matrixChild;
-	childNode->mTransformationDerived = true;
 }
 
 //---------------------------------------------------------------------

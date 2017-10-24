@@ -85,6 +85,7 @@ class gLTFImportPbsMaterialsCreator
 
 		// Generic
 		const std::string getUvString (int texCoord);
+		bool isDiffuseMapAvailable (const gLTFMaterial& material);
 		bool samplerInMaterial (int samplerIndex, const gLTFMaterial& material);
 
 	private:
