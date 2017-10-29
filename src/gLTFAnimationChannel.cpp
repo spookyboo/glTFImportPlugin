@@ -25,50 +25,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFNode_H__
-#define __gLTFNode_H__
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include "gLTFMesh.h"
-#include "OgreMatrix4.h"
+#include "gLTFImportConstants.h"
+#include "gLTFAnimationChannel.h"
 
-/************************************************************************************************
- This file contains the data struture of a gLFTNode.
-/************************************************************************************************/
-
-/**********************************************/
-/** Class responsible that represents an Node */
-/**********************************************/
-class gLTFNode
+//---------------------------------------------------------------------
+gLTFAnimationChannel::gLTFAnimationChannel(void)
 {
-	public:
-		gLTFNode(void);
-		virtual ~gLTFNode(void) {};
-		void out (void); // prints the content of the gLTFNode
+}
 
-		// Public members
-		int mCamera; // unused for now
-		std::vector<int> mChildren;
-		int mSkin;
-		float mMatrix[16];
-		bool mHasMatrix;
-		int mMesh;
-		float mRotation[4];
-		bool mHasRotation;
-		float mScale[3];
-		bool mHasScale;
-		float mTranslation[3];
-		bool mHasTranslation;
-		std::vector<float> mWeights;
-		std::string mName;
-
-		// Derived data
-		gLTFMesh mMeshDerived; // from mesh
-		bool mTransformationCalculated;
-		Ogre::Matrix4 mCalculatedTransformation;
-		gLTFNode* mParentNode;
-};
-
-#endif
+//---------------------------------------------------------------------
+void gLTFAnimationChannel::out(void)
+{
+	OUT << "***************** Debug: gLTFAnimationChannel *****************\n";
+}

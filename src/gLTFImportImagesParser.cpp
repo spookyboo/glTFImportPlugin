@@ -39,7 +39,7 @@ bool gLTFImportImagesParser::parseImages (rapidjson::Value::ConstMemberIterator 
 	OUT << TAB << "Loop through images array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
-		OUT << TAB << "Source index " << source << "\n";
+		OUT << TAB << "image index ==> " << source << "\n";
 		gLTFImage image;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();

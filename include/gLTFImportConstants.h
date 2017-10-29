@@ -40,12 +40,12 @@ struct Devnull : std::ostream, std::streambuf
 };
 
 // (un)comment first/second line to enable/disable debug to screen
-//#define OUT std::cout
-#define OUT Devnull()
+#define OUT std::cout
+//#define OUT Devnull()
 
 //---------------------------------------------------------------------
 // Disable the line below when using gLTFTEST, because otherwise Ogre::Image (used for texture transformation) does not work
-#define TEXTURE_TRANSFORMATION 1
+#define USE_OGRE_IN_PLUGIN 1
 
 //---------------------------------------------------------------------
 static const std::string TAB = "  ";
@@ -168,7 +168,7 @@ static std::string generateRandomString (void)
 	// Generate a name if not provided (name is optional in gLTF)
 	std::stringstream ss;
 	std::time_t result = std::time(nullptr);
-	ss << result;
+	ss << rand() << rand();
 	return ss.str();
 }
 

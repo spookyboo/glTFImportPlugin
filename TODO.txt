@@ -1,5 +1,7 @@
 HLMS Editor:
 ===========
+- Add option the regenerate tangents for a specific submesh. Reason is that this is probably needed for the polly project. Importing with generation of tangents
+  doesn't work.
 
 Plugin:
 ======

@@ -32,7 +32,7 @@
 #include "OgreQuaternion.h"
 #include "OgreMatrix4.h"
 #include "base64.h"
-
+#include "OgreRoot.h"
 
 //---------------------------------------------------------------------
 gLTFImportOgreMeshCreator::gLTFImportOgreMeshCreator (void)
@@ -53,7 +53,8 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 	std::map<int, gLTFNode> nodesMap,
 	std::map<int, gLTFMesh> meshesMap,
 	std::map<int, gLTFAccessor> accessorMap,
-	int startBinaryBuffer)
+	int startBinaryBuffer,
+	bool hasAnimations)
 {
 	OUT << "\nPerform gLTFImportOgreMeshCreator::createOgreMeshFiles\n";
 	OUT << "------------------------------------------------------\n";
@@ -65,7 +66,10 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 	{
 		// Property found; determine its value
 		if ((it->second).boolValue)
-			return createCombinedOgreMeshFile (data, nodesMap, accessorMap, startBinaryBuffer);
+		{
+			createCombinedOgreSkeletonFile(data, nodesMap, accessorMap, startBinaryBuffer, hasAnimations);
+			return createCombinedOgreMeshFile(data, nodesMap, accessorMap, startBinaryBuffer, hasAnimations);
+		}
 		else
 			return createIndividualOgreMeshFiles (data, meshesMap, accessorMap, startBinaryBuffer);
 	}
@@ -106,7 +110,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		dst << "<mesh>\n";
 		dst << TAB << "<submeshes>\n";
 
-		writeSubmesh(dst, mesh, data, accessorMap, startBinaryBuffer); // Do not perform any transformation
+		writeSubmeshToMesh(dst, mesh, data, accessorMap, startBinaryBuffer); // Do not perform any transformation
 		
 		dst << TAB << "</submeshes>\n";
 		dst << "</mesh>\n";
@@ -124,10 +128,12 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPluginData* data,
 	std::map<int, gLTFNode> nodesMap,
 	std::map<int, gLTFAccessor> accessorMap,
-	int startBinaryBuffer)
+	int startBinaryBuffer,
+	bool hasAnimations)
 {
-	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreMeshFile2\n";
-
+	// ********************************************* MESH FILE *********************************************
+	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreMeshFile\n";
+	
 	// Create the Ogre mesh xml files (*.xml)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
 
@@ -155,16 +161,30 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 		{
 			mesh = node.mMeshDerived;
 			Ogre::Matrix4 matrix = node.mCalculatedTransformation;
-			writeSubmesh(dst, 
+			writeSubmeshToMesh(dst,
 				mesh, 
 				data, 
 				accessorMap, 
 				startBinaryBuffer, 
-				matrix);
+				matrix,
+				hasAnimations);
 		}
 	}
 
 	dst << TAB << "</submeshes>\n";
+	if (hasAnimations)
+	{
+		dst << TAB <<
+			"<skeletonlink name = \"" <<
+			data->mInFileDialogBaseName <<
+			".skeleton\" />\n";
+		//std::string ogreFullyQualifiedSkeletonFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".skeleton";
+		//dst << TAB <<
+			//"<skeletonlink name = \"" <<
+			//ogreFullyQualifiedSkeletonFileName <<
+			//"\" />\n";
+	}
+
 	dst << "</mesh>\n";
 	dst.close();
 	OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
@@ -175,12 +195,91 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst, 
+bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditorPluginData* data,
+	std::map<int, gLTFNode> nodesMap,
+	std::map<int, gLTFAccessor> accessorMap,
+	int startBinaryBuffer,
+	bool hasAnimations)
+{
+	// ********************************************* SKELETON FILE *********************************************
+	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile\n";
+
+	if (!hasAnimations)
+		return false;
+	
+	// Create the Ogre skeleton files (*.skeleton.xml/.skeleton)
+	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
+
+	// Create one combined Ogre mesh file (.xml)
+	std::map<int, gLTFNode>::iterator it;
+	gLTFNode node;
+
+	std::string ogreFullyQualifiedSkeletonXmlFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".skeleton.xml";
+	std::string ogreFullyQualifiedSkeletonFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".skeleton";
+	OUT << "Create: skeleton.xml file " << ogreFullyQualifiedSkeletonXmlFileName << "\n";
+
+	// Create the file
+	std::ofstream dst(ogreFullyQualifiedSkeletonXmlFileName);
+
+	// Add xml content
+	dst << "<skeleton blendmode=\"average\">\n";
+	
+	// 1. Add bones (=nodes, =joints)
+	dst << TAB << "<bones>\n";
+	
+	/* Iterate through all nodes and write the bone info. Each joint is a bone. Each joint refers to a node.
+	 */
+	unsigned int index = 0;
+	for (it = nodesMap.begin(); it != nodesMap.end(); it++)
+	{
+		node = it->second;
+		writeBoneToSkeleton(dst,
+			index,
+			&node,
+			data,
+			accessorMap,
+			startBinaryBuffer);
+		++index;
+	}
+	dst << TAB << "</bones>\n";
+
+	// 2. Add bones hierarchy
+	dst << TAB << "<bonehierarchy>\n";
+	for (it = nodesMap.begin(); it != nodesMap.end(); it++)
+	{
+		node = it->second;
+		writeBoneHierarchyToSkeleton(dst, &node);
+	}
+	dst << TAB << "</bonehierarchy>\n";
+
+	// 3. Add animations
+	dst << TAB << "<animations>\n";
+	// TODO: Add animations
+	dst << TAB << "</animations>\n";
+
+	dst << "</skeleton>\n";
+	dst.close();
+	OUT << "Written skeleton.xml file " << ogreFullyQualifiedSkeletonXmlFileName << "\n";
+	convertXmlFileToSkeleton(data, ogreFullyQualifiedSkeletonXmlFileName, ogreFullyQualifiedSkeletonFileName);
+	setSkeletonFileNamePropertyValue(data, ogreFullyQualifiedSkeletonFileName);
+
+#ifdef USE_OGRE_IN_PLUGIN
+	// Load the skeletonfile in Ogre before the mesh .xml is converted
+	//Ogre::Root* root = Ogre::Root::getSingletonPtr();
+	//root->addResourceLocation(fullyQualifiedImportPath, "FileSystem", Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+#endif // DEBUG
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 	gLTFMesh mesh,
 	Ogre::HlmsEditorPluginData* data,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
-	Ogre::Matrix4 matrix)
+	Ogre::Matrix4 matrix,
+	bool hasAnimations)
 {
 	std::map<int, gLTFPrimitive>::iterator itPrimitives;
 	gLTFPrimitive primitive;
@@ -231,7 +330,7 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 		// Write faces
 		if (primitive.mIndicesAccessor > -1)
 		{
-			writeFaces(dst, primitive, accessorMap, data, startBinaryBuffer);
+			writeFacesToMesh(dst, primitive, accessorMap, data, startBinaryBuffer);
 		}
 
 		// Write geometry
@@ -278,7 +377,9 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 				">\n";
 
 			// Write vertices
-			writeVertices(dst, primitive, accessorMap, 
+			writeVerticesToMesh(dst,
+				primitive, 
+				accessorMap, 
 				data, 
 				startBinaryBuffer, 
 				matrix);
@@ -286,8 +387,21 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 			// Closing tags
 			dst << TABx4 << "</vertexbuffer>\n";
 			dst << TABx3 << "</geometry>\n";
+
+			/* Add none assignment in case there are animations
+			 * Only in case there is an animation, these entries are written, otherwise it does not
+			 * make sense.
+			 */
+			if (hasAnimations)
+			{
+				dst << TABx3 << "<boneassignments>\n";
+
+				// Write bone assignments
+				writeBoneAssignmentsToMesh(dst, primitive, accessorMap, data, startBinaryBuffer);
+
+				dst << TABx3 << "</boneassignments>\n";
+			}
 		}
-		// TODO: Finsih it !
 
 		dst << TABx2 << "</submesh>\n";
 	}
@@ -296,7 +410,7 @@ bool gLTFImportOgreMeshCreator::writeSubmesh (std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeFaces (std::ofstream& dst,
+bool gLTFImportOgreMeshCreator::writeFacesToMesh(std::ofstream& dst,
 	const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
@@ -333,7 +447,7 @@ bool gLTFImportOgreMeshCreator::writeFaces (std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst, 
+bool gLTFImportOgreMeshCreator::writeVerticesToMesh(std::ofstream& dst,
 	const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
@@ -415,6 +529,146 @@ bool gLTFImportOgreMeshCreator::writeVertices (std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
+	const gLTFPrimitive& primitive,
+	std::map<int, gLTFAccessor> accessorMap,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
+	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived]; // To determine number of vertices
+	gLTFAccessor  jointAccessor = accessorMap[primitive.mJoints_0AccessorDerived];
+	gLTFAccessor  weightAccessor = accessorMap[primitive.mWeights_0AccessorDerived];
+	Ogre::Vector4 joint;
+	Ogre::Vector4 weight;
+	unsigned short fCount;
+
+	// Get the buffer
+	char* jointBuffer = getBufferChunk(weightAccessor.mUriDerived, data, jointAccessor, startBinaryBuffer);
+	char* weightBuffer = getBufferChunk(weightAccessor.mUriDerived, data, weightAccessor, startBinaryBuffer);
+
+	// Iterate through all vertices
+	for (int i = 0; i < positionAccessor.mCount; i++)
+	{
+		joint = Ogre::Vector4(0.0f, 0.0f, 0.0f, 0.0f);
+		weight = Ogre::Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// Get the joint (= bone). A joint must be a VEC4/UNSIGNED_BYTE/UNSIGNED_SHORT, otherwise it doesn't get read
+		if (jointAccessor.mType == "VEC4" && jointAccessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
+		{
+			// Get the joint
+			joint = mBufferReader.readVec4FromUnsignedByteBuffer(jointBuffer,
+				i,
+				jointAccessor,
+				getCorrectForMinMaxPropertyValue(data));
+		}
+		else if (jointAccessor.mType == "VEC4" && jointAccessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
+		{
+			// Get the joint
+			joint = mBufferReader.readVec4FromUnsignedShortBuffer(jointBuffer,
+				i,
+				jointAccessor,
+				getCorrectForMinMaxPropertyValue(data));
+		}
+
+		// Get the weight. A weight must be a VEC4/FLOAT/UNSIGNED_BYTE/UNSIGNED_SHORT, otherwise it doesn't get read
+		if (weightAccessor.mType == "VEC4" && weightAccessor.mComponentType == gLTFAccessor::FLOAT)
+		{
+			// Get the weight
+			weight = mBufferReader.readVec4FromFloatBuffer(weightBuffer,
+				i,
+				weightAccessor,
+				getCorrectForMinMaxPropertyValue(data));
+		}
+		else if (weightAccessor.mType == "VEC4" && weightAccessor.mComponentType == gLTFAccessor::UNSIGNED_BYTE)
+		{
+			// Get the weight
+			weight = mBufferReader.readVec4FromUnsignedByteBuffer(weightBuffer,
+				i,
+				weightAccessor,
+				getCorrectForMinMaxPropertyValue(data));
+		}
+		else if (weightAccessor.mType == "VEC4" && weightAccessor.mComponentType == gLTFAccessor::UNSIGNED_SHORT)
+		{
+			// Get the weight
+			weight = mBufferReader.readVec4FromUnsignedShortBuffer(weightBuffer,
+				i,
+				weightAccessor,
+				getCorrectForMinMaxPropertyValue(data));
+		}
+
+		// Write the xml entry. A vertex can be influenced by max. 4 bones/joints
+		float joints[4];
+		float weights[4];
+		joints[0] = joint.x;
+		joints[1] = joint.y;
+		joints[2] = joint.z;
+		joints[3] = joint.w;
+		weights[0] = weight.x;
+		weights[1] = weight.y;
+		weights[2] = weight.z;
+		weights[3] = weight.w;
+		fCount = 0;
+		while (fCount < 4)
+		{
+			weights[fCount] = weights[fCount] < 0.00000001f ? 1.0f : weights[fCount];
+			dst << TABx4 <<
+				"<vertexboneassignment vertexindex=\"" <<
+				i <<
+				"\" boneindex = \"" <<
+				joints[fCount] <<
+				"\" weight=\"" <<
+				weights[fCount] <<
+				"\" />\n";
+			++fCount;
+		}
+	}
+
+	delete[] weightBuffer;
+	delete[] jointBuffer;
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeBoneToSkeleton(std::ofstream& dst,
+	unsigned int index,
+	gLTFNode* node,
+	Ogre::HlmsEditorPluginData* data,
+	std::map<int, gLTFAccessor> accessorMap,
+	int startBinaryBuffer)
+{
+	if (node->mName != "")
+	{
+		dst << TABx2 << "<bone id=\"" <<
+			index <<
+			"\" name=\"" <<
+			node->mName <<
+			"\">\n";
+		dst << TABx2 << "</bone>\n";
+	}
+
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton(std::ofstream& dst, gLTFNode* node)
+{
+	std::string parentNodeName = "";
+	if (node->mParentNode)
+		parentNodeName = node->mParentNode->mName;
+
+	if (parentNodeName != "" && node->mName != "")
+	{
+		dst << TABx2 << "<boneparent bone=\"" <<
+			node->mName <<
+			"\" parent=\"" <<
+			parentNodeName <<
+			"\" />\n";
+	}
+
+	return true;
+}
+
+//---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
 	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
@@ -432,7 +686,7 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 		// A position must be a VEC3/Float, otherwise it doesn't get read
 		if (positionAccessor.mType == "VEC3" && positionAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			// Perform the transformation; use Ogre's classes, becaus they are proven
+			// Perform the transformation; use Ogre's classes, because they are proven
 			Ogre::Vector3 pos = mBufferReader.readVec3FromFloatBuffer(buffer,
 				i, 
 				positionAccessor, 
@@ -767,6 +1021,19 @@ bool gLTFImportOgreMeshCreator::convertXmlFileToMesh (Ogre::HlmsEditorPluginData
 }
 
 //---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::convertXmlFileToSkeleton (Ogre::HlmsEditorPluginData* data,
+	const std::string& xmlFileName,
+	const std::string& skeletonFileName)
+{
+	std::string meshToolCmd = "OgreMeshTool -v2 ";
+
+	std::string runOgreMeshTool = meshToolCmd + "\"" + xmlFileName + "\" \"" + skeletonFileName + "\"";
+	OUT << "Generating skeleton: " << runOgreMeshTool << "\n";
+	system(runOgreMeshTool.c_str());
+	return true;
+}
+
+//---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::getCorrectForMinMaxPropertyValue (Ogre::HlmsEditorPluginData* data)
 {
 	// First get the property value (from the HLMS Editor)
@@ -790,5 +1057,17 @@ bool gLTFImportOgreMeshCreator::setMeshFileNamePropertyValue (Ogre::HlmsEditorPl
 	property.stringValue = fileName;
 	data->mOutReferencesMap[property.propertyName] = property;
 	
+	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::setSkeletonFileNamePropertyValue(Ogre::HlmsEditorPluginData* data, const std::string& fileName)
+{
+	Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY property;
+	property.propertyName = "load_skeleton";
+	property.type = Ogre::HlmsEditorPluginData::STRING;
+	property.stringValue = fileName;
+	data->mOutReferencesMap[property.propertyName] = property;
+
 	return true;
 }

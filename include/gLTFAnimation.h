@@ -25,50 +25,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFNode_H__
-#define __gLTFNode_H__
+#ifndef __gLTFAnimation_H__
+#define __gLTFAnimation_H__
 
 #include <string>
-#include <vector>
+#include <map>
 #include <iostream>
-#include "gLTFMesh.h"
-#include "OgreMatrix4.h"
+#include "gLTFAnimationChannel.h"
+#include "gLTFAnimationSampler.h"
 
 /************************************************************************************************
- This file contains the data struture of a gLFTNode.
+ This file contains the data struture of a gLFTAnimation.
 /************************************************************************************************/
 
-/**********************************************/
-/** Class responsible that represents an Node */
-/**********************************************/
-class gLTFNode
+/***************************************************/
+/** Class responsible that represents an Animation */
+/***************************************************/
+class gLTFAnimation
 {
 	public:
-		gLTFNode(void);
-		virtual ~gLTFNode(void) {};
-		void out (void); // prints the content of the gLTFNode
+		gLTFAnimation(void);
+		virtual ~gLTFAnimation(void) {};
+		void out (void); // prints the content of the gLTFAnimation
 
 		// Public members
-		int mCamera; // unused for now
-		std::vector<int> mChildren;
-		int mSkin;
-		float mMatrix[16];
-		bool mHasMatrix;
-		int mMesh;
-		float mRotation[4];
-		bool mHasRotation;
-		float mScale[3];
-		bool mHasScale;
-		float mTranslation[3];
-		bool mHasTranslation;
-		std::vector<float> mWeights;
 		std::string mName;
+		std::map<int, gLTFAnimationChannel> mAnimationChannelsMap;
+		std::map<int, gLTFAnimationSampler> mAnimationSamplersMap;
 
 		// Derived data
-		gLTFMesh mMeshDerived; // from mesh
-		bool mTransformationCalculated;
-		Ogre::Matrix4 mCalculatedTransformation;
-		gLTFNode* mParentNode;
 };
 
 #endif

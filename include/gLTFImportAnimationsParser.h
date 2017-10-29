@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
-For the latest info, see http://www.ogre3d.org/
+For the latest info, see http://www.ogre3d.org
 
 Copyright (c) 2000-2014 Torus Knot Software Ltd
 
@@ -25,50 +25,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
-#ifndef __gLTFNode_H__
-#define __gLTFNode_H__
+#ifndef __gLTFImportAnimationsParser_H__
+#define __gLTFImportAnimationsParser_H__
 
-#include <string>
-#include <vector>
-#include <iostream>
-#include "gLTFMesh.h"
-#include "OgreMatrix4.h"
+#include <map>
+#include "gLTFImportConstants.h"
+#include "gLTFAnimation.h"
+#include "rapidjson/document.h"
 
-/************************************************************************************************
- This file contains the data struture of a gLFTNode.
-/************************************************************************************************/
-
-/**********************************************/
-/** Class responsible that represents an Node */
-/**********************************************/
-class gLTFNode
+/** Class responsible for executing the import and transformation of gLTF Animations */
+class gLTFImportAnimationsParser
 {
 	public:
-		gLTFNode(void);
-		virtual ~gLTFNode(void) {};
-		void out (void); // prints the content of the gLTFNode
+		gLTFImportAnimationsParser (void)
+		{
+			mAnimationsMap.clear();
+		};
+		virtual ~gLTFImportAnimationsParser (void) {};
 
-		// Public members
-		int mCamera; // unused for now
-		std::vector<int> mChildren;
-		int mSkin;
-		float mMatrix[16];
-		bool mHasMatrix;
-		int mMesh;
-		float mRotation[4];
-		bool mHasRotation;
-		float mScale[3];
-		bool mHasScale;
-		float mTranslation[3];
-		bool mHasTranslation;
-		std::vector<float> mWeights;
-		std::string mName;
+		// Parse the gLTF Animations (level 1)
+		bool parseAnimations (rapidjson::Value::ConstMemberIterator jsonIterator);
 
-		// Derived data
-		gLTFMesh mMeshDerived; // from mesh
-		bool mTransformationCalculated;
-		Ogre::Matrix4 mCalculatedTransformation;
-		gLTFNode* mParentNode;
+		// Returns the animations structure
+		const std::map<int, gLTFAnimation> getParsedAnimations(void) const;
+
+	protected:
+
+	private:
+		std::map<int, gLTFAnimation> mAnimationsMap;
 };
 
 #endif

@@ -43,8 +43,9 @@ int main()
 	//pluginData.mInFileDialogName = "Corset.glb"; // Binary file
 	//pluginData.mInFileDialogName = "Monster.gltf"; // Embedded binary
 	//pluginData.mInFileDialogName = "SmilingFace.gltf"; // Json text file
-	pluginData.mInFileDialogName = "scene.gltf"; // Json text file
+	//pluginData.mInFileDialogName = "scene.gltf"; // Json text file
 	//pluginData.mInFileDialogName = "CesiumMilkTruck.gltf"; // Json text file
+	pluginData.mInFileDialogName = "CesiumMan.gltf"; // Json text file
 	
 
 	//pluginData.mInFileDialogBaseName = "BoomBox";
@@ -57,8 +58,9 @@ int main()
 	//pluginData.mInFileDialogBaseName = "Corset";
 	//pluginData.mInFileDialogBaseName = "Monster";
 	//pluginData.mInFileDialogBaseName = "SmilingFace";
-	pluginData.mInFileDialogBaseName = "scene";
+	//pluginData.mInFileDialogBaseName = "scene";
 	//pluginData.mInFileDialogBaseName = "CesiumMilkTruck";
+	pluginData.mInFileDialogBaseName = "CesiumMan";
 
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/BoomBox/glTF/"; // With end slash
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/Suzanne/glTF/"; // With end slash
@@ -74,7 +76,8 @@ int main()
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/sexylady/";
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/CesiumMilkTruck/glTF/"; // With end slash
 	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/warehouse/";
-	pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/cartoongirl/";
+	//pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/cartoongirl/";
+	pluginData.mInFileDialogPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/2.0/CesiumMan/glTF/"; // With end slash
 	
 	pluginData.mInImportPath = "C:/Users/Henry/Downloads/glTF-Sample-Models-master/"; // With end slash
 	//pluginData.mInImportPath = "C:/Users/Henry/Downloads/AdamHead/import/"; // With end slash

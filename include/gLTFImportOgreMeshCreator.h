@@ -52,9 +52,10 @@ class gLTFImportOgreMeshCreator
 			std::map<int, gLTFNode> nodesMap,
 			std::map<int, gLTFMesh> meshesMap,
 			std::map<int, gLTFAccessor> accessorMap,
-			int startBinaryBuffer); // Creates *.xml and .mesh files
+			int startBinaryBuffer,
+			bool hasAnimations); // Creates *.xml and .mesh files
 
-		bool createIndividualOgreMeshFiles(Ogre::HlmsEditorPluginData* data,
+		bool createIndividualOgreMeshFiles (Ogre::HlmsEditorPluginData* data,
 			std::map<int, gLTFMesh> meshesMap,
 			std::map<int, gLTFAccessor> accessorMap,
 			int startBinaryBuffer); // Creates individual files
@@ -62,30 +63,54 @@ class gLTFImportOgreMeshCreator
 		bool createCombinedOgreMeshFile (Ogre::HlmsEditorPluginData* data,
 			std::map<int, gLTFNode> nodesMap,
 			std::map<int, gLTFAccessor> accessorMap,
-			int startBinaryBuffer); // Combine into one file
+			int startBinaryBuffer,
+			bool hasAnimations); // Combine into one file
+
+		bool createCombinedOgreSkeletonFile (Ogre::HlmsEditorPluginData* data,
+			std::map<int, gLTFNode> nodesMap,
+			std::map<int, gLTFAccessor> accessorMap,
+			int startBinaryBuffer,
+			bool hasAnimations);
 	
 	protected:
 		// Write to mesh .xml file
-		bool writeSubmesh(std::ofstream& dst,
+		bool writeSubmeshToMesh (std::ofstream& dst,
 			gLTFMesh mesh,
 			Ogre::HlmsEditorPluginData* data,
 			std::map<int, gLTFAccessor> accessorMap,
 			int startBinaryBuffer,
-			Ogre::Matrix4 matrix = Ogre::Matrix4());
+			Ogre::Matrix4 matrix = Ogre::Matrix4(),
+			bool hasAnimations = false);
 
-		bool writeFaces (std::ofstream& dst,
+		bool writeFacesToMesh(std::ofstream& dst,
 			const gLTFPrimitive& primitive,
 			std::map<int, gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer); // Write all faces
 
-		bool writeVertices (std::ofstream& dst, 
+		bool writeVerticesToMesh(std::ofstream& dst,
 			const gLTFPrimitive& primitive, 
 			std::map<int, 
 			gLTFAccessor> accessorMap,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer,
-			Ogre::Matrix4 matrix = Ogre::Matrix4()); // Write all vertices
+			Ogre::Matrix4 matrix = Ogre::Matrix4()); // Write all vertices of a submesh
+
+		bool writeBoneAssignmentsToMesh(std::ofstream& dst,
+			const gLTFPrimitive& primitive,
+			std::map<int, gLTFAccessor> accessorMap,
+			Ogre::HlmsEditorPluginData* data, 
+			int startBinaryBuffer); // Write all bone assignments of a submesh
+
+		// Write to skeleton.xml file
+		bool writeBoneToSkeleton(std::ofstream& dst,
+			unsigned int index,
+			gLTFNode* node,
+			Ogre::HlmsEditorPluginData* data,
+			std::map<int, gLTFAccessor> accessorMap,
+			int startBinaryBuffer);
+
+		bool writeBoneHierarchyToSkeleton (std::ofstream& dst, gLTFNode* node);
 		
 		// Read attributes from buffer
 		void readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
@@ -134,8 +159,13 @@ class gLTFImportOgreMeshCreator
 			const std::string& xmlFileName, 
 			const std::string& meshFileName);
 
-		bool getCorrectForMinMaxPropertyValue(Ogre::HlmsEditorPluginData* data);
-		bool setMeshFileNamePropertyValue(Ogre::HlmsEditorPluginData* data, const std::string& fileName);
+		bool convertXmlFileToSkeleton (Ogre::HlmsEditorPluginData* data,
+			const std::string& xmlFileName,
+			const std::string& skeletonFileName);
+
+		bool getCorrectForMinMaxPropertyValue (Ogre::HlmsEditorPluginData* data);
+		bool setMeshFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
+		bool setSkeletonFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
 	
 	private:
 		std::string mHelperString;

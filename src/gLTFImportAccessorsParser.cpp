@@ -39,6 +39,7 @@ bool gLTFImportAccessorsParser::parseAccessors (rapidjson::Value::ConstMemberIte
 	OUT << TAB << "Loop through accessors array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		OUT << TAB << "accessor index ==> " << index << "\n";
 		gLTFAccessor accessor;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();

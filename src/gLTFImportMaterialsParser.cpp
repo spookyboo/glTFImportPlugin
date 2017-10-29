@@ -45,6 +45,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 	OUT << TAB << "Loop through materials array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		OUT << TAB << "material index ==> " << count  << "\n";
 		gLTFMaterial material;
 		name = "";
 		rapidjson::Value::ConstMemberIterator it;

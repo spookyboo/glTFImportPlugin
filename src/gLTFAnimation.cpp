@@ -27,42 +27,15 @@
 */
 
 #include "gLTFImportConstants.h"
-#include "gLTFNode.h"
+#include "gLTFAnimation.h"
 
 //---------------------------------------------------------------------
-gLTFNode::gLTFNode(void) :
-	mCamera (-1),
-	mSkin (-1), 
-	mMesh (-1),
-	mHasMatrix(false),
-	mHasRotation(false),
-	mHasScale(false),
-	mHasTranslation(false),
-	mTransformationCalculated(false),
-	mParentNode(0)
+gLTFAnimation::gLTFAnimation(void)
 {
-	mChildren.clear();
-	mWeights.clear();
-	mName = "";
-	for (int i = 0; i < 16; ++i)
-		mMatrix[i] = 0.0f;
-
-	mRotation[0] = 0.0f;
-	mRotation[1] = 0.0f;
-	mRotation[2] = 0.0f;
-	mRotation[3] = 1.0f;
-
-	mScale[0] = 1.0f;
-	mScale[1] = 1.0f;
-	mScale[2] = 1.0f;
-
-	mTranslation[0] = 0.0f;
-	mTranslation[1] = 0.0f;
-	mTranslation[2] = 0.0f;
 }
 
 //---------------------------------------------------------------------
-void gLTFNode::out (void)
+void gLTFAnimation::out (void)
 {
-	OUT << "***************** Debug: gLTFNode *****************\n";
+	OUT << "***************** Debug: gLTFAnimation *****************\n";
 }

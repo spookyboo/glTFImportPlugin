@@ -151,10 +151,14 @@
   <ItemGroup>
     <ClCompile Include="..\src\base64.cpp" />
     <ClCompile Include="..\src\gLTFAccessor.cpp" />
+    <ClCompile Include="..\src\gLTFAnimation.cpp" />
+    <ClCompile Include="..\src\gLTFAnimationChannel.cpp" />
+    <ClCompile Include="..\src\gLTFAnimationSampler.cpp" />
     <ClCompile Include="..\src\gLTFBuffer.cpp" />
     <ClCompile Include="..\src\gLTFBufferView.cpp" />
     <ClCompile Include="..\src\gLTFImage.cpp" />
     <ClCompile Include="..\src\gLTFImportAccessorsParser.cpp" />
+    <ClCompile Include="..\src\gLTFImportAnimationsParser.cpp" />
     <ClCompile Include="..\src\gLTFImportBufferReader.cpp" />
     <ClCompile Include="..\src\gLTFImportBuffersParser.cpp" />
     <ClCompile Include="..\src\gLTFImportBufferViewsParser.cpp" />

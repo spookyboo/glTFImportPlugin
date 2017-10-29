@@ -99,7 +99,8 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 			mNodesMap, 
 			mMeshesMap, 
 			mAccessorsMap, 
-			startBinaryBuffer);
+			startBinaryBuffer,
+			mHasAnimations);
 	}
 
 	// Create the HLMSEditor project file
@@ -215,11 +216,17 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 	rapidjson::Value::ConstMemberIterator itEnd = d.MemberEnd();
 	for (rapidjson::Value::ConstMemberIterator it = d.MemberBegin(); it != itEnd; ++it)
 	{
-		// TODO: Parse animations, assets, nodes, scene, skins, ... ?????
+		// TODO: Parse assets, scene, skins, ... ?????
 
 		OUT << "-------------------------------- key gLTF ==> " << it->name.GetString() << " --------------------------------\n";
 		std::string name(it->name.GetString());
 
+		if (it->value.IsArray() && name == "animations")
+		{
+			mAnimationsParser.parseAnimations(it); // Parse the animations
+			mAnimationsMap = mAnimationsParser.getParsedAnimations();
+			mHasAnimations = true;
+		}
 		if (it->value.IsArray() && name == "nodes")
 		{
 			mNodesParser.parseNodes(it); // Parse the nodes
@@ -726,6 +733,7 @@ void gLTFImportExecutor::propagateNodeTransformsToChildren (gLTFNode* node)
 	for (itChildNodes = node->mChildren.begin(); itChildNodes != itChildNodesEnd; itChildNodes++)
 	{
 		childNode = findNodeByIndex(node->mChildren[count]);
+		childNode->mParentNode = node; // Set the parentnode
 		if (childNode && !childNode->mTransformationCalculated)
 		{
 			childNode->mCalculatedTransformation = node->mCalculatedTransformation * childNode->mCalculatedTransformation;
@@ -739,8 +747,6 @@ void gLTFImportExecutor::propagateNodeTransformsToChildren (gLTFNode* node)
 //---------------------------------------------------------------------
 gLTFNode* gLTFImportExecutor::findNodeByIndex (int nodeIndex)
 {
-	OUT << TABx4 << "gLTFImportExecutor::findNodeByIndex\n";
-
 	std::map<int, gLTFNode>::iterator it = mNodesMap.find(nodeIndex);
 	if (it != mNodesMap.end())
 	{
@@ -1041,7 +1047,7 @@ const std::string& gLTFImportExecutor::writeImageFile (const std::string& textur
 bool gLTFImportExecutor::convertTexture (const std::string& fileName, 
 	TextureTransformation transformation)
 {
-#ifdef TEXTURE_TRANSFORMATION
+#ifdef USE_OGRE_IN_PLUGIN
 	OUT << TABx4 << "Perform gLTFImportExecutor::convertTexture\n";
 	if (fileName == "")
 		return false; // File does not exist

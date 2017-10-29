@@ -26,64 +26,61 @@
   -----------------------------------------------------------------------------
 */
 
-#include "gLTFImportBuffersParser.h"
+#include "gLTFAnimation.h"
+#include "gLTFImportAnimationsParser.h"
 
 //---------------------------------------------------------------------
-bool gLTFImportBuffersParser::parseBuffers (const std::string& fileName, rapidjson::Value::ConstMemberIterator jsonIterator)
+bool gLTFImportAnimationsParser::parseAnimations (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << TAB << "Perform gLTFImportBuffersParser::parseBuffers\n";
+	OUT << TAB << "Perform gLTFImportAnimationsParser::parseAnimations\n";
 
-	int source = 0;
+	int index = 0;
 	const rapidjson::Value& array = jsonIterator->value;
 
-	OUT << TAB << "Loop through Buffers array\n";
+	OUT << TAB << "Loop through animations array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
-		OUT << TAB << "buffer index ==> " << source << "\n";
-		gLTFBuffer buffer;
+		OUT << TAB << "animation index ==> " << index << "\n";
+		gLTFAnimation animation;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
 
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
-			OUT << TABx2 << "key buffer ==> " << it->name.GetString() << "\n";
+			OUT << TABx2 << "key animation ==> " << it->name.GetString() << "\n";
 			std::string key = std::string(it->name.GetString());
-			if (it->value.IsString() && key == "uri")
+			if (it->value.IsArray() && key == "channels")
 			{
-				// ******** 1. uri ********
-				buffer.mUri = it->value.GetString();
-				OUT << TABx2 << "value ==> " << buffer.mUri << "\n";
+				// ******** 1. channels ********
+				//mAnimationChannelsParser.parseAnimationChannels(it);
+				//animation.mAnimationChannelsMap = mAnimationChannelsParser.getParsedAnimationChannels();
 			}
-			if (it->value.IsInt() && key == "byteLength")
+			if (it->value.IsArray() && key == "samplers")
 			{
-				// ******** 2. byteLength ********
-				buffer.mByteLength = it->value.GetInt();
-				OUT << TABx2 << "value ==> " << buffer.mByteLength << "\n";
+				// ******** 2. samplers ********
+				//mAnimationSamplersParser.parseAnimationSamplers(it);
+				//animation.mAnimationSamplersMap = mAnimationSamplersParser.getParsedAnimationSamplers();
 			}
 			if (it->value.IsString() && key == "name")
 			{
 				// ******** 3. name ********
-				buffer.mName = it->value.GetString();
-				OUT << TABx2 << "value ==> " << buffer.mName << "\n";
+				animation.mName = it->value.GetString();
+				OUT << TABx2 << "value ==> " << animation.mName << "\n";
 			}
 		}
 		
-		if (buffer.mUri == "")
-		{
-			/* The uri is not defined, so assign the file in which the json is defined. This may be the case when
-			   both the json and the buffer are part of the same file (so, the glb file itself)
-			*/
-			buffer.mUri = fileName;
-		}
-		mBuffersMap[source] = buffer;
-		++source;
+		mAnimationsMap[index] = animation;
+		++index;
 	}
 
 	return true;
 }
 
 //---------------------------------------------------------------------
-const std::map<int, gLTFBuffer> gLTFImportBuffersParser::getParsedBuffers (void) const
+const std::map<int, gLTFAnimation> gLTFImportAnimationsParser::getParsedAnimations (void) const
 {
-	return mBuffersMap;
+	return mAnimationsMap;
 }
+
+
+

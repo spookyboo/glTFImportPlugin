@@ -33,13 +33,17 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 {
 	OUT << TAB << "Perform gLTFImportNodesParser::parseNodes\n";
 
+	std::string name;
 	int index = 0;
 	const rapidjson::Value& array = jsonIterator->value;
 
 	OUT << TAB << "Loop through Nodes array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		OUT << TAB << "node index ==> " << index << "\n";
 		gLTFNode node;
+		node.mName = "";
+		name = "";
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
 
@@ -151,7 +155,8 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 			if (it->value.IsString() && key == "name")
 			{
 				// ******** 10. name ********
-				node.mName = it->value.GetString();
+				name = it->value.GetString();
+				node.mName = name;
 				OUT << TABx2 << "value ==> " << node.mName << "\n";
 			}
 		}
@@ -206,6 +211,13 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 				scale.z = node.mScale[2];
 			}
 			matrix.makeTransform(translation, scale, rotation);
+		}
+		
+		if (name == "")
+		{
+			// Generate a name if not provided (name is optional in gLTF)
+			name = "Node_" + generateRandomString();
+			node.mName = name;
 		}
 		
 		node.mCalculatedTransformation = matrix;

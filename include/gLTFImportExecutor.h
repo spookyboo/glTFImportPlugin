@@ -41,6 +41,7 @@ THE SOFTWARE.
 #include "gLTFImportBuffersParser.h"
 #include "gLTFImportBufferViewsParser.h"
 #include "gLTFImportNodesParser.h"
+#include "gLTFImportAnimationsParser.h"
 #include "gLTFImportPbsMaterialsCreator.h"
 #include "gLTFImportOgreMeshCreator.h"
 #include "rapidjson/document.h"
@@ -138,6 +139,7 @@ class gLTFImportExecutor
 		bool isDuplicateUri (const std::string& uri); // Check whether the image file was already written/copied
 
 	private:
+		bool mHasAnimations; // If true, the gLTF file has animations
 		std::string mHelperString;
 		std::string mHelperMaterialNameString;
 		gLTFImage mHelperImage;
@@ -152,6 +154,7 @@ class gLTFImportExecutor
 		std::map<int, gLTFBufferView> mBufferViewsMap;
 		std::map<int, gLTFBuffer> mBuffersMap;
 		std::map<int, gLTFNode> mNodesMap;
+		std::map<int, gLTFAnimation> mAnimationsMap;
 
 		gLTFImportAccessorsParser mAccessorsParser;
 		gLTFImportMeshesParser mMeshesParser;
@@ -162,6 +165,7 @@ class gLTFImportExecutor
 		gLTFImportBufferViewsParser mBufferViewsParser;
 		gLTFImportImagesParser mImagesParser;
 		gLTFImportNodesParser mNodesParser;
+		gLTFImportAnimationsParser mAnimationsParser;
 		
 		// Creator classes
 		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;

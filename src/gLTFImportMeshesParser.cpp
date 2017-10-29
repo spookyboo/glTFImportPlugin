@@ -37,6 +37,7 @@ bool gLTFImportMeshesParser::parseMeshes (rapidjson::Value::ConstMemberIterator 
 	const rapidjson::Value& array = jsonIterator->value;
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
+		OUT << TAB << "mesh index ==> " << index << "\n";
 		gLTFMesh mesh;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();

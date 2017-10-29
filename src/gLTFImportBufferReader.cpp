@@ -253,14 +253,19 @@ const Ogre::Vector4& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char
 {
 	unsigned char raw;
 	int unsignedByteSize = sizeof(unsigned char);
+	//OUT << "DEBUG: unsignedByteSize: " << unsignedByteSize << "\n";
 	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 4 * unsignedByteSize;
 	memcpy(&raw, &buffer[count * stride], unsignedByteSize);
+	//OUT << "DEBUG: readVec4FromUnsignedByteBuffer[0]: " << (unsigned int)raw << "\n";
 	mHelperVec4.x = raw;
 	memcpy(&raw, &buffer[count * stride + unsignedByteSize], unsignedByteSize);
+	//OUT << "DEBUG: readVec4FromUnsignedByteBuffer[1]: " << (unsigned int)raw << "\n";
 	mHelperVec4.y = raw;
 	memcpy(&raw, &buffer[count * stride + 2 * unsignedByteSize], unsignedByteSize);
+	//OUT << "DEBUG: readVec4FromUnsignedByteBuffer[2]: " << (unsigned int)raw << "\n";
 	mHelperVec4.z = raw;
 	memcpy(&raw, &buffer[count * stride + 3 * unsignedByteSize], unsignedByteSize);
+	//OUT << "DEBUG: readVec4FromUnsignedByteBuffer[3]: " << (unsigned int)raw << "\n";
 	mHelperVec4.w = raw;
 
 	// Correct with min/max
@@ -278,14 +283,19 @@ const Ogre::Vector4& gLTFImportBufferReader::readVec4FromUnsignedShortBuffer(cha
 {
 	unsigned short raw;
 	int unsignedShortSize = sizeof(unsigned short);
+	//OUT << "DEBUG: unsignedShortSize: " << unsignedShortSize << "\n";
 	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 4 * unsignedShortSize;
 	memcpy(&raw, &buffer[count * stride], unsignedShortSize);
+	//OUT << "DEBUG: readVec4FromUnsignedShortBuffer[0]: " << raw << "\n";
 	mHelperVec4.x = raw;
 	memcpy(&raw, &buffer[count * stride + unsignedShortSize], unsignedShortSize);
+	//OUT << "DEBUG: readVec4FromUnsignedShortBuffer[1]: " << raw << "\n";
 	mHelperVec4.y = raw;
 	memcpy(&raw, &buffer[count * stride + 2 * unsignedShortSize], unsignedShortSize);
+	//OUT << "DEBUG: readVec4FromUnsignedShortBuffer[2]: " << raw << "\n";
 	mHelperVec4.z = raw;
 	memcpy(&raw, &buffer[count * stride + 3 * unsignedShortSize], unsignedShortSize);
+	//OUT << "DEBUG: readVec4FromUnsignedShortBuffer[3]: " << raw << "\n";
 	mHelperVec4.w = raw;
 
 	// Correct with min/max

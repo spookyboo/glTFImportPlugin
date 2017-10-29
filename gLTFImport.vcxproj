@@ -134,10 +134,14 @@
   <ItemGroup>
     <ClInclude Include="include\base64.h" />
     <ClInclude Include="include\gLTFAccessor.h" />
+    <ClInclude Include="include\gLTFAnimation.h" />
+    <ClInclude Include="include\gLTFAnimationChannel.h" />
+    <ClInclude Include="include\gLTFAnimationSampler.h" />
     <ClInclude Include="include\gLTFBuffer.h" />
     <ClInclude Include="include\gLTFBufferView.h" />
     <ClInclude Include="include\gLTFImage.h" />
     <ClInclude Include="include\gLTFImportAccessorsParser.h" />
+    <ClInclude Include="include\gLTFImportAnimationsParser.h" />
     <ClInclude Include="include\gLTFImportBuffersParser.h" />
     <ClInclude Include="include\gLTFImportBufferReader.h" />
     <ClInclude Include="include\gLTFImportBufferViewsParser.h" />
@@ -199,10 +203,14 @@
   <ItemGroup>
     <ClCompile Include="src\base64.cpp" />
     <ClCompile Include="src\gLTFAccessor.cpp" />
+    <ClCompile Include="src\gLTFAnimation.cpp" />
+    <ClCompile Include="src\gLTFAnimationChannel.cpp" />
+    <ClCompile Include="src\gLTFAnimationSampler.cpp" />
     <ClCompile Include="src\gLTFBuffer.cpp" />
     <ClCompile Include="src\gLTFBufferView.cpp" />
     <ClCompile Include="src\gLTFImage.cpp" />
     <ClCompile Include="src\gLTFImportAccessorsParser.cpp" />
+    <ClCompile Include="src\gLTFImportAnimationsParser.cpp" />
     <ClCompile Include="src\gLTFImportBuffersParser.cpp" />
     <ClCompile Include="src\gLTFImportBufferReader.cpp" />
     <ClCompile Include="src\gLTFImportBufferViewsParser.cpp" />
