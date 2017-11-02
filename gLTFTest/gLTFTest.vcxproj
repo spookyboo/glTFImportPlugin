@@ -158,6 +158,8 @@
     <ClCompile Include="..\src\gLTFBufferView.cpp" />
     <ClCompile Include="..\src\gLTFImage.cpp" />
     <ClCompile Include="..\src\gLTFImportAccessorsParser.cpp" />
+    <ClCompile Include="..\src\gLTFImportAnimationChannelsParser.cpp" />
+    <ClCompile Include="..\src\gLTFImportAnimationSamplersParser.cpp" />
     <ClCompile Include="..\src\gLTFImportAnimationsParser.cpp" />
     <ClCompile Include="..\src\gLTFImportBufferReader.cpp" />
     <ClCompile Include="..\src\gLTFImportBuffersParser.cpp" />

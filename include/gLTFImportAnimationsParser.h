@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <map>
 #include "gLTFImportConstants.h"
 #include "gLTFAnimation.h"
+#include "gLTFImportAnimationChannelsParser.h"
+#include "gLTFImportAnimationSamplersParser.h"
 #include "rapidjson/document.h"
 
 /** Class responsible for executing the import and transformation of gLTF Animations */
@@ -53,6 +55,8 @@ class gLTFImportAnimationsParser
 
 	private:
 		std::map<int, gLTFAnimation> mAnimationsMap;
+		gLTFImportAnimationChannelsParser mAnimationChannelsParser;
+		gLTFImportAnimationSamplersParser mAnimationSamplersParser;
 };
 
 #endif

@@ -148,6 +148,14 @@ namespace Ogre
 		property.boolValue = true;
 		mProperties[property.propertyName] = property;
 
+		// Optimize for desktop
+		property.propertyName = "generate_animation";
+		property.labelName = "Always generate animation";
+		property.info = "";
+		property.type = HlmsEditorPluginData::BOOL;
+		property.boolValue = true;
+		mProperties[property.propertyName] = property;
+
 		// Correct for min/max
 		// Accessors have an optional min/max array, but for some models applying this results in misformed vertices
 		property.propertyName = "correct_min_max";

@@ -46,18 +46,28 @@ gLTFImportOgreMeshCreator::gLTFImportOgreMeshCreator (void)
 	mTexcoords_0Map.clear();
 	mTexcoords_1Map.clear();
 	mIndicesMap.clear();
+	mNodesMap.clear();
+	mMeshesMap.clear();
+	mAnimationsMap.clear();
+	mAccessorMap.clear();
 }
 
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData* data,
 	std::map<int, gLTFNode> nodesMap,
 	std::map<int, gLTFMesh> meshesMap,
+	std::map<int, gLTFAnimation> animationsMap,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
 	bool hasAnimations)
 {
 	OUT << "\nPerform gLTFImportOgreMeshCreator::createOgreMeshFiles\n";
 	OUT << "------------------------------------------------------\n";
+
+	mNodesMap = nodesMap;
+	mMeshesMap = meshesMap;
+	mAnimationsMap = animationsMap;
+	mAccessorMap = accessorMap;
 
 	// First get the property value (from the HLMS Editor)
 	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
@@ -67,23 +77,22 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 		// Property found; determine its value
 		if ((it->second).boolValue)
 		{
-			createCombinedOgreSkeletonFile(data, nodesMap, accessorMap, startBinaryBuffer, hasAnimations);
-			return createCombinedOgreMeshFile(data, nodesMap, accessorMap, startBinaryBuffer, hasAnimations);
+			if (isGenerateAnimationProperty(data))
+				createCombinedOgreSkeletonFile(data, startBinaryBuffer, hasAnimations);
+			return createCombinedOgreMeshFile(data, startBinaryBuffer, hasAnimations);
 		}
 		else
-			return createIndividualOgreMeshFiles (data, meshesMap, accessorMap, startBinaryBuffer);
+			return createIndividualOgreMeshFiles (data, startBinaryBuffer);
 	}
 	else
 	{
 		// Property not found; the default way of processing is to create individual meshes
-		return createIndividualOgreMeshFiles(data, meshesMap, accessorMap, startBinaryBuffer);
+		return createIndividualOgreMeshFiles(data, startBinaryBuffer);
 	}
 }
 
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorPluginData* data,
-	std::map<int, gLTFMesh> meshesMap,
-	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer)
 {
 	OUT << "\nPerform gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles\n";
@@ -96,7 +105,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 	gLTFMesh mesh;
 	std::string ogreFullyQualifiedMeshXmlFileName;
 	std::string ogreFullyQualifiedMeshMeshFileName;
-	for (it = meshesMap.begin(); it != meshesMap.end(); it++)
+	for (it = mMeshesMap.begin(); it != mMeshesMap.end(); it++)
 	{
 		mesh = it->second;
 		ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + mesh.mName + ".xml";
@@ -110,7 +119,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		dst << "<mesh>\n";
 		dst << TAB << "<submeshes>\n";
 
-		writeSubmeshToMesh(dst, mesh, data, accessorMap, startBinaryBuffer); // Do not perform any transformation
+		writeSubmeshToMesh(dst, mesh, data, startBinaryBuffer); // Do not perform any transformation
 		
 		dst << TAB << "</submeshes>\n";
 		dst << "</mesh>\n";
@@ -126,8 +135,6 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPluginData* data,
-	std::map<int, gLTFNode> nodesMap,
-	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
 	bool hasAnimations)
 {
@@ -154,7 +161,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	dst << TAB << "<submeshes>\n";
 
 	// Iterate through all nodes and write the geometry data (vertices) of the related meshes
-	for (it = nodesMap.begin(); it != nodesMap.end(); it++)
+	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
 	{
 		node = it->second;
 		if (node.mMesh > -1)
@@ -164,7 +171,6 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 			writeSubmeshToMesh(dst,
 				mesh, 
 				data, 
-				accessorMap, 
 				startBinaryBuffer, 
 				matrix,
 				hasAnimations);
@@ -172,7 +178,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	}
 
 	dst << TAB << "</submeshes>\n";
-	if (hasAnimations)
+	if (hasAnimations && isGenerateAnimationProperty(data))
 	{
 		dst << TAB <<
 			"<skeletonlink name = \"" <<
@@ -196,8 +202,6 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditorPluginData* data,
-	std::map<int, gLTFNode> nodesMap,
-	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
 	bool hasAnimations)
 {
@@ -230,14 +234,13 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 	/* Iterate through all nodes and write the bone info. Each joint is a bone. Each joint refers to a node.
 	 */
 	unsigned int index = 0;
-	for (it = nodesMap.begin(); it != nodesMap.end(); it++)
+	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
 	{
 		node = it->second;
 		writeBoneToSkeleton(dst,
 			index,
 			&node,
 			data,
-			accessorMap,
 			startBinaryBuffer);
 		++index;
 	}
@@ -245,7 +248,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 
 	// 2. Add bones hierarchy
 	dst << TAB << "<bonehierarchy>\n";
-	for (it = nodesMap.begin(); it != nodesMap.end(); it++)
+	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
 	{
 		node = it->second;
 		writeBoneHierarchyToSkeleton(dst, &node);
@@ -254,7 +257,13 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 
 	// 3. Add animations
 	dst << TAB << "<animations>\n";
-	// TODO: Add animations
+	std::map<int, gLTFAnimation>::iterator itAnimations;
+	gLTFAnimation animation;
+	for (itAnimations = mAnimationsMap.begin(); itAnimations != mAnimationsMap.end(); itAnimations++)
+	{
+		animation = itAnimations->second;
+		writeAnimationsToSkeleton(dst, &animation);
+	}
 	dst << TAB << "</animations>\n";
 
 	dst << "</skeleton>\n";
@@ -276,7 +285,6 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 	gLTFMesh mesh,
 	Ogre::HlmsEditorPluginData* data,
-	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
 	Ogre::Matrix4 matrix,
 	bool hasAnimations)
@@ -330,13 +338,13 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 		// Write faces
 		if (primitive.mIndicesAccessor > -1)
 		{
-			writeFacesToMesh(dst, primitive, accessorMap, data, startBinaryBuffer);
+			writeFacesToMesh(dst, primitive, data, startBinaryBuffer);
 		}
 
 		// Write geometry
 		if (primitive.mPositionAccessorDerived > -1)
 		{
-			gLTFAccessor  accessor = accessorMap[primitive.mPositionAccessorDerived];
+			gLTFAccessor  accessor = mAccessorMap[primitive.mPositionAccessorDerived];
 			dst << TABx3 << "<geometry vertexcount=\"" << accessor.mCount << "\">\n";
 
 			// Write vertexbuffer header
@@ -347,7 +355,7 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 			std::string numTextCoordsText = "\"0\"";
 			if (primitive.mNormalAccessorDerived < 0)
 				hasNormalsText = "\"false\"";
-			if (primitive.mTangentAccessorDerived < 0)
+			if (primitive.mTangentAccessorDerived < 0 || isGenerateTangentsProperty(data))
 				hasTangentsText = "\"false\"";
 			if (primitive.mTexcoord_0AccessorDerived > -1)
 				numTextCoordsText = "\"1\"";
@@ -369,7 +377,7 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 
 			// Tangents
 			dst << " tangents = " << hasTangentsText;
-			if (primitive.mTangentAccessorDerived > -1)
+			if (primitive.mTangentAccessorDerived > -1 && !isGenerateTangentsProperty(data))
 				" tangent_dimensions = \"4\"";
 
 			// Texcoords
@@ -379,7 +387,6 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 			// Write vertices
 			writeVerticesToMesh(dst,
 				primitive, 
-				accessorMap, 
 				data, 
 				startBinaryBuffer, 
 				matrix);
@@ -392,12 +399,12 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 			 * Only in case there is an animation, these entries are written, otherwise it does not
 			 * make sense.
 			 */
-			if (hasAnimations)
+			if (hasAnimations && isGenerateAnimationProperty(data))
 			{
 				dst << TABx3 << "<boneassignments>\n";
 
 				// Write bone assignments
-				writeBoneAssignmentsToMesh(dst, primitive, accessorMap, data, startBinaryBuffer);
+				writeBoneAssignmentsToMesh(dst, primitive, data, startBinaryBuffer);
 
 				dst << TABx3 << "</boneassignments>\n";
 			}
@@ -412,16 +419,15 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::writeFacesToMesh(std::ofstream& dst,
 	const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
-	gLTFAccessor  indicesAccessor = accessorMap[primitive.mIndicesAccessor];
+	gLTFAccessor  indicesAccessor = mAccessorMap[primitive.mIndicesAccessor];
 	if (indicesAccessor.mCount == 0)
 		return false;
 
 	// Read indices
-	readIndicesFromUriOrFile (primitive, accessorMap, data, startBinaryBuffer);
+	readIndicesFromUriOrFile (primitive, data, startBinaryBuffer);
 
 	// Write indices
 	dst << TABx3 << "<faces count = \"" << indicesAccessor.mCount / 3 << "\">\n";
@@ -449,26 +455,24 @@ bool gLTFImportOgreMeshCreator::writeFacesToMesh(std::ofstream& dst,
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::writeVerticesToMesh(std::ofstream& dst,
 	const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
 	Ogre::Matrix4 matrix)
 {
 	// Read positions, normals, tangents,... etc.
 	readPositionsFromUriOrFile(primitive, 
-		accessorMap, 
 		data, 
 		startBinaryBuffer, 
 		matrix); // Read the positions
-	readNormalsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the normals
-	readTangentsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the tangents
-	readColorsFromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the diffuse colours
-	readTexCoords0FromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 0
-	readTexCoords1FromUriOrFile(primitive, accessorMap, data, startBinaryBuffer); // Read the uv's set 1
+	readNormalsFromUriOrFile(primitive, data, startBinaryBuffer); // Read the normals
+	readTangentsFromUriOrFile(primitive, data, startBinaryBuffer); // Read the tangents
+	readColorsFromUriOrFile(primitive, data, startBinaryBuffer); // Read the diffuse colours
+	readTexCoords0FromUriOrFile(primitive, data, startBinaryBuffer); // Read the uv's set 0
+	readTexCoords1FromUriOrFile(primitive, data, startBinaryBuffer); // Read the uv's set 1
 
 	// Write vertices; Assume that count of positions, texcoords, etc. is the same
 	// TODO: Verify !!!!!!!!!!
-	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived];
+	gLTFAccessor  positionAccessor = mAccessorMap[primitive.mPositionAccessorDerived];
 	for (int i = 0; i < positionAccessor.mCount; i++)
 	{
 		// Open vertex
@@ -486,7 +490,7 @@ bool gLTFImportOgreMeshCreator::writeVerticesToMesh(std::ofstream& dst,
 		}
 
 		// Tangent
-		if (mTangentsMap.size() > 0)
+		if (mTangentsMap.size() > 0 && !isGenerateTangentsProperty(data))
 		{
 			Ogre::Vector4 vec4 = mTangentsMap[i];
 			// Take value 'a' (= w) into account for handedness
@@ -531,13 +535,12 @@ bool gLTFImportOgreMeshCreator::writeVerticesToMesh(std::ofstream& dst,
 //---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
 	const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
-	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived]; // To determine number of vertices
-	gLTFAccessor  jointAccessor = accessorMap[primitive.mJoints_0AccessorDerived];
-	gLTFAccessor  weightAccessor = accessorMap[primitive.mWeights_0AccessorDerived];
+	gLTFAccessor  positionAccessor = mAccessorMap[primitive.mPositionAccessorDerived]; // To determine number of vertices
+	gLTFAccessor  jointAccessor = mAccessorMap[primitive.mJoints_0AccessorDerived];
+	gLTFAccessor  weightAccessor = mAccessorMap[primitive.mWeights_0AccessorDerived];
 	Ogre::Vector4 joint;
 	Ogre::Vector4 weight;
 	unsigned short fCount;
@@ -633,16 +636,75 @@ bool gLTFImportOgreMeshCreator::writeBoneToSkeleton(std::ofstream& dst,
 	unsigned int index,
 	gLTFNode* node,
 	Ogre::HlmsEditorPluginData* data,
-	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer)
 {
 	if (node->mName != "")
 	{
+		// Get the translation, rotation, scale of the node. If not present, return and don't write this bone to skeleton file
+		std::vector<gLTFAnimationChannel> vec = getAnimationChannelsByNode(index);
+		if (vec.empty())
+			return true;
+
 		dst << TABx2 << "<bone id=\"" <<
 			index <<
 			"\" name=\"" <<
 			node->mName <<
 			"\">\n";
+
+		std::vector<gLTFAnimationChannel>::iterator it;
+		std::vector<gLTFAnimationChannel>::iterator itEnd = vec.end();
+		gLTFAnimationChannel animationChannel;
+		gLTFNode node;
+		Ogre::Matrix4 matrix4;
+		Ogre::Vector3 position;
+		Ogre::Quaternion orientation;
+		Ogre::Vector3 axis;
+		Ogre::Radian angle;
+		Ogre::Vector3 scale;
+		for (it = vec.begin(); it != itEnd; it++)
+		{
+			animationChannel = *it;
+			node = getNodeByIndex(index);
+			matrix4 = node.mCalculatedTransformation;
+			matrix4.decomposition(position, scale, orientation);
+			if (animationChannel.mTargetPath == "translation")
+			{
+				dst << TABx3 << "<position x= \"" << 
+					position.x <<
+					"\" y=\"" <<
+					position.y << 
+					"\" z=\"0" <<
+					position.z <<
+					"\" />\n";
+			}
+			else if (animationChannel.mTargetPath == "rotation")
+			{
+				orientation.ToAngleAxis(angle, axis);
+				dst << TABx3 << "<rotation angle=\"" <<
+					angle.valueRadians() <<
+					"\">\n";
+				dst << TABx4 << "<axis x= \"" << 
+					axis.x <<
+					"\" y=\"" <<
+					axis.y <<
+					"\" z=\"" <<
+					axis.z <<
+					"\" />\n";
+				dst << TABx3 << "</rotation>\n";
+			}
+			else if (animationChannel.mTargetPath == "scale")
+			{
+				dst << TABx3 << "<scale x= \"" <<
+					scale.x <<
+					"\" y=\"" <<
+					scale.y <<
+					"\" z=\"" <<
+					scale.z <<
+					"\" />\n";
+			}
+			// Weights are unsupported currently !!!
+		}
+
 		dst << TABx2 << "</bone>\n";
 	}
 
@@ -650,7 +712,23 @@ bool gLTFImportOgreMeshCreator::writeBoneToSkeleton(std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton(std::ofstream& dst, gLTFNode* node)
+//bool gLTFImportOgreMeshCreator::writeBoneTranslationToSkeleton (std::ofstream& dst, 
+//	Ogre::HlmsEditorPluginData* data,
+	//unsigned int nodeIndex,
+	//unsigned int animationSamplerIndex,
+	//int startBinaryBuffer)
+//{
+	// First get the accessor
+	// TODO: The mInput accessor is probably wrong. Where can I get the translation of the node?????
+	//gLTFAnimation animation = getAnimationByNodeIndex(nodeIndex);
+	//gLTFAnimationSampler animationSampler = getAnimationSamplerByAnimationAndSamplerIndex(animation, animationSamplerIndex);
+	//gLTFAccessor  animationInputAccessor = mAccessorMap[animationSampler.mInput];
+	//OUT << "DEBUG: animationSampler.mInput = " << animationSampler.mInput << "\n";
+	//return true;
+//}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton (std::ofstream& dst, gLTFNode* node)
 {
 	std::string parentNodeName = "";
 	if (node->mParentNode)
@@ -669,14 +747,47 @@ bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton(std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst, gLTFAnimation* animation)
+{
+	dst << TABx2 << "<animation name=\"" <<
+		animation->mName <<
+		"\" length=\"1.0\">\n";
+
+	dst << TABx3 << "<tracks>\n";
+	std::map<int, gLTFNode>::iterator it;
+	gLTFNode node;
+	unsigned int index = 0;
+	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
+	{
+		node = it->second;
+		if (node.mHasAnimation && node.hasAnimationName(animation->mName))
+		{
+			// This node is part of the animation
+			dst << TABx4 <<
+				"<track bone = \"" <<
+				node.mName <<
+				"\">\n";
+			dst << TABx4 << "</track>\n";
+		}
+		++index;
+	}
+
+	// TODO: Add track
+	dst << TABx3 << "</tracks>\n";
+
+	dst << TABx2 << "</animation>\n";
+
+	return true;
+}
+
+//---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
 	Ogre::Matrix4 matrix)
 {
 	// Open the buffer file and read positions
-	gLTFAccessor  positionAccessor = accessorMap[primitive.mPositionAccessorDerived];
+	gLTFAccessor  positionAccessor = mAccessorMap[primitive.mPositionAccessorDerived];
 	char* buffer = getBufferChunk(positionAccessor.mUriDerived, data, positionAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
@@ -701,7 +812,6 @@ void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive&
 
 //---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
@@ -709,7 +819,7 @@ void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& p
 		return;
 
 	// Get the buffer and read positions
-	gLTFAccessor  normalAccessor = accessorMap[primitive.mNormalAccessorDerived];
+	gLTFAccessor  normalAccessor = mAccessorMap[primitive.mNormalAccessorDerived];
 	char* buffer = getBufferChunk(normalAccessor.mUriDerived, data, normalAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
@@ -732,7 +842,6 @@ void gLTFImportOgreMeshCreator::readNormalsFromUriOrFile (const gLTFPrimitive& p
 
 //---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
@@ -740,7 +849,7 @@ void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& 
 		return;
 
 	// Get the buffer file and read positions
-	gLTFAccessor  tangentAccessor = accessorMap[primitive.mTangentAccessorDerived];
+	gLTFAccessor  tangentAccessor = mAccessorMap[primitive.mTangentAccessorDerived];
 	char* buffer = getBufferChunk(tangentAccessor.mUriDerived, data, tangentAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
@@ -763,7 +872,6 @@ void gLTFImportOgreMeshCreator::readTangentsFromUriOrFile (const gLTFPrimitive& 
 
 //---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
@@ -771,7 +879,7 @@ void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& pr
 		return;
 
 	// Get the buffer file and read colours
-	gLTFAccessor  mColor_0Accessor = accessorMap[primitive.mColor_0AccessorDerived];
+	gLTFAccessor  mColor_0Accessor = mAccessorMap[primitive.mColor_0AccessorDerived];
 	char* buffer = getBufferChunk(mColor_0Accessor.mUriDerived, data, mColor_0Accessor, startBinaryBuffer);
 
 	// Iterate through the chunk
@@ -807,7 +915,6 @@ void gLTFImportOgreMeshCreator::readColorsFromUriOrFile (const gLTFPrimitive& pr
 
 //---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readIndicesFromUriOrFile (const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
@@ -815,7 +922,7 @@ void gLTFImportOgreMeshCreator::readIndicesFromUriOrFile (const gLTFPrimitive& p
 		return;
 
 	// Get the buffer file and read indices
-	gLTFAccessor indicesAccessor = accessorMap[primitive.mIndicesAccessor];
+	gLTFAccessor indicesAccessor = mAccessorMap[primitive.mIndicesAccessor];
 	char* buffer = getBufferChunk(indicesAccessor.mUriDerived, data, indicesAccessor, startBinaryBuffer);
 
 	// Iterate through the chunk
@@ -850,7 +957,6 @@ void gLTFImportOgreMeshCreator::readIndicesFromUriOrFile (const gLTFPrimitive& p
 
 //---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
@@ -858,7 +964,7 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 		return;
 
 	// Get the buffer file and read positions
-	gLTFAccessor  mTexcoord_0Accessor = accessorMap[primitive.mTexcoord_0AccessorDerived];
+	gLTFAccessor  mTexcoord_0Accessor = mAccessorMap[primitive.mTexcoord_0AccessorDerived];
 	char* buffer = getBufferChunk(mTexcoord_0Accessor.mUriDerived, data, mTexcoord_0Accessor, startBinaryBuffer);
 
 	// Iterate through the chunk
@@ -897,7 +1003,6 @@ void gLTFImportOgreMeshCreator::readTexCoords0FromUriOrFile (const gLTFPrimitive
 
 //---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive& primitive,
-	std::map<int, gLTFAccessor> accessorMap,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
@@ -905,7 +1010,7 @@ void gLTFImportOgreMeshCreator::readTexCoords1FromUriOrFile (const gLTFPrimitive
 		return;
 
 	// Get the buffer file and read positions
-	gLTFAccessor  mTexcoord_1Accessor = accessorMap[primitive.mTexcoord_1AccessorDerived];
+	gLTFAccessor  mTexcoord_1Accessor = mAccessorMap[primitive.mTexcoord_1AccessorDerived];
 	char* buffer = getBufferChunk(mTexcoord_1Accessor.mUriDerived, data, mTexcoord_1Accessor, startBinaryBuffer);
 
 	// Iterate through the chunk
@@ -1071,3 +1176,126 @@ bool gLTFImportOgreMeshCreator::setSkeletonFileNamePropertyValue(Ogre::HlmsEdito
 
 	return true;
 }
+
+//---------------------------------------------------------------------
+std::vector<gLTFAnimationChannel> gLTFImportOgreMeshCreator::getAnimationChannelsByNode (int nodeIndex)
+{
+	mHelperAnimationChannelVector.clear();
+	std::map<int, gLTFAnimation>::iterator it;
+	std::map<int, gLTFAnimation>::iterator itEnd = mAnimationsMap.end();
+	std::map<int, gLTFAnimationChannel>::iterator itChannels;
+	std::map<int, gLTFAnimationChannel>::iterator itChannelsEnd;
+	gLTFAnimation animation;
+	gLTFAnimationChannel animationChannel;
+	for (it = mAnimationsMap.begin(); it != itEnd; it++)
+	{
+		animation = it->second;
+		for (itChannels = animation.mAnimationChannelsMap.begin(); itChannels != animation.mAnimationChannelsMap.end(); itChannels++)
+		{
+			animationChannel = itChannels->second;
+			if (animationChannel.mTargetNode == nodeIndex)
+				mHelperAnimationChannelVector.push_back(animationChannel);
+		}
+	}
+
+	return mHelperAnimationChannelVector;
+}
+
+//---------------------------------------------------------------------
+/*
+gLTFAnimation gLTFImportOgreMeshCreator::getAnimationByNodeIndex (int nodeIndex)
+{
+	mHelperAnimation = gLTFAnimation();
+	gLTFAnimation animation;
+	gLTFAnimationChannel animationChannel;
+	std::map<int, gLTFAnimation>::iterator it;
+	std::map<int, gLTFAnimation>::iterator itEnd = mAnimationsMap.end();
+	std::map<int, gLTFAnimationChannel>::iterator itChannels;
+	std::map<int, gLTFAnimationChannel>::iterator itChannelsEnd;
+	for (it = mAnimationsMap.begin(); it != itEnd; it++)
+	{
+		animation = it->second;
+		for (itChannels = animation.mAnimationChannelsMap.begin(); itChannels != animation.mAnimationChannelsMap.end(); itChannels++)
+		{
+			animationChannel = itChannels->second;
+			if (animationChannel.mTargetNode == nodeIndex)
+			{
+				mHelperAnimation = animation;
+				return mHelperAnimation;
+			}
+		}
+	}
+	
+	return mHelperAnimation;
+}
+*/
+//---------------------------------------------------------------------
+gLTFAnimation gLTFImportOgreMeshCreator::getAnimationByIndex (int animationIndex)
+{
+	mHelperAnimation = gLTFAnimation();
+	std::map<int, gLTFAnimation>::iterator it = mAnimationsMap.find(animationIndex);
+	if (it != mAnimationsMap.end())
+	{
+		// Found the node
+		mHelperAnimation = it->second;
+		return mHelperAnimation;
+	}
+
+	return mHelperAnimation;
+}
+
+//---------------------------------------------------------------------
+gLTFNode gLTFImportOgreMeshCreator::getNodeByIndex (int nodeIndex)
+{
+	mHelperNode = gLTFNode();
+	std::map<int, gLTFNode>::iterator it = mNodesMap.find(nodeIndex);
+	if (it != mNodesMap.end())
+	{
+		// Found the node
+		mHelperNode = it->second;
+		return mHelperNode;
+	}
+
+	return mHelperNode;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::isGenerateTangentsProperty (Ogre::HlmsEditorPluginData* data)
+{
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY>::iterator it = properties.find("generate_tangents");
+	if (it != properties.end())
+		return (it->second).boolValue;
+
+	return false;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::isGenerateAnimationProperty (Ogre::HlmsEditorPluginData* data)
+{
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
+	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY>::iterator it = properties.find("generate_animation");
+	if (it != properties.end())
+		return (it->second).boolValue;
+
+	return false;
+}
+
+
+//---------------------------------------------------------------------
+/*
+gLTFAnimationSampler gLTFImportOgreMeshCreator::getAnimationSamplerByAnimationAndSamplerIndex (gLTFAnimation animation, 
+	int samplerIndex)
+{
+	mHelperAnimationSampler = gLTFAnimationSampler();
+	std::map<int, gLTFAnimationSampler>::iterator it = animation.mAnimationSamplersMap.find(samplerIndex);
+	if (it != animation.mAnimationSamplersMap.end())
+	{
+		// Found the node
+		mHelperAnimationSampler = it->second;
+		return mHelperAnimationSampler;
+	}
+	
+	return mHelperAnimationSampler;
+}
+*/

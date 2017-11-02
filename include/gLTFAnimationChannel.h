@@ -47,8 +47,14 @@ public:
 	void out(void); // prints the content of the gLTFAnimationChannel
 
 	// Public members
-
+	int mSampler; // The index of the sampler
+	int mTargetNode; // The index of the node to target
+	std::string mTargetPath; // Translation, Rotation, Scale, Weights (for Morph targets)
+	
 	// Derived data
+	int mInputDerived; // The index of an accessor containing keyframe input values, e.g., time.
+	std::string mInterpolationDerived; // Interpolation algorithm.
+	int mOutputDerived; // The index of an accessor, containing keyframe output values (VEC3, ...).
 };
 
 #endif

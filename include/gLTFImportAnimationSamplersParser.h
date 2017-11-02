@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
-For the latest info, see http://www.ogre3d.org/
+For the latest info, see http://www.ogre3d.org
 
 Copyright (c) 2000-2014 Torus Knot Software Ltd
 
@@ -25,24 +25,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
+#ifndef __gLTFImportAnimationSamplersParser_H__
+#define __gLTFImportAnimationSamplersParser_H__
 
+#include <map>
 #include "gLTFImportConstants.h"
-#include "gLTFAnimationChannel.h"
+#include "gLTFAnimationSampler.h"
+#include "rapidjson/document.h"
 
-//---------------------------------------------------------------------
-gLTFAnimationChannel::gLTFAnimationChannel(void) :
-	mSampler(-1),
-	mTargetNode(-1),
-	mInputDerived(-1),
-	mOutputDerived(-1)
-
+/** Class responsible for executing the import and transformation of gLTF AnimationSamplers */
+class gLTFImportAnimationSamplersParser
 {
-	mTargetPath = "";
-	mInterpolationDerived = "";
-}
+	public:
+		gLTFImportAnimationSamplersParser (void)
+		{
+			mAnimationSamplersMap.clear();
+		};
+		virtual ~gLTFImportAnimationSamplersParser (void) {};
 
-//---------------------------------------------------------------------
-void gLTFAnimationChannel::out(void)
-{
-	OUT << "***************** Debug: gLTFAnimationChannel *****************\n";
-}
+		// Parse the gLTF AnimationSamplers (level 1)
+		bool parseAnimationSamplers (rapidjson::Value::ConstMemberIterator jsonIterator);
+
+		// Returns the AnimationSamplers structure
+		const std::map<int, gLTFAnimationSampler> getParsedAnimationSamplers (void) const;
+
+	protected:
+
+	private:
+		std::map<int, gLTFAnimationSampler> mAnimationSamplersMap;
+};
+
+#endif

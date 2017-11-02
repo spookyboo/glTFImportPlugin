@@ -90,6 +90,7 @@ class gLTFImportExecutor
 		bool propagateAccessors(void); // Accessors are enriched with data from Buffers and BufferViews
 		bool propagateMeshes (Ogre::HlmsEditorPluginData* data); // Primitives are enriched with data from Materials and Accessors
 		bool propagateNodes(Ogre::HlmsEditorPluginData* data);
+		bool propagateAnimations (Ogre::HlmsEditorPluginData* data);
 		gLTFNode* getTopLevelParentNode (gLTFNode* childNode); // Searches the highest parent in the tree
 		void propagateNodeTransformsToChildren (gLTFNode* node); // Transforms are inherited from the parent
 		
@@ -99,6 +100,8 @@ class gLTFImportExecutor
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
 		const std::string& getMaterialNameByIndex (int index);
+		//gLTFAnimation getAnimationByNodeIndex (int nodeIndex);
+		void addAnimationsToNode (gLTFNode* node, int nodeIndex); // Add all animations in which a node participates
 		const std::string& prepareUri(const std::string&  textureName,
 			Ogre::HlmsEditorPluginData* data,
 			const std::string&  materialName,
@@ -109,6 +112,7 @@ class gLTFImportExecutor
 		gLTFNode* findNodeByIndex (int nodeIndex);
 		void writeTextureEntryToConfig (std::ofstream& texFile, const std::string& uriImage, int& texCount);
 		const std::string& getImageIndexAsString (int textureIndex);
+		gLTFAnimationSampler getAnimationSamplerByAnimationAndSamplerIndex (gLTFAnimation* animation, int samplerIndex);
 
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
@@ -145,6 +149,8 @@ class gLTFImportExecutor
 		gLTFImage mHelperImage;
 		std::string mHelperUri;
 		std::string mHelperOutputFile;
+		gLTFAnimation mHelperAnimation;
+		gLTFAnimationSampler mHelperAnimationSampler;
 		std::map<int, gLTFAccessor> mAccessorsMap;
 		std::map<int, gLTFMesh> mMeshesMap;
 		std::map<int, gLTFMaterial> mMaterialsMap;

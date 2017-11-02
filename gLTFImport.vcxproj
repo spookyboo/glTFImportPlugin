@@ -141,6 +141,8 @@
     <ClInclude Include="include\gLTFBufferView.h" />
     <ClInclude Include="include\gLTFImage.h" />
     <ClInclude Include="include\gLTFImportAccessorsParser.h" />
+    <ClInclude Include="include\gLTFImportAnimationChannelsParser.h" />
+    <ClInclude Include="include\gLTFImportAnimationSamplersParser.h" />
     <ClInclude Include="include\gLTFImportAnimationsParser.h" />
     <ClInclude Include="include\gLTFImportBuffersParser.h" />
     <ClInclude Include="include\gLTFImportBufferReader.h" />
@@ -210,6 +212,8 @@
     <ClCompile Include="src\gLTFBufferView.cpp" />
     <ClCompile Include="src\gLTFImage.cpp" />
     <ClCompile Include="src\gLTFImportAccessorsParser.cpp" />
+    <ClCompile Include="src\gLTFImportAnimationChannelsParser.cpp" />
+    <ClCompile Include="src\gLTFImportAnimationSamplersParser.cpp" />
     <ClCompile Include="src\gLTFImportAnimationsParser.cpp" />
     <ClCompile Include="src\gLTFImportBuffersParser.cpp" />
     <ClCompile Include="src\gLTFImportBufferReader.cpp" />

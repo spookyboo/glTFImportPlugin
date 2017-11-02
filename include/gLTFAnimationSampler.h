@@ -47,6 +47,9 @@ public:
 	void out(void); // prints the content of the gLTFAnimationSampler
 
 	// Public members
+	int mInput; // The index of an accessor containing keyframe input values, e.g., time.
+	std::string mInterpolation; // Interpolation algorithm.
+	int mOutput; // The index of an accessor, containing keyframe output values (VEC3, ...).
 
 	// Derived data
 };

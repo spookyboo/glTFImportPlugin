@@ -39,6 +39,7 @@ gLTFNode::gLTFNode(void) :
 	mHasScale(false),
 	mHasTranslation(false),
 	mTransformationCalculated(false),
+	mHasAnimation(false),
 	mParentNode(0)
 {
 	mChildren.clear();
@@ -59,10 +60,25 @@ gLTFNode::gLTFNode(void) :
 	mTranslation[0] = 0.0f;
 	mTranslation[1] = 0.0f;
 	mTranslation[2] = 0.0f;
+	
+	mAnimationVector.clear();
 }
 
 //---------------------------------------------------------------------
 void gLTFNode::out (void)
 {
 	OUT << "***************** Debug: gLTFNode *****************\n";
+}
+
+//---------------------------------------------------------------------
+bool gLTFNode::hasAnimationName (const std::string& animationName)
+{
+	std::vector<gLTFAnimation>::iterator it;
+	std::vector<gLTFAnimation>::iterator itEnd = mAnimationVector.end();
+	for (it = mAnimationVector.begin(); it != itEnd; ++it)
+	{
+		if ((*it).mName == animationName)
+			return true;
+	}
+	return false;
 }

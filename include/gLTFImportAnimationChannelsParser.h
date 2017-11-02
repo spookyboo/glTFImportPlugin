@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 This source file is part of OGRE
 (Object-oriented Graphics Rendering Engine)
-For the latest info, see http://www.ogre3d.org/
+For the latest info, see http://www.ogre3d.org
 
 Copyright (c) 2000-2014 Torus Knot Software Ltd
 
@@ -25,24 +25,36 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -----------------------------------------------------------------------------
 */
+#ifndef __gLTFImportAnimationChannelsParser_H__
+#define __gLTFImportAnimationChannelsParser_H__
 
+#include <map>
 #include "gLTFImportConstants.h"
 #include "gLTFAnimationChannel.h"
+#include "rapidjson/document.h"
 
-//---------------------------------------------------------------------
-gLTFAnimationChannel::gLTFAnimationChannel(void) :
-	mSampler(-1),
-	mTargetNode(-1),
-	mInputDerived(-1),
-	mOutputDerived(-1)
-
+/** Class responsible for executing the import and transformation of gLTF AnimationChannels */
+class gLTFImportAnimationChannelsParser
 {
-	mTargetPath = "";
-	mInterpolationDerived = "";
-}
+	public:
+		gLTFImportAnimationChannelsParser (void)
+		{
+			mAnimationChannelsMap.clear();
+		};
+		virtual ~gLTFImportAnimationChannelsParser (void) {};
 
-//---------------------------------------------------------------------
-void gLTFAnimationChannel::out(void)
-{
-	OUT << "***************** Debug: gLTFAnimationChannel *****************\n";
-}
+		// Parse the gLTF AnimationChannels (level 1)
+		bool parseAnimationChannels (rapidjson::Value::ConstMemberIterator jsonIterator);
+
+		// Returns the AnimationChannels structure
+		const std::map<int, gLTFAnimationChannel> getParsedAnimationChannels (void) const;
+
+	protected:
+		bool parseTarget(rapidjson::Value::ConstMemberIterator jsonIterator,
+			gLTFAnimationChannel* animationChannel);
+
+	private:
+		std::map<int, gLTFAnimationChannel> mAnimationChannelsMap;
+};
+
+#endif

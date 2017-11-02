@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <vector>
 #include <iostream>
 #include "gLTFMesh.h"
+#include "gLTFAnimation.h"
 #include "OgreMatrix4.h"
 
 /************************************************************************************************
@@ -47,6 +48,7 @@ class gLTFNode
 		gLTFNode(void);
 		virtual ~gLTFNode(void) {};
 		void out (void); // prints the content of the gLTFNode
+		bool hasAnimationName (const std::string& animationName);
 
 		// Public members
 		int mCamera; // unused for now
@@ -69,6 +71,9 @@ class gLTFNode
 		bool mTransformationCalculated;
 		Ogre::Matrix4 mCalculatedTransformation;
 		gLTFNode* mParentNode;
+		bool mHasAnimation;
+		std::vector<gLTFAnimation> mAnimationVector;
+
 };
 
 #endif

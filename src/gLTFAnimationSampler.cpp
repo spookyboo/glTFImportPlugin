@@ -30,8 +30,11 @@ THE SOFTWARE.
 #include "gLTFAnimationSampler.h"
 
 //---------------------------------------------------------------------
-gLTFAnimationSampler::gLTFAnimationSampler(void)
+gLTFAnimationSampler::gLTFAnimationSampler(void) :
+	mInput(-1),
+	mOutput(-1)
 {
+	mInterpolation = "";
 }
 
 //---------------------------------------------------------------------

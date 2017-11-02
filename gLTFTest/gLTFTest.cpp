@@ -32,6 +32,13 @@ int main()
 	property.boolValue = true; // Combine meshes to one mesh or make individual mesh files
 	pluginData.mInPropertiesMap[property.propertyName] = property;
 
+	property.propertyName = "generate_animation";
+	property.labelName = "Always generate animation";
+	property.info = "";
+	property.type = Ogre::HlmsEditorPluginData::BOOL;
+	property.boolValue = true;
+	pluginData.mInPropertiesMap[property.propertyName] = property;
+
 	//pluginData.mInFileDialogName = "BoomBox.gltf"; // Json text file
 	//pluginData.mInFileDialogName = "Suzanne.gltf"; // Json text file
 	//pluginData.mInFileDialogName = "BoomBox.glb"; // Binary file

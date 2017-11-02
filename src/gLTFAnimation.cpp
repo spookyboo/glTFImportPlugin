@@ -32,6 +32,9 @@
 //---------------------------------------------------------------------
 gLTFAnimation::gLTFAnimation(void)
 {
+	mName = "";
+	mAnimationChannelsMap.clear();
+	mAnimationSamplersMap.clear();
 }
 
 //---------------------------------------------------------------------

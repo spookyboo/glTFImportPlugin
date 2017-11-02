@@ -43,6 +43,7 @@ gLTFImportExecutor::gLTFImportExecutor(void)
 	mMaterialsConfigFileName = "";
 	mTexturesConfigFileName = "";
 
+	mAnimationsMap.clear();
 	mAccessorsMap.clear();
 	mMeshesMap.clear();
 	mMaterialsMap.clear();
@@ -98,6 +99,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 		result = mOgreMeshCreator.createOgreMeshFiles (data, 
 			mNodesMap, 
 			mMeshesMap, 
+			mAnimationsMap,
 			mAccessorsMap, 
 			startBinaryBuffer,
 			mHasAnimations);
@@ -294,6 +296,7 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 	propagateAccessors();
 	propagateMeshes(data);
 	propagateNodes(data);
+	propagateAnimations(data);
 	return true;
 }
 
@@ -628,7 +631,6 @@ bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data)
 		for (itPrimitives = (itMeshes->second).mPrimitiveMap.begin(); itPrimitives != (itMeshes->second).mPrimitiveMap.end(); itPrimitives++)
 		{
 			(itPrimitives->second).mMaterialNameDerived = getMaterialNameByIndex((itPrimitives->second).mMaterial);
-OUT << TABx4 << "DEBUG: (itPrimitives->second).mMaterialNameDerived " << (itPrimitives->second).mMaterialNameDerived << "\n";
 
 			// Iterate through Attribute map
 			std::map<std::string, int>::iterator itAttr;
@@ -671,18 +673,51 @@ bool gLTFImportExecutor::propagateNodes (Ogre::HlmsEditorPluginData* data)
 	std::map<int, gLTFNode>::iterator itNodes;
 	std::map<int, gLTFNode>::iterator itNodesEnd = mNodesMap.end();
 	gLTFMesh mesh;
-
+	gLTFAnimation animation;
+	int index = 0;
+	
 	// Iterate though the nodes, propagate transformation to childres and set the derived mesh object
 	for (itNodes = mNodesMap.begin(); itNodes != itNodesEnd; itNodes++)
 	{
 		gLTFNode* node = &itNodes->second;
+		addAnimationsToNode(node, index); // Add all animations to this node
 		node = getTopLevelParentNode(node); // Search for the toplevel node in the tree and start from there
 		propagateNodeTransformsToChildren(&(itNodes->second));
 		mesh = mMeshesMap[itNodes->second.mMesh];
 		itNodes->second.mMeshDerived = mesh;
+		++index;
 	}
 
 	return true;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::propagateAnimations (Ogre::HlmsEditorPluginData* data)
+{
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateAnimations\n";
+
+	// Propagate animation data
+	std::map<int, gLTFAnimation>::iterator itAnimation;
+	std::map<int, gLTFAnimation>::iterator itAnimationEnd = mAnimationsMap.end();
+	std::map<int, gLTFAnimationChannel>::iterator itAnimationChannel;
+	gLTFAnimation* animation;
+	gLTFAnimationSampler animationSampler;
+	int index = 0;
+
+	// Iterate though the animations, propagate sampler data to channelobjects
+	for (itAnimation = mAnimationsMap.begin(); itAnimation != itAnimationEnd; itAnimation++)
+	{
+		animation = &itAnimation->second;
+		for (itAnimationChannel = animation->mAnimationChannelsMap.begin(); 
+			itAnimationChannel != animation->mAnimationChannelsMap.end(); itAnimationChannel++)
+		{
+			animationSampler = getAnimationSamplerByAnimationAndSamplerIndex(animation, (itAnimationChannel->second).mSampler);
+			(itAnimationChannel->second).mInputDerived = animationSampler.mInput;
+			(itAnimationChannel->second).mInterpolationDerived = animationSampler.mInterpolation;
+			(itAnimationChannel->second).mOutputDerived = animationSampler.mOutput;
+		}
+		++index;
+	}
 }
 
 //---------------------------------------------------------------------
@@ -828,6 +863,74 @@ const std::string& gLTFImportExecutor::getMaterialNameByIndex (int index)
 	}
 
 	return mHelperMaterialNameString;
+}
+
+
+//---------------------------------------------------------------------
+void gLTFImportExecutor::addAnimationsToNode(gLTFNode* node, int nodeIndex)
+{
+	std::map<int, gLTFAnimation>::iterator it;
+	std::map<int, gLTFAnimation>::iterator itEnd = mAnimationsMap.end();
+	std::map<int, gLTFAnimationChannel>::iterator itChannels;
+	std::map<int, gLTFAnimationChannel>::iterator itChannelsEnd;
+	gLTFAnimation animation;
+	gLTFAnimationChannel animationChannel;
+	for (it = mAnimationsMap.begin(); it != itEnd; it++)
+	{
+		animation = it->second;
+		for (itChannels = animation.mAnimationChannelsMap.begin(); itChannels != animation.mAnimationChannelsMap.end(); itChannels++)
+		{
+			animationChannel = itChannels->second;
+			if (animationChannel.mTargetNode == nodeIndex)
+			{
+				node->mAnimationVector.push_back(animation);
+			}
+		}
+	}
+}
+
+//---------------------------------------------------------------------
+/*
+gLTFAnimation gLTFImportExecutor::getAnimationByNodeIndex (int nodeIndex)
+{
+	mHelperAnimation = gLTFAnimation();
+	gLTFAnimation animation;
+	gLTFAnimationChannel animationChannel;
+	std::map<int, gLTFAnimation>::iterator it;
+	std::map<int, gLTFAnimation>::iterator itEnd = mAnimationsMap.end();
+	std::map<int, gLTFAnimationChannel>::iterator itChannels;
+	std::map<int, gLTFAnimationChannel>::iterator itChannelsEnd;
+	for (it = mAnimationsMap.begin(); it != itEnd; it++)
+	{
+		animation = it->second;
+		for (itChannels = animation.mAnimationChannelsMap.begin(); itChannels != animation.mAnimationChannelsMap.end(); itChannels++)
+		{
+			animationChannel = itChannels->second;
+			if (animationChannel.mTargetNode == nodeIndex)
+			{
+				mHelperAnimation = animation;
+				return mHelperAnimation;
+			}
+		}
+	}
+
+	return mHelperAnimation;
+}
+*/
+
+//---------------------------------------------------------------------
+gLTFAnimationSampler gLTFImportExecutor::getAnimationSamplerByAnimationAndSamplerIndex(gLTFAnimation* animation, int samplerIndex)
+{
+	mHelperAnimationSampler = gLTFAnimationSampler();
+	std::map<int, gLTFAnimationSampler>::iterator it = animation->mAnimationSamplersMap.find(samplerIndex);
+	if (it != animation->mAnimationSamplersMap.end())
+	{
+		// Found the animation sampler
+		mHelperAnimationSampler = it->second;
+		return mHelperAnimationSampler;
+	}
+
+	return mHelperAnimationSampler;
 }
 
 //---------------------------------------------------------------------

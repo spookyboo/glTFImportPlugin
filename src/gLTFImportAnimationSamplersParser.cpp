@@ -26,56 +26,50 @@
   -----------------------------------------------------------------------------
 */
 
-#include "gLTFAnimation.h"
-#include "gLTFImportAnimationsParser.h"
+#include "gLTFAnimationSampler.h"
+#include "gLTFImportAnimationSamplersParser.h"
 
 //---------------------------------------------------------------------
-bool gLTFImportAnimationsParser::parseAnimations (rapidjson::Value::ConstMemberIterator jsonIterator)
+bool gLTFImportAnimationSamplersParser::parseAnimationSamplers (rapidjson::Value::ConstMemberIterator jsonIterator)
 {
-	OUT << TAB << "Perform gLTFImportAnimationsParser::parseAnimations\n";
+	OUT << TAB << "Perform gLTFImportAnimationSamplersParser::parseAnimationSamplers\n";
 
 	int index = 0;
 	const rapidjson::Value& array = jsonIterator->value;
 
-	OUT << TAB << "Loop through animations array\n";
+	OUT << TAB << "Loop through animation samplers array\n";
 	for (rapidjson::SizeType i = 0; i < array.Size(); i++)
 	{
-		OUT << TAB << "animation index ==> " << index << "\n";
-		gLTFAnimation animation;
+		OUT << TAB << "animation sampler index ==> " << index << "\n";
+		gLTFAnimationSampler animationSampler;
 		rapidjson::Value::ConstMemberIterator it;
 		rapidjson::Value::ConstMemberIterator itEnd = array[i].MemberEnd();
 
 		for (it = array[i].MemberBegin(); it != itEnd; ++it)
 		{
-			OUT << TABx2 << "key animation ==> " << it->name.GetString() << "\n";
+			OUT << TABx2 << "key animation sampler ==> " << it->name.GetString() << "\n";
 			std::string key = std::string(it->name.GetString());
-			if (it->value.IsArray() && key == "channels")
+			if (it->value.IsInt() && key == "input")
 			{
-				// ******** 1. channels ********
-				mAnimationChannelsParser.parseAnimationChannels(it);
-				animation.mAnimationChannelsMap = mAnimationChannelsParser.getParsedAnimationChannels();
+				// ******** 1. input ********
+				animationSampler.mInput = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << animationSampler.mInput << "\n";
 			}
-			if (it->value.IsArray() && key == "samplers")
+			if (it->value.IsString() && key == "interpolation")
 			{
-				// ******** 2. samplers ********
-				mAnimationSamplersParser.parseAnimationSamplers(it);
-				animation.mAnimationSamplersMap = mAnimationSamplersParser.getParsedAnimationSamplers();
+				// ******** 2. interpolation ********
+				animationSampler.mInterpolation = it->value.GetString();
+				OUT << TABx2 << "value ==> " << animationSampler.mInterpolation << "\n";
 			}
-			if (it->value.IsString() && key == "name")
+			if (it->value.IsInt() && key == "output")
 			{
-				// ******** 3. name ********
-				animation.mName = it->value.GetString();
-				OUT << TABx2 << "value ==> " << animation.mName << "\n";
+				// ******** 3. output ********
+				animationSampler.mOutput = it->value.GetInt();
+				OUT << TABx2 << "value ==> " << animationSampler.mOutput << "\n";
 			}
 		}
-
-		if (animation.mName == "")
-		{
-			// Generate a name if not provided (name is optional in gLTF)
-			animation.mName = "Anim_" + generateRandomString();
-		}
-
-		mAnimationsMap[index] = animation;
+		
+		mAnimationSamplersMap[index] = animationSampler;
 		++index;
 	}
 
@@ -83,9 +77,9 @@ bool gLTFImportAnimationsParser::parseAnimations (rapidjson::Value::ConstMemberI
 }
 
 //---------------------------------------------------------------------
-const std::map<int, gLTFAnimation> gLTFImportAnimationsParser::getParsedAnimations (void) const
+const std::map<int, gLTFAnimationSampler> gLTFImportAnimationSamplersParser::getParsedAnimationSamplers (void) const
 {
-	return mAnimationsMap;
+	return mAnimationSamplersMap;
 }
 
 
