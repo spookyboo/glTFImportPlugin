@@ -55,6 +55,10 @@ class gLTFImportBufferReader
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
+		float readFromFloatBuffer (char* buffer,
+			int count,
+			gLTFAccessor accessor,
+			bool applyMinMax = false);
 
 		// Read Vec2
 		const Ogre::Vector2& readVec2FromUnsignedByteBuffer (char* buffer, 

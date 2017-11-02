@@ -71,7 +71,6 @@ class gLTFNode
 		bool mTransformationCalculated;
 		Ogre::Matrix4 mCalculatedTransformation;
 		gLTFNode* mParentNode;
-		bool mHasAnimation;
 		std::vector<gLTFAnimation> mAnimationVector;
 
 };

@@ -89,6 +89,26 @@ unsigned int gLTFImportBufferReader::readFromUnsignedIntBuffer(char* buffer, int
 }
 
 //---------------------------------------------------------------------
+float gLTFImportBufferReader::readFromFloatBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax)
+{
+	float scalar;
+	int floatSize = sizeof(float);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : floatSize;
+	memcpy(&scalar, &buffer[count * stride], floatSize);
+
+	// Correct with min/max
+	if (applyMinMax)
+	{
+		if (accessor.mMinAvailable)
+			scalar = scalar < (unsigned int)accessor.mMinInt[0] ? (unsigned int)accessor.mMinInt[0] : scalar;
+		if (accessor.mMaxAvailable)
+			scalar = scalar >(unsigned int)accessor.mMaxInt[0] ? (unsigned int)accessor.mMaxInt[0] : scalar;
+	}
+
+	return scalar;
+}
+
+//---------------------------------------------------------------------
 const Ogre::Vector2& gLTFImportBufferReader::readVec2FromFloatBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor,

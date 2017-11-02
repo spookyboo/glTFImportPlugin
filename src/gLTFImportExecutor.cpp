@@ -867,7 +867,7 @@ const std::string& gLTFImportExecutor::getMaterialNameByIndex (int index)
 
 
 //---------------------------------------------------------------------
-void gLTFImportExecutor::addAnimationsToNode(gLTFNode* node, int nodeIndex)
+void gLTFImportExecutor::addAnimationsToNode (gLTFNode* node, int nodeIndex)
 {
 	std::map<int, gLTFAnimation>::iterator it;
 	std::map<int, gLTFAnimation>::iterator itEnd = mAnimationsMap.end();

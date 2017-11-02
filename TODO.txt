@@ -1,10 +1,9 @@
 HLMS Editor:
 ===========
-- Add option the regenerate tangents for a specific submesh. Reason is that this is probably needed for the polly project. Importing with generation of tangents
-  doesn't work.
 
 Plugin:
 ======
+- Animations in gLTF is probably keyframes in Ogre 3D
 - Instead of setting the PAF_POST_IMPORT_LOAD_MESH flag, create a <project>_meshes.cfg file and extend the projectfile (pending implementation in the 
   HLMS Editor)
 - Implement macroblocks, blendblocks and samplers; they are currently fixed
@@ -52,6 +51,8 @@ DONE:
   of non-generated tangents
 - Bug (sort of): If there is only an emissive map and no other diffuse/detail diffuse maps, don't make the emission map a detail diffuse map, but a regular
   diffuse map.
+- Add option the regenerate tangents for a specific submesh. Reason is that this is probably needed for the polly project. Importing with generation of tangents
+  doesn't work.
 
 Not specified in gLTF:
 - How to implement reflection? (using dds cubemaps)

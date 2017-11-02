@@ -112,7 +112,17 @@ class gLTFImportOgreMeshCreator
 		bool writeBoneHierarchyToSkeleton (std::ofstream& dst, gLTFNode* node);
 
 		// Write animation to skeleton.xml file
-		bool writeAnimationsToSkeleton(std::ofstream& dst, gLTFAnimation* animation);
+		bool writeAnimationsToSkeleton(std::ofstream& dst, 
+			gLTFAnimation* animation,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer);
+
+		// Write keyframes to skeleton.xml file
+		bool writeKeyframesToSkeleton(std::ofstream& dst, 
+			gLTFAnimation* animation, 
+			int boneIndex,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer);
 		
 		// Read attributes from buffer
 		void readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
@@ -175,6 +185,11 @@ class gLTFImportOgreMeshCreator
 
 		// Returns the property value to generate animations; returns false if the property isn't available
 		bool isGenerateAnimationProperty (Ogre::HlmsEditorPluginData* data);
+
+		// Determine the largest keyframe time
+		float getMaxTimeOfKeyframes(gLTFAnimation* animation,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer);
 
 	private:
 		std::string mHelperString;

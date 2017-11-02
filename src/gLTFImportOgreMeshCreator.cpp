@@ -262,7 +262,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 	for (itAnimations = mAnimationsMap.begin(); itAnimations != mAnimationsMap.end(); itAnimations++)
 	{
 		animation = itAnimations->second;
-		writeAnimationsToSkeleton(dst, &animation);
+		writeAnimationsToSkeleton(dst, &animation, data, startBinaryBuffer);
 	}
 	dst << TAB << "</animations>\n";
 
@@ -747,11 +747,16 @@ bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton (std::ofstream& dst
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst, gLTFAnimation* animation)
+bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst, 
+	gLTFAnimation* animation,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
 {
 	dst << TABx2 << "<animation name=\"" <<
 		animation->mName <<
-		"\" length=\"1.0\">\n";
+		"\" length=\"" <<
+		getMaxTimeOfKeyframes(animation, data, startBinaryBuffer) <<
+		"\">\n";
 
 	dst << TABx3 << "<tracks>\n";
 	std::map<int, gLTFNode>::iterator it;
@@ -760,24 +765,149 @@ bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst, g
 	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
 	{
 		node = it->second;
-		if (node.mHasAnimation && node.hasAnimationName(animation->mName))
+		if (node.hasAnimationName(animation->mName))
 		{
 			// This node is part of the animation
 			dst << TABx4 <<
-				"<track bone = \"" <<
+				"<track bone=\"" <<
 				node.mName <<
 				"\">\n";
+			dst << TABx5 <<
+				"<keyframes>\n";
+
+			writeKeyframesToSkeleton(dst, animation, index, data, startBinaryBuffer);
+
+			dst << TABx5 <<
+				"</keyframes>\n";
 			dst << TABx4 << "</track>\n";
 		}
 		++index;
 	}
 
-	// TODO: Add track
 	dst << TABx3 << "</tracks>\n";
 
 	dst << TABx2 << "</animation>\n";
 
 	return true;
+}
+
+//---------------------------------------------------------------------
+float gLTFImportOgreMeshCreator::getMaxTimeOfKeyframes (gLTFAnimation* animation,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
+	float maxTime = 0.0f;
+	std::map<int, gLTFAnimationChannel>::iterator it;
+	std::map<int, int> uniqueAccessorsMap; // All unique accessors
+	gLTFAccessor  keyframeAccessor;
+
+	// Iterate through all animation channels of the animation
+	for (it = animation->mAnimationChannelsMap.begin(); it != animation->mAnimationChannelsMap.end(); it++)
+		uniqueAccessorsMap[(it->second).mInputDerived] = (it->second).mInputDerived;
+
+	// Iterate through the uniqueAccessorsMap
+	std::map<int, int>::iterator itUniqueAnimationChannels;
+	char* buffer;
+	float time = 0.0f;
+	for (itUniqueAnimationChannels = uniqueAccessorsMap.begin(); itUniqueAnimationChannels != uniqueAccessorsMap.end(); itUniqueAnimationChannels++)
+	{
+		// Get the accessor
+		keyframeAccessor = mAccessorMap[itUniqueAnimationChannels->first];
+		buffer = getBufferChunk(keyframeAccessor.mUriDerived, data, keyframeAccessor, startBinaryBuffer);
+		
+		// Iterate through the chunk
+		// You may assume that keyframeAccessor.mCount represents the max. time, but better be safe and read them all
+		mPositionsMap.clear();
+		for (int i = 0; i < keyframeAccessor.mCount; i++)
+		{
+			// A position must be a SCALAR/Float, otherwise it doesn't get read
+			if (keyframeAccessor.mType == "SCALAR" && keyframeAccessor.mComponentType == gLTFAccessor::FLOAT)
+			{
+				time = mBufferReader.readFromFloatBuffer(buffer,
+					i,
+					keyframeAccessor,
+					getCorrectForMinMaxPropertyValue(data));
+				maxTime = std::max(time, maxTime);
+			}
+		}
+
+		delete[] buffer;
+	}
+
+	return maxTime;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeKeyframesToSkeleton (std::ofstream& dst, 
+	gLTFAnimation* animation, 
+	int boneIndex,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
+	// Iterate through buffer (accessor.count); each count is one keyframe.
+	// Use the 1..3 animation channels to define translate, rotate, scale. Get them from mOutputDerived
+	std::multimap<int, gLTFAnimationChannel> keyframeGroupMap;
+	std::map<int, gLTFAnimationChannel>::iterator it;
+	gLTFAnimationChannel animationChannel;
+	gLTFAccessor  keyframeAccessor;
+
+	// Iterate through all animation channels of the animation
+	for (it = animation->mAnimationChannelsMap.begin(); it != animation->mAnimationChannelsMap.end(); it++)
+	{
+		animationChannel = it->second;
+		
+		// Only animation channels with node == boneIndex are taken into account
+		if (animationChannel.mTargetNode == boneIndex)
+		{
+			// Group all animation channels with the same mInputDerived.
+			// Use a map with mInputDerived as key and animation channels as value
+			keyframeGroupMap.insert(std::pair<int, gLTFAnimationChannel>(animationChannel.mInputDerived, animationChannel));
+		}
+	}
+
+	// Iterate through the keyframeMap
+	std::map<int, gLTFAnimationChannel>::iterator itKeyframeGroup = keyframeGroupMap.begin();
+	int key;
+	char* buffer;
+	float time = 0.0f;
+	while (itKeyframeGroup != keyframeGroupMap.end())
+	{
+		// Get the accessor represented by mInputDerived
+		key = itKeyframeGroup->first;
+		keyframeAccessor = mAccessorMap[key];
+		buffer = getBufferChunk(keyframeAccessor.mUriDerived, data, keyframeAccessor, startBinaryBuffer);
+
+		// Advance to next non-duplicate entry.
+		while (itKeyframeGroup != keyframeGroupMap.end() && key == itKeyframeGroup->first)
+		{
+			// TODO: Get the animation channels and check whether it contains TRS (translate, rotate, scale)
+			++itKeyframeGroup;
+		}
+
+		// Iterate through the chunk
+		for (int i = 0; i < keyframeAccessor.mCount; i++)
+		{
+			// A position must be a SCALAR/Float, otherwise it doesn't get read
+			if (keyframeAccessor.mType == "SCALAR" && keyframeAccessor.mComponentType == gLTFAccessor::FLOAT)
+			{
+				time = mBufferReader.readFromFloatBuffer(buffer,
+					i,
+					keyframeAccessor,
+					getCorrectForMinMaxPropertyValue(data));
+
+				dst << TABx5 <<
+					"<keyframe time=\"" <<
+					time <<
+					"\">\n";
+
+				// TODO: Add Channels (TRS attributes)
+			}
+
+			dst << TABx5 << "</keyframe>\n";
+		}
+
+		delete[] buffer;
+	}
 }
 
 //---------------------------------------------------------------------
