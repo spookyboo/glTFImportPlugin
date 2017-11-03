@@ -102,28 +102,20 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
 
-		//bool writeBoneTranslationToSkeleton (std::ofstream& dst, 
-			//Ogre::HlmsEditorPluginData* data, 
-			//unsigned int nodeIndex, 
-			//unsigned int animationSamplerIndex,
-			//int startBinaryBuffer);
-
 		// Write bone hierarchy to skeleton.xml file
 		bool writeBoneHierarchyToSkeleton (std::ofstream& dst, gLTFNode* node);
 
 		// Write animation to skeleton.xml file
-		bool writeAnimationsToSkeleton(std::ofstream& dst, 
-			gLTFAnimation* animation,
+		bool writeAnimationsToSkeleton (std::ofstream& dst,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
 
-		// Write keyframes to skeleton.xml file
-		bool writeKeyframesToSkeleton(std::ofstream& dst, 
-			gLTFAnimation* animation, 
-			int boneIndex,
+		// Write keyframe header to skeleton.xml file
+		bool writeKeyframesToSkeleton (std::ofstream& dst,
+			std::vector<gLTFAnimationChannel>* animationChannelsForNode,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
-		
+
 		// Read attributes from buffer
 		void readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
 			Ogre::HlmsEditorPluginData* data,
@@ -172,13 +164,8 @@ class gLTFImportOgreMeshCreator
 		bool setMeshFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
 		bool setSkeletonFileNamePropertyValue (Ogre::HlmsEditorPluginData* data, const std::string& fileName);
 		std::vector<gLTFAnimationChannel> getAnimationChannelsByNode (int nodeIndex);
-		//gLTFAnimation getAnimationByNodeIndex (int nodeIndex);
 		gLTFAnimation getAnimationByIndex (int animationIndex);
 		gLTFNode getNodeByIndex (int nodeIndex);
-		//gLTFAnimationChannel getAnimationChannelByAnimationAndChannelIndex (gLTFAnimation animation,
-			//int channelIndex);
-		//gLTFAnimationSampler getAnimationSamplerByAnimationAndSamplerIndex (gLTFAnimation animation,
-			//int samplerIndex);
 			
 		// Returns the property value to generate tangents; returns false if the property isn't available
 		bool isGenerateTangentsProperty (Ogre::HlmsEditorPluginData* data);
@@ -186,10 +173,25 @@ class gLTFImportOgreMeshCreator
 		// Returns the property value to generate animations; returns false if the property isn't available
 		bool isGenerateAnimationProperty (Ogre::HlmsEditorPluginData* data);
 
-		// Determine the largest keyframe time
-		float getMaxTimeOfKeyframes(gLTFAnimation* animation,
+		// Determine the time of an animation
+		float getMaxTimeOfAnimation (const std::string& animationName,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
+
+		// Determine the largest keyframe time
+		float getMaxTimeOfKeyframes (gLTFAnimationChannel* animationChannel,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer);
+
+		/* gLTF's animation system does not map clearly to Ogre's animation system. One animation in gLTF concerns 
+		 * the movement of one part of the model (one or more bones), e.q. moving a leg for walking, while another gLTF 
+		 * animation is involved with moving the other leg. They are individual animations, but a regular (Ogre) animation 
+		 * is a combination of multiple gLTF animations (e.g. "walking").
+		 * The gLTF specs do not make clear which gLTF animations belong to each other, an which do not.
+		 * Current implementation in this plugin assumes that there is only 1 Ogre animation in the skeleton file and
+		 * combines all gLTF animations.
+		 */
+		bool findAllUniqueOgreSkeletonAnimations (void);
 
 	private:
 		std::string mHelperString;
@@ -205,6 +207,7 @@ class gLTFImportOgreMeshCreator
 		std::map<int, gLTFMesh> mMeshesMap;
 		std::map<int, gLTFAnimation> mAnimationsMap;
 		std::map<int, gLTFAccessor> mAccessorMap;
+		std::map<int, std::string> mOgreSkeletonAnimationsMap; // Contains a list of all unique animations in Ogre
 		Ogre::Vector4 mHelperVec4Struct;
 		Ogre::Vector3 mHelperVec3Struct;
 		Ogre::Vector2 mHelperVec2Struct;

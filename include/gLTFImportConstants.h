@@ -55,6 +55,9 @@ static const std::string TABx4 = TAB + TABx3;
 static const std::string TABx5 = TAB + TABx4;
 static const std::string TABx6 = TAB + TABx5;
 static const std::string TABx7 = TAB + TABx6;
+static const std::string TABx8 = TAB + TABx7;
+static const std::string TABx9 = TAB + TABx8;
+static const std::string TABx10 = TAB + TABx9;
 
 static std::string gFileExtension = "";
 static std::string gJsonString = "";

@@ -50,6 +50,7 @@ gLTFImportOgreMeshCreator::gLTFImportOgreMeshCreator (void)
 	mMeshesMap.clear();
 	mAnimationsMap.clear();
 	mAccessorMap.clear();
+	mOgreSkeletonAnimationsMap.clear();
 }
 
 //---------------------------------------------------------------------
@@ -95,7 +96,7 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
-	OUT << "\nPerform gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles\n";
+	OUT << "Perform gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles\n";
 
 	// Create the Ogre mesh xml files (*.xml)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
@@ -110,7 +111,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		mesh = it->second;
 		ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + mesh.mName + ".xml";
 		ogreFullyQualifiedMeshMeshFileName = fullyQualifiedImportPath + mesh.mName + ".mesh";
-		OUT << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+		OUT << TABx2 << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 
 		// Create the file
 		std::ofstream dst(ogreFullyQualifiedMeshXmlFileName);
@@ -125,7 +126,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		dst << "</mesh>\n";
 
 		dst.close();
-		OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+		OUT << TABx2 << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 	}
 
 	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
@@ -139,7 +140,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	bool hasAnimations)
 {
 	// ********************************************* MESH FILE *********************************************
-	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreMeshFile\n";
+	OUT << "Perform gLTFImportOgreMeshCreator::createCombinedOgreMeshFile\n";
 	
 	// Create the Ogre mesh xml files (*.xml)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
@@ -151,7 +152,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 
 	std::string ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".xml";
 	std::string ogreFullyQualifiedMeshMeshFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".mesh";
-	OUT << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+	OUT << TABx2 << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 
 	// Create the file
 	std::ofstream dst(ogreFullyQualifiedMeshXmlFileName);
@@ -193,7 +194,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 
 	dst << "</mesh>\n";
 	dst.close();
-	OUT << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+	OUT << TABx2 << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
 	setMeshFileNamePropertyValue(data, ogreFullyQualifiedMeshMeshFileName);
 
@@ -206,7 +207,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 	bool hasAnimations)
 {
 	// ********************************************* SKELETON FILE *********************************************
-	OUT << "\nPerform gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile\n";
+	OUT << TAB << "Perform gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile\n";
 
 	if (!hasAnimations)
 		return false;
@@ -220,7 +221,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 
 	std::string ogreFullyQualifiedSkeletonXmlFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".skeleton.xml";
 	std::string ogreFullyQualifiedSkeletonFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".skeleton";
-	OUT << "Create: skeleton.xml file " << ogreFullyQualifiedSkeletonXmlFileName << "\n";
+	OUT << TABx2 << "Create: skeleton.xml file " << ogreFullyQualifiedSkeletonXmlFileName << "\n";
 
 	// Create the file
 	std::ofstream dst(ogreFullyQualifiedSkeletonXmlFileName);
@@ -256,19 +257,11 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 	dst << TAB << "</bonehierarchy>\n";
 
 	// 3. Add animations
-	dst << TAB << "<animations>\n";
-	std::map<int, gLTFAnimation>::iterator itAnimations;
-	gLTFAnimation animation;
-	for (itAnimations = mAnimationsMap.begin(); itAnimations != mAnimationsMap.end(); itAnimations++)
-	{
-		animation = itAnimations->second;
-		writeAnimationsToSkeleton(dst, &animation, data, startBinaryBuffer);
-	}
-	dst << TAB << "</animations>\n";
+	writeAnimationsToSkeleton(dst, data, startBinaryBuffer);
 
 	dst << "</skeleton>\n";
 	dst.close();
-	OUT << "Written skeleton.xml file " << ogreFullyQualifiedSkeletonXmlFileName << "\n";
+	OUT << TABx2 << "Written skeleton.xml file " << ogreFullyQualifiedSkeletonXmlFileName << "\n";
 	convertXmlFileToSkeleton(data, ogreFullyQualifiedSkeletonXmlFileName, ogreFullyQualifiedSkeletonFileName);
 	setSkeletonFileNamePropertyValue(data, ogreFullyQualifiedSkeletonFileName);
 
@@ -632,18 +625,21 @@ bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeBoneToSkeleton(std::ofstream& dst,
+bool gLTFImportOgreMeshCreator::writeBoneToSkeleton (std::ofstream& dst,
 	unsigned int index,
 	gLTFNode* node,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
+	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeBoneToSkeleton\n";
+
+	// TODO
 	if (node->mName != "")
 	{
 		// Get the translation, rotation, scale of the node. If not present, return and don't write this bone to skeleton file
-		std::vector<gLTFAnimationChannel> vec = getAnimationChannelsByNode(index);
-		if (vec.empty())
-			return true;
+		//std::vector<gLTFAnimationChannel> vec = getAnimationChannelsByNode(index);
+		//if (vec.empty())
+			//return true;
 
 		dst << TABx2 << "<bone id=\"" <<
 			index <<
@@ -651,59 +647,46 @@ bool gLTFImportOgreMeshCreator::writeBoneToSkeleton(std::ofstream& dst,
 			node->mName <<
 			"\">\n";
 
-		std::vector<gLTFAnimationChannel>::iterator it;
-		std::vector<gLTFAnimationChannel>::iterator itEnd = vec.end();
-		gLTFAnimationChannel animationChannel;
-		gLTFNode node;
 		Ogre::Matrix4 matrix4;
 		Ogre::Vector3 position;
 		Ogre::Quaternion orientation;
 		Ogre::Vector3 axis;
 		Ogre::Radian angle;
 		Ogre::Vector3 scale;
-		for (it = vec.begin(); it != itEnd; it++)
-		{
-			animationChannel = *it;
-			node = getNodeByIndex(index);
-			matrix4 = node.mCalculatedTransformation;
-			matrix4.decomposition(position, scale, orientation);
-			if (animationChannel.mTargetPath == "translation")
-			{
-				dst << TABx3 << "<position x= \"" << 
-					position.x <<
-					"\" y=\"" <<
-					position.y << 
-					"\" z=\"0" <<
-					position.z <<
-					"\" />\n";
-			}
-			else if (animationChannel.mTargetPath == "rotation")
-			{
-				orientation.ToAngleAxis(angle, axis);
-				dst << TABx3 << "<rotation angle=\"" <<
-					angle.valueRadians() <<
-					"\">\n";
-				dst << TABx4 << "<axis x= \"" << 
-					axis.x <<
-					"\" y=\"" <<
-					axis.y <<
-					"\" z=\"" <<
-					axis.z <<
-					"\" />\n";
-				dst << TABx3 << "</rotation>\n";
-			}
-			else if (animationChannel.mTargetPath == "scale")
-			{
-				dst << TABx3 << "<scale x= \"" <<
-					scale.x <<
-					"\" y=\"" <<
-					scale.y <<
-					"\" z=\"" <<
-					scale.z <<
-					"\" />\n";
-			}
-			// Weights are unsupported currently !!!
-		}
+		matrix4 = node->mCalculatedTransformation;
+		matrix4.decomposition(position, scale, orientation);
+
+		// Position
+		dst << TABx3 << "<position x= \"" <<
+			position.x <<
+			"\" y=\"" <<
+			position.y <<
+			"\" z=\"" <<
+			position.z <<
+			"\" />\n";
+
+		// Orientation
+		orientation.ToAngleAxis(angle, axis);
+		dst << TABx3 << "<rotation angle=\"" <<
+			angle.valueRadians() <<
+			"\">\n";
+		dst << TABx4 << "<axis x= \"" <<
+			axis.x <<
+			"\" y=\"" <<
+			axis.y <<
+			"\" z=\"" <<
+			axis.z <<
+			"\" />\n";
+		dst << TABx3 << "</rotation>\n";
+
+		// Scale
+		dst << TABx3 << "<scale x= \"" <<
+			scale.x <<
+			"\" y=\"" <<
+			scale.y <<
+			"\" z=\"" <<
+			scale.z <<
+			"\" />\n";
 
 		dst << TABx2 << "</bone>\n";
 	}
@@ -712,28 +695,15 @@ bool gLTFImportOgreMeshCreator::writeBoneToSkeleton(std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-//bool gLTFImportOgreMeshCreator::writeBoneTranslationToSkeleton (std::ofstream& dst, 
-//	Ogre::HlmsEditorPluginData* data,
-	//unsigned int nodeIndex,
-	//unsigned int animationSamplerIndex,
-	//int startBinaryBuffer)
-//{
-	// First get the accessor
-	// TODO: The mInput accessor is probably wrong. Where can I get the translation of the node?????
-	//gLTFAnimation animation = getAnimationByNodeIndex(nodeIndex);
-	//gLTFAnimationSampler animationSampler = getAnimationSamplerByAnimationAndSamplerIndex(animation, animationSamplerIndex);
-	//gLTFAccessor  animationInputAccessor = mAccessorMap[animationSampler.mInput];
-	//OUT << "DEBUG: animationSampler.mInput = " << animationSampler.mInput << "\n";
-	//return true;
-//}
-
-//---------------------------------------------------------------------
 bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton (std::ofstream& dst, gLTFNode* node)
 {
+	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton\n";
+
 	std::string parentNodeName = "";
 	if (node->mParentNode)
 		parentNodeName = node->mParentNode->mName;
 
+	// TODO:
 	if (parentNodeName != "" && node->mName != "")
 	{
 		dst << TABx2 << "<boneparent bone=\"" <<
@@ -747,168 +717,291 @@ bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton (std::ofstream& dst
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst, 
-	gLTFAnimation* animation,
+bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
-	dst << TABx2 << "<animation name=\"" <<
-		animation->mName <<
-		"\" length=\"" <<
-		getMaxTimeOfKeyframes(animation, data, startBinaryBuffer) <<
-		"\">\n";
+	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeAnimationsToSkeleton\n";
 
-	dst << TABx3 << "<tracks>\n";
-	std::map<int, gLTFNode>::iterator it;
-	gLTFNode node;
-	unsigned int index = 0;
-	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
+	// TODO: findAllUniqueOgreSkeletonAnimations is currently a dummy function, because it in unclear how
+	// gLTF animations are grouped together
+	findAllUniqueOgreSkeletonAnimations (); // Group gLTF animations into one or multiple Ogre animations
+	dst << TAB << "<animations>\n";
+	std::map<int, std::string>::iterator it;
+	for (it = mOgreSkeletonAnimationsMap.begin(); it != mOgreSkeletonAnimationsMap.end(); it++)
 	{
-		node = it->second;
-		if (node.hasAnimationName(animation->mName))
+		dst << TABx2 << "<animation name=\"" <<
+			it->second <<
+			"\" length=\"" <<
+			getMaxTimeOfAnimation(it->second, data, startBinaryBuffer) <<
+			"\">\n";
+		dst << TABx3 << "<tracks>\n";
+
+		// Iterate through all bones (nodes) within this animation
+		std::map<int, gLTFNode>::iterator itNode;
+		std::map<int, gLTFAnimation>::iterator itAnimation;
+		std::map<int, gLTFAnimationChannel>::iterator itAnimationChannel;
+		std::vector<gLTFAnimationChannel> animationChannelsForNode; // All the animation channels in this animation for this node
+		gLTFNode node;
+		gLTFAnimation animation;
+		gLTFAnimationChannel animationChannel;
+		unsigned int nodeIndex = 0;
+		bool hasKeyframeHeader = false;
+		bool hasTrackAndKeyframesHeader = false;
+		for (itNode = mNodesMap.begin(); itNode != mNodesMap.end(); itNode++)
 		{
-			// This node is part of the animation
-			dst << TABx4 <<
-				"<track bone=\"" <<
-				node.mName <<
-				"\">\n";
-			dst << TABx5 <<
-				"<keyframes>\n";
+			node = itNode->second;
+			hasTrackAndKeyframesHeader = false;
 
-			writeKeyframesToSkeleton(dst, animation, index, data, startBinaryBuffer);
+			// Iterate through all animations
+			for (itAnimation = mAnimationsMap.begin(); itAnimation != mAnimationsMap.end(); itAnimation++)
+			{
+				animation = itAnimation->second;
+				animationChannelsForNode.clear();
 
-			dst << TABx5 <<
-				"</keyframes>\n";
-			dst << TABx4 << "</track>\n";
+				// Iterate through all animations channels within the animation
+				for (itAnimationChannel = animation.mAnimationChannelsMap.begin(); 
+					itAnimationChannel != animation.mAnimationChannelsMap.end(); 
+					itAnimationChannel++)
+				{
+					animationChannel = itAnimationChannel->second;
+					if (animationChannel.mTargetNode == nodeIndex)
+					{
+						// The node (bone) is defined in this channel; include it in the animation
+						if (!hasTrackAndKeyframesHeader)
+						{
+							dst << TABx4 <<
+								"<track bone=\"" <<
+								node.mName <<
+								"\">\n";
+							dst << TABx5 <<
+								"<keyframes>\n";
+							hasTrackAndKeyframesHeader = true;
+						}
+
+						animationChannelsForNode.push_back(animationChannel);
+					}
+				}
+
+				// Now we know which channels refer to this node. Write the keyframes
+				if (!animationChannelsForNode.empty())
+					writeKeyframesToSkeleton(dst, &animationChannelsForNode, data, startBinaryBuffer);
+			}
+
+			if (hasTrackAndKeyframesHeader)
+			{
+				dst << TABx5 << "</keyframes>\n";
+				dst << TABx4 << "</track>\n";
+			}
+
+			++nodeIndex;
 		}
-		++index;
+		dst << TABx3 << "</tracks>\n";
+		dst << TABx2 << "</animation>\n";
 	}
-
-	dst << TABx3 << "</tracks>\n";
-
-	dst << TABx2 << "</animation>\n";
+	dst << TAB << "</animations>\n";
 
 	return true;
 }
 
 //---------------------------------------------------------------------
-float gLTFImportOgreMeshCreator::getMaxTimeOfKeyframes (gLTFAnimation* animation,
+float gLTFImportOgreMeshCreator::getMaxTimeOfAnimation (const std::string& animationName,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
+	OUT << TABx4 << "Perform gLTFImportOgreMeshCreator::getMaxTimeOfAnimation\n";
+
+	// TODO: The animationName is ignored for now.
+
 	float maxTime = 0.0f;
-	std::map<int, gLTFAnimationChannel>::iterator it;
-	std::map<int, int> uniqueAccessorsMap; // All unique accessors
-	gLTFAccessor  keyframeAccessor;
-
-	// Iterate through all animation channels of the animation
-	for (it = animation->mAnimationChannelsMap.begin(); it != animation->mAnimationChannelsMap.end(); it++)
-		uniqueAccessorsMap[(it->second).mInputDerived] = (it->second).mInputDerived;
-
-	// Iterate through the uniqueAccessorsMap
-	std::map<int, int>::iterator itUniqueAnimationChannels;
-	char* buffer;
 	float time = 0.0f;
-	for (itUniqueAnimationChannels = uniqueAccessorsMap.begin(); itUniqueAnimationChannels != uniqueAccessorsMap.end(); itUniqueAnimationChannels++)
+
+	// Iterate through all bones (nodes) within this animation
+	std::map<int, gLTFNode>::iterator itNode;
+	std::map<int, gLTFAnimation>::iterator itAnimation;
+	std::map<int, gLTFAnimationChannel>::iterator itAnimationChannel;
+	gLTFNode node;
+	gLTFAnimation animation;
+	gLTFAnimationChannel animationChannel;
+	unsigned int nodeIndex = 0;
+	for (itNode = mNodesMap.begin(); itNode != mNodesMap.end(); itNode++)
 	{
-		// Get the accessor
-		keyframeAccessor = mAccessorMap[itUniqueAnimationChannels->first];
-		buffer = getBufferChunk(keyframeAccessor.mUriDerived, data, keyframeAccessor, startBinaryBuffer);
-		
-		// Iterate through the chunk
-		// You may assume that keyframeAccessor.mCount represents the max. time, but better be safe and read them all
-		mPositionsMap.clear();
-		for (int i = 0; i < keyframeAccessor.mCount; i++)
+		node = itNode->second;
+
+		// Iterate through all animations
+		for (itAnimation = mAnimationsMap.begin(); itAnimation != mAnimationsMap.end(); itAnimation++)
 		{
-			// A position must be a SCALAR/Float, otherwise it doesn't get read
-			if (keyframeAccessor.mType == "SCALAR" && keyframeAccessor.mComponentType == gLTFAccessor::FLOAT)
+			animation = itAnimation->second;
+
+			// Iterate through all animations channels within the animation
+			for (itAnimationChannel = animation.mAnimationChannelsMap.begin();
+				itAnimationChannel != animation.mAnimationChannelsMap.end();
+				itAnimationChannel++)
 			{
-				time = mBufferReader.readFromFloatBuffer(buffer,
-					i,
-					keyframeAccessor,
-					getCorrectForMinMaxPropertyValue(data));
-				maxTime = std::max(time, maxTime);
+				animationChannel = itAnimationChannel->second;
+				if (animationChannel.mTargetNode == nodeIndex)
+				{
+					// The node (bone) is defined in this channel
+					time = getMaxTimeOfKeyframes (&animationChannel, data, startBinaryBuffer);
+					maxTime = std::max(time, maxTime);
+				}
 			}
 		}
 
-		delete[] buffer;
+		++nodeIndex;
+
 	}
 
 	return maxTime;
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeKeyframesToSkeleton (std::ofstream& dst, 
-	gLTFAnimation* animation, 
-	int boneIndex,
+float gLTFImportOgreMeshCreator::getMaxTimeOfKeyframes (gLTFAnimationChannel* animationChannel,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
-	// Iterate through buffer (accessor.count); each count is one keyframe.
-	// Use the 1..3 animation channels to define translate, rotate, scale. Get them from mOutputDerived
-	std::multimap<int, gLTFAnimationChannel> keyframeGroupMap;
-	std::map<int, gLTFAnimationChannel>::iterator it;
-	gLTFAnimationChannel animationChannel;
-	gLTFAccessor  keyframeAccessor;
+	OUT << TABx4 << "Perform gLTFImportOgreMeshCreator::getMaxTimeOfKeyframes\n";
 
-	// Iterate through all animation channels of the animation
-	for (it = animation->mAnimationChannelsMap.begin(); it != animation->mAnimationChannelsMap.end(); it++)
+	float maxTime = 0.0f;
+	float time = 0.0f;
+	gLTFAccessor  animationChannelAccessor;
+	animationChannelAccessor = mAccessorMap[animationChannel->mInputDerived];
+	char* buffer = getBufferChunk(animationChannelAccessor.mUriDerived, data, animationChannelAccessor, startBinaryBuffer);
+
+	// Iterate through the chunk
+	// You may assume that keyframeAccessor.mCount represents the max. time, but better be safe and read them all
+	for (int i = 0; i < animationChannelAccessor.mCount; i++)
 	{
-		animationChannel = it->second;
-		
-		// Only animation channels with node == boneIndex are taken into account
-		if (animationChannel.mTargetNode == boneIndex)
+		// A position must be a SCALAR/Float, otherwise it doesn't get read
+		if (animationChannelAccessor.mType == "SCALAR" && animationChannelAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			// Group all animation channels with the same mInputDerived.
-			// Use a map with mInputDerived as key and animation channels as value
-			keyframeGroupMap.insert(std::pair<int, gLTFAnimationChannel>(animationChannel.mInputDerived, animationChannel));
+			time = mBufferReader.readFromFloatBuffer(buffer,
+				i,
+				animationChannelAccessor,
+				getCorrectForMinMaxPropertyValue(data));
+			maxTime = std::max(time, maxTime);
 		}
 	}
 
-	// Iterate through the keyframeMap
-	std::map<int, gLTFAnimationChannel>::iterator itKeyframeGroup = keyframeGroupMap.begin();
-	int key;
-	char* buffer;
+	delete[] buffer;
+
+	return maxTime;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::writeKeyframesToSkeleton (std::ofstream& dst,
+	std::vector<gLTFAnimationChannel>* animationChannelsForNode,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
 	float time = 0.0f;
-	while (itKeyframeGroup != keyframeGroupMap.end())
+	gLTFAccessor  inputAccessor;
+	gLTFAccessor  outputAccessor;
+	std::vector<gLTFAnimationChannel>::iterator it;
+	gLTFAnimationChannel animationChannel;
+
+	// The animation channels are all part of the same animation and the same node, assume they all refer to the 
+	// same accessor (otherwise it isn't part of same set of keyframes)
+	it = animationChannelsForNode->begin();
+	animationChannel = *it;
+	inputAccessor = mAccessorMap[animationChannel.mInputDerived];
+	outputAccessor = mAccessorMap[animationChannel.mInputDerived];
+	char* inputBuffer = getBufferChunk(inputAccessor.mUriDerived, data, inputAccessor, startBinaryBuffer);
+	char* outputBuffer = getBufferChunk(outputAccessor.mUriDerived, data, outputAccessor, startBinaryBuffer);
+	Ogre::Vector3 translation;
+	Ogre::Vector4 vec4Orientation;
+	Ogre::Quaternion orientation;
+	Ogre::Vector3 axis;
+	Ogre::Radian angle;
+	Ogre::Vector3 scale;
+
+	// Iterate through the chunk
+	for (int i = 0; i < inputAccessor.mCount; i++)
 	{
-		// Get the accessor represented by mInputDerived
-		key = itKeyframeGroup->first;
-		keyframeAccessor = mAccessorMap[key];
-		buffer = getBufferChunk(keyframeAccessor.mUriDerived, data, keyframeAccessor, startBinaryBuffer);
-
-		// Advance to next non-duplicate entry.
-		while (itKeyframeGroup != keyframeGroupMap.end() && key == itKeyframeGroup->first)
+		if (inputAccessor.mType == "SCALAR" && inputAccessor.mComponentType == gLTFAccessor::FLOAT)
 		{
-			// TODO: Get the animation channels and check whether it contains TRS (translate, rotate, scale)
-			++itKeyframeGroup;
-		}
+			// Get the time
+			time = mBufferReader.readFromFloatBuffer(inputBuffer,
+				i,
+				inputAccessor,
+				getCorrectForMinMaxPropertyValue(data));
 
-		// Iterate through the chunk
-		for (int i = 0; i < keyframeAccessor.mCount; i++)
-		{
-			// A position must be a SCALAR/Float, otherwise it doesn't get read
-			if (keyframeAccessor.mType == "SCALAR" && keyframeAccessor.mComponentType == gLTFAccessor::FLOAT)
+			dst << TABx6 <<
+				"<keyframe time=\"" <<
+				time <<
+				"\">\n";
+
+			// Iterate through the channels
+			for (it = animationChannelsForNode->begin(); it != animationChannelsForNode->end(); it++)
 			{
-				time = mBufferReader.readFromFloatBuffer(buffer,
-					i,
-					keyframeAccessor,
-					getCorrectForMinMaxPropertyValue(data));
+				animationChannel = *it;
+				if (animationChannel.mTargetPath == "translation")
+				{
+					// TODO: Get the data from the outputBuffer properly (take type/component into account)
+					translation = mBufferReader.readVec3FromFloatBuffer(outputBuffer,
+						i,
+						outputAccessor,
+						getCorrectForMinMaxPropertyValue(data));
+					dst << TABx7 << "<translate x= \"" <<
+						translation.x <<
+						"\" y=\"" <<
+						translation.y <<
+						"\" z=\"" <<
+						translation.z <<
+						"\" />\n";
 
-				dst << TABx5 <<
-					"<keyframe time=\"" <<
-					time <<
-					"\">\n";
-
-				// TODO: Add Channels (TRS attributes)
+				}
+				else if (animationChannel.mTargetPath == "rotation")
+				{
+					// TODO: Get the data from the outputBuffer properly (take type/component into account)
+					vec4Orientation = mBufferReader.readVec4FromFloatBuffer(outputBuffer,
+						i,
+						outputAccessor,
+						getCorrectForMinMaxPropertyValue(data));
+					orientation.x = vec4Orientation.x;
+					orientation.y = vec4Orientation.y;
+					orientation.z = vec4Orientation.z;
+					orientation.w = vec4Orientation.w;
+					orientation.ToAngleAxis(angle, axis);
+					dst << TABx7 << "<rotate angle=\"" <<
+						angle.valueRadians() <<
+						"\">\n";
+					dst << TABx8 << "<axis x= \"" <<
+						axis.x <<
+						"\" y=\"" <<
+						axis.y <<
+						"\" z=\"" <<
+						axis.z <<
+						"\" />\n";
+					dst << TABx7 << "</rotate>\n";
+				}
+				else if (animationChannel.mTargetPath == "scale")
+				{
+					// TODO: Get the data from the outputBuffer properly (take type/component into account)
+					scale = mBufferReader.readVec3FromFloatBuffer(outputBuffer,
+						i,
+						outputAccessor,
+						getCorrectForMinMaxPropertyValue(data));
+					dst << TABx7 << "<scale x= \"" <<
+						scale.x <<
+						"\" y=\"" <<
+						scale.y <<
+						"\" z=\"" <<
+						scale.z <<
+						"\" />\n";
+				}
 			}
 
-			dst << TABx5 << "</keyframe>\n";
+			dst << TABx6 << "</keyframe>\n";
 		}
-
-		delete[] buffer;
 	}
+
+	delete[] outputBuffer;
+	delete[] inputBuffer;
+
+	return true;
 }
+
 
 //---------------------------------------------------------------------
 void gLTFImportOgreMeshCreator::readPositionsFromUriOrFile (const gLTFPrimitive& primitive,
@@ -1332,34 +1425,6 @@ std::vector<gLTFAnimationChannel> gLTFImportOgreMeshCreator::getAnimationChannel
 }
 
 //---------------------------------------------------------------------
-/*
-gLTFAnimation gLTFImportOgreMeshCreator::getAnimationByNodeIndex (int nodeIndex)
-{
-	mHelperAnimation = gLTFAnimation();
-	gLTFAnimation animation;
-	gLTFAnimationChannel animationChannel;
-	std::map<int, gLTFAnimation>::iterator it;
-	std::map<int, gLTFAnimation>::iterator itEnd = mAnimationsMap.end();
-	std::map<int, gLTFAnimationChannel>::iterator itChannels;
-	std::map<int, gLTFAnimationChannel>::iterator itChannelsEnd;
-	for (it = mAnimationsMap.begin(); it != itEnd; it++)
-	{
-		animation = it->second;
-		for (itChannels = animation.mAnimationChannelsMap.begin(); itChannels != animation.mAnimationChannelsMap.end(); itChannels++)
-		{
-			animationChannel = itChannels->second;
-			if (animationChannel.mTargetNode == nodeIndex)
-			{
-				mHelperAnimation = animation;
-				return mHelperAnimation;
-			}
-		}
-	}
-	
-	return mHelperAnimation;
-}
-*/
-//---------------------------------------------------------------------
 gLTFAnimation gLTFImportOgreMeshCreator::getAnimationByIndex (int animationIndex)
 {
 	mHelperAnimation = gLTFAnimation();
@@ -1411,21 +1476,10 @@ bool gLTFImportOgreMeshCreator::isGenerateAnimationProperty (Ogre::HlmsEditorPlu
 	return false;
 }
 
-
 //---------------------------------------------------------------------
-/*
-gLTFAnimationSampler gLTFImportOgreMeshCreator::getAnimationSamplerByAnimationAndSamplerIndex (gLTFAnimation animation, 
-	int samplerIndex)
+bool gLTFImportOgreMeshCreator::findAllUniqueOgreSkeletonAnimations (void)
 {
-	mHelperAnimationSampler = gLTFAnimationSampler();
-	std::map<int, gLTFAnimationSampler>::iterator it = animation.mAnimationSamplersMap.find(samplerIndex);
-	if (it != animation.mAnimationSamplersMap.end())
-	{
-		// Found the node
-		mHelperAnimationSampler = it->second;
-		return mHelperAnimationSampler;
-	}
-	
-	return mHelperAnimationSampler;
+	mOgreSkeletonAnimationsMap.clear();
+	mOgreSkeletonAnimationsMap[0] = "animate_" + generateRandomString();
+	return true;
 }
-*/
