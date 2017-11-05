@@ -71,6 +71,17 @@ class gLTFImportOgreMeshCreator
 			bool hasAnimations);
 	
 	protected:
+		struct Keyframe
+		{
+			float time = 0.0f;
+			bool hasTranslation = false;
+			Ogre::Vector3 translation;
+			bool hasRotation = false;
+			Ogre::Quaternion rotation;
+			bool hasScale = false;
+			Ogre::Vector3 scale;
+		};
+
 		// Write to mesh .xml file
 		bool writeSubmeshToMesh (std::ofstream& dst,
 			gLTFMesh mesh,

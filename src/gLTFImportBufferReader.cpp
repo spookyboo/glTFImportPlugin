@@ -195,6 +195,28 @@ const Ogre::Vector3& gLTFImportBufferReader::readVec3FromFloatBuffer(char* buffe
 }
 
 //---------------------------------------------------------------------
+const Ogre::Vector3& gLTFImportBufferReader::skipAndReadVec3FromFloatBuffer(char* buffer,
+	unsigned int skipBytes,
+	gLTFAccessor accessor,
+	bool applyMinMax)
+{
+	float raw;
+	int floatSize = sizeof(float);
+	memcpy(&raw, &buffer[skipBytes], floatSize);
+	mHelperVec3.x = raw;
+	memcpy(&raw, &buffer[skipBytes + floatSize], floatSize);
+	mHelperVec3.y = raw;
+	memcpy(&raw, &buffer[skipBytes + 2 * floatSize], floatSize);
+	mHelperVec3.z = raw;
+
+	// Correct with min/max
+	if (applyMinMax)
+		correctVec3WithMinMax(accessor, &mHelperVec3);
+
+	return mHelperVec3;
+}
+
+//---------------------------------------------------------------------
 const Ogre::Vector3& gLTFImportBufferReader::readVec3FromUnsignedByteBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor,
@@ -256,6 +278,30 @@ const Ogre::Vector4& gLTFImportBufferReader::readVec4FromFloatBuffer(char* buffe
 	memcpy(&raw, &buffer[count * stride + 2 * floatSize], floatSize);
 	mHelperVec4.z = raw;
 	memcpy(&raw, &buffer[count * stride + 3 * floatSize], floatSize);
+	mHelperVec4.w = raw;
+
+	// Correct with min/max
+	if (applyMinMax)
+		correctVec4WithMinMax(accessor, &mHelperVec4);
+
+	return mHelperVec4;
+}
+
+//---------------------------------------------------------------------
+const Ogre::Vector4& gLTFImportBufferReader::skipAndReadVec4FromFloatBuffer (char* buffer,
+	unsigned int skipBytes,
+	gLTFAccessor accessor,
+	bool applyMinMax)
+{
+	float raw;
+	int floatSize = sizeof(float);
+	memcpy(&raw, &buffer[skipBytes], floatSize);
+	mHelperVec4.x = raw;
+	memcpy(&raw, &buffer[skipBytes + floatSize], floatSize);
+	mHelperVec4.y = raw;
+	memcpy(&raw, &buffer[skipBytes + 2 * floatSize], floatSize);
+	mHelperVec4.z = raw;
+	memcpy(&raw, &buffer[skipBytes + 3 * floatSize], floatSize);
 	mHelperVec4.w = raw;
 
 	// Correct with min/max

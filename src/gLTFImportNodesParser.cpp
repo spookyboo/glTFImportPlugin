@@ -216,11 +216,15 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 		if (name == "")
 		{
 			// Generate a name if not provided (name is optional in gLTF)
-			name = "Node_" + generateRandomString();
+			//name = "Node_" + generateRandomString();
+			std::stringstream ss;
+			ss << "Node_" << index;
+			name = ss.str();
 			node.mName = name;
 		}
-		
+
 		node.mCalculatedTransformation = matrix;
+		node.mOwnTransformation = matrix;
 		mNodesMap[index] = node;
 		++index;
 	}

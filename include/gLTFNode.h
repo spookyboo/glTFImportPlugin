@@ -70,6 +70,7 @@ class gLTFNode
 		gLTFMesh mMeshDerived; // from mesh
 		bool mTransformationCalculated;
 		Ogre::Matrix4 mCalculatedTransformation;
+		Ogre::Matrix4 mOwnTransformation;
 		gLTFNode* mParentNode;
 		std::vector<gLTFAnimation> mAnimationVector;
 

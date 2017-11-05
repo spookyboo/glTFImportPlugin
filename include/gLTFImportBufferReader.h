@@ -87,11 +87,16 @@ class gLTFImportBufferReader
 			int count, 
 			gLTFAccessor accessor, 
 			bool applyMinMax = false);
+		const Ogre::Vector3& skipAndReadVec3FromFloatBuffer (char* buffer,
+			unsigned int skipBytes,
+			gLTFAccessor accessor,
+			bool applyMinMax);
 
 		// Read Vec4
 		const Ogre::Vector4& readVec4FromUnsignedByteBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
 		const Ogre::Vector4& readVec4FromUnsignedShortBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
 		const Ogre::Vector4& readVec4FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
+		const Ogre::Vector4& skipAndReadVec4FromFloatBuffer (char* buffer, unsigned int skipBytes, gLTFAccessor accessor, bool applyMinMax = false);
 
 		// Min/Max corrections
 		void correctVec2WithMinMax (gLTFAccessor accessor, Ogre::Vector2* vec2);

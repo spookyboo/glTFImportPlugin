@@ -229,7 +229,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 	// Add xml content
 	dst << "<skeleton blendmode=\"average\">\n";
 	
-	// 1. Add bones (=nodes, =joints)
+	// 1. Add bones (=joints; a joint is an index to a node)
 	dst << TAB << "<bones>\n";
 	
 	/* Iterate through all nodes and write the bone info. Each joint is a bone. Each joint refers to a node.
@@ -593,7 +593,7 @@ bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
 		}
 
 		// Write the xml entry. A vertex can be influenced by max. 4 bones/joints
-		float joints[4];
+		unsigned short joints[4];
 		float weights[4];
 		joints[0] = joint.x;
 		joints[1] = joint.y;
@@ -606,7 +606,7 @@ bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
 		fCount = 0;
 		while (fCount < 4)
 		{
-			weights[fCount] = weights[fCount] < 0.00000001f ? 1.0f : weights[fCount];
+			//weights[fCount] = weights[fCount] < 0.00000001f ? 1.0f : weights[fCount];
 			dst << TABx4 <<
 				"<vertexboneassignment vertexindex=\"" <<
 				i <<
@@ -633,7 +633,10 @@ bool gLTFImportOgreMeshCreator::writeBoneToSkeleton (std::ofstream& dst,
 {
 	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeBoneToSkeleton\n";
 
-	// TODO
+	/* Each bone is a joint in the skin object, A joint refers to a node.
+	 * Iterate through the joints and get the node.
+	 */
+	// TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Change code below, use joints
 	if (node->mName != "")
 	{
 		// Get the translation, rotation, scale of the node. If not present, return and don't write this bone to skeleton file
@@ -654,6 +657,7 @@ bool gLTFImportOgreMeshCreator::writeBoneToSkeleton (std::ofstream& dst,
 		Ogre::Radian angle;
 		Ogre::Vector3 scale;
 		matrix4 = node->mCalculatedTransformation;
+		//matrix4 = node->mOwnTransformation; // TODO: TESTTESTTESTTESTTEST
 		matrix4.decomposition(position, scale, orientation);
 
 		// Position
@@ -699,6 +703,11 @@ bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton (std::ofstream& dst
 {
 	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton\n";
 
+	/* Iterate trough all joints, search its node and determine the parentnode of the node.
+	 * Search the joint index of the parent node.
+	 * TODO!!!!!!!!!!!!!!!!!
+	 */
+
 	std::string parentNodeName = "";
 	if (node->mParentNode)
 		parentNodeName = node->mParentNode->mName;
@@ -722,6 +731,12 @@ bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst,
 	int startBinaryBuffer)
 {
 	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeAnimationsToSkeleton\n";
+
+	/* TODO: 
+	 * animationChannelsForNode must be animationChannelsForJoint, because not the node index, but the 
+	 * joint index must be used
+	 */
+
 
 	// TODO: findAllUniqueOgreSkeletonAnimations is currently a dummy function, because it in unclear how
 	// gLTF animations are grouped together
@@ -889,7 +904,7 @@ float gLTFImportOgreMeshCreator::getMaxTimeOfKeyframes (gLTFAnimationChannel* an
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeKeyframesToSkeleton (std::ofstream& dst,
+bool gLTFImportOgreMeshCreator::writeKeyframesToSkeleton(std::ofstream& dst,
 	std::vector<gLTFAnimationChannel>* animationChannelsForNode,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
@@ -897,107 +912,167 @@ bool gLTFImportOgreMeshCreator::writeKeyframesToSkeleton (std::ofstream& dst,
 	float time = 0.0f;
 	gLTFAccessor  inputAccessor;
 	gLTFAccessor  outputAccessor;
-	std::vector<gLTFAnimationChannel>::iterator it;
 	gLTFAnimationChannel animationChannel;
+	Ogre::Vector3 axis;
+	Ogre::Radian angle;
+	char* inputBuffer;
+	char* outputBuffer;
+	Ogre::Vector3 translation;
+	Ogre::Vector4 vec4Rotation;
+	Ogre::Quaternion rotation;
+	Ogre::Vector3 scale;
+	std::map<float, Keyframe> keyframes;
+	std::map<int, char*> inputBufferMap;
+	std::map<int, char*> outputBufferMap;
+
 
 	// The animation channels are all part of the same animation and the same node, assume they all refer to the 
 	// same accessor (otherwise it isn't part of same set of keyframes)
-	it = animationChannelsForNode->begin();
-	animationChannel = *it;
-	inputAccessor = mAccessorMap[animationChannel.mInputDerived];
-	outputAccessor = mAccessorMap[animationChannel.mInputDerived];
-	char* inputBuffer = getBufferChunk(inputAccessor.mUriDerived, data, inputAccessor, startBinaryBuffer);
-	char* outputBuffer = getBufferChunk(outputAccessor.mUriDerived, data, outputAccessor, startBinaryBuffer);
-	Ogre::Vector3 translation;
-	Ogre::Vector4 vec4Orientation;
-	Ogre::Quaternion orientation;
-	Ogre::Vector3 axis;
-	Ogre::Radian angle;
-	Ogre::Vector3 scale;
 
-	// Iterate through the chunk
-	for (int i = 0; i < inputAccessor.mCount; i++)
+	// Iterate through the channels and create the in- and output buffers
+	unsigned int index = 0;
+	std::vector<gLTFAnimationChannel>::iterator it;
+	for (it = animationChannelsForNode->begin(); it != animationChannelsForNode->end(); it++)
 	{
-		if (inputAccessor.mType == "SCALAR" && inputAccessor.mComponentType == gLTFAccessor::FLOAT)
-		{
-			// Get the time
-			time = mBufferReader.readFromFloatBuffer(inputBuffer,
-				i,
-				inputAccessor,
-				getCorrectForMinMaxPropertyValue(data));
-
-			dst << TABx6 <<
-				"<keyframe time=\"" <<
-				time <<
-				"\">\n";
-
-			// Iterate through the channels
-			for (it = animationChannelsForNode->begin(); it != animationChannelsForNode->end(); it++)
-			{
-				animationChannel = *it;
-				if (animationChannel.mTargetPath == "translation")
-				{
-					// TODO: Get the data from the outputBuffer properly (take type/component into account)
-					translation = mBufferReader.readVec3FromFloatBuffer(outputBuffer,
-						i,
-						outputAccessor,
-						getCorrectForMinMaxPropertyValue(data));
-					dst << TABx7 << "<translate x= \"" <<
-						translation.x <<
-						"\" y=\"" <<
-						translation.y <<
-						"\" z=\"" <<
-						translation.z <<
-						"\" />\n";
-
-				}
-				else if (animationChannel.mTargetPath == "rotation")
-				{
-					// TODO: Get the data from the outputBuffer properly (take type/component into account)
-					vec4Orientation = mBufferReader.readVec4FromFloatBuffer(outputBuffer,
-						i,
-						outputAccessor,
-						getCorrectForMinMaxPropertyValue(data));
-					orientation.x = vec4Orientation.x;
-					orientation.y = vec4Orientation.y;
-					orientation.z = vec4Orientation.z;
-					orientation.w = vec4Orientation.w;
-					orientation.ToAngleAxis(angle, axis);
-					dst << TABx7 << "<rotate angle=\"" <<
-						angle.valueRadians() <<
-						"\">\n";
-					dst << TABx8 << "<axis x= \"" <<
-						axis.x <<
-						"\" y=\"" <<
-						axis.y <<
-						"\" z=\"" <<
-						axis.z <<
-						"\" />\n";
-					dst << TABx7 << "</rotate>\n";
-				}
-				else if (animationChannel.mTargetPath == "scale")
-				{
-					// TODO: Get the data from the outputBuffer properly (take type/component into account)
-					scale = mBufferReader.readVec3FromFloatBuffer(outputBuffer,
-						i,
-						outputAccessor,
-						getCorrectForMinMaxPropertyValue(data));
-					dst << TABx7 << "<scale x= \"" <<
-						scale.x <<
-						"\" y=\"" <<
-						scale.y <<
-						"\" z=\"" <<
-						scale.z <<
-						"\" />\n";
-				}
-			}
-
-			dst << TABx6 << "</keyframe>\n";
-		}
+		animationChannel = *it;
+		inputAccessor = mAccessorMap[animationChannel.mInputDerived];
+		outputAccessor = mAccessorMap[animationChannel.mOutputDerived];
+		inputBuffer = getBufferChunk(inputAccessor.mUriDerived, data, inputAccessor, startBinaryBuffer);
+		outputBuffer = getBufferChunk(outputAccessor.mUriDerived, data, outputAccessor, startBinaryBuffer);
+		inputBufferMap[index] = inputBuffer;
+		outputBufferMap[index] = outputBuffer;
+		++index;
 	}
 
-	delete[] outputBuffer;
-	delete[] inputBuffer;
+	// Iterate through the buffers to get the time and TRS values. According to the specs, the number of entries in the
+	// inputbuffer must match the number of entries in the outputbuffer
+	//unsigned int skipBytes;
+	//int floatSize = sizeof(float);
+	// Iterate through the channels
+	index = 0;
+	for (it = animationChannelsForNode->begin(); it != animationChannelsForNode->end(); it++)
+	{
+		animationChannel = *it;
+		inputAccessor = mAccessorMap[animationChannel.mInputDerived];
+		outputAccessor = mAccessorMap[animationChannel.mOutputDerived];
+
+		for (int i = 0; i < inputAccessor.mCount; i++)
+		{
+			if (inputAccessor.mType == "SCALAR" && inputAccessor.mComponentType == gLTFAccessor::FLOAT)
+			{
+				time = mBufferReader.readFromFloatBuffer(inputBufferMap[index],
+					i,
+					inputAccessor,
+					getCorrectForMinMaxPropertyValue(data));
+				keyframes[time].time = time;
+			}
+
+			// TRS
+			if (animationChannel.mTargetPath == "translation")
+			{
+				translation = mBufferReader.readVec3FromFloatBuffer(outputBufferMap[index],
+					i,
+					outputAccessor,
+					getCorrectForMinMaxPropertyValue(data));
+				//skipBytes += 3 * floatSize;
+				keyframes[time].hasTranslation = true;
+				keyframes[time].translation = translation;
+			}
+			else if (animationChannel.mTargetPath == "rotation")
+			{
+				vec4Rotation = mBufferReader.readVec4FromFloatBuffer(outputBufferMap[index],
+					i,
+					outputAccessor,
+					getCorrectForMinMaxPropertyValue(data));
+				//skipBytes += 4 * floatSize;
+				rotation.x = vec4Rotation.x;
+				rotation.y = vec4Rotation.y;
+				rotation.z = vec4Rotation.z;
+				rotation.w = vec4Rotation.w;
+				keyframes[time].rotation = rotation;
+				keyframes[time].hasRotation = true;
+			}
+			else if (animationChannel.mTargetPath == "scale")
+			{
+				scale = mBufferReader.readVec3FromFloatBuffer(outputBufferMap[index],
+					i,
+					outputAccessor,
+					getCorrectForMinMaxPropertyValue(data));
+				//skipBytes += 3 * floatSize;
+				keyframes[time].scale = scale;
+				keyframes[time].hasScale = true;
+			}
+			// Weights are not supported
+		}
+
+		++index;
+		//skipBytes += outputAccessor.mByteStrideDerived;
+	}
+
+	// Iterate through the in/outputbuffers and delete them
+	std::map<int, char*>::iterator itOutputBuffers;
+	for (itOutputBuffers = outputBufferMap.begin(); itOutputBuffers != outputBufferMap.end(); itOutputBuffers++)
+	{
+		outputBuffer = itOutputBuffers->second;
+		delete[] outputBuffer;
+	}
+	std::map<int, char*>::iterator itInputBuffers;
+	for (itInputBuffers = inputBufferMap.begin(); itInputBuffers != inputBufferMap.end(); itInputBuffers++)
+	{
+		inputBuffer = itInputBuffers->second;
+		delete[] inputBuffer;
+	}
+	
+	// Iterate through the keyframes
+	std::map<float, Keyframe>::iterator itKeyframes;
+	for (itKeyframes = keyframes.begin(); itKeyframes != keyframes.end(); itKeyframes++)
+	{
+		Keyframe keyframe = itKeyframes->second;
+		dst << TABx6 <<
+			"<keyframe time=\"" <<
+			keyframe.time <<
+			"\">\n";
+
+		if (keyframe.hasTranslation)
+		{
+			//keyframe.translation = Ogre::Vector3(0, 0, 0); // TEST
+			dst << TABx7 << "<translate x=\"" <<
+				keyframe.translation.x <<
+				"\" y=\"" <<
+				keyframe.translation.y <<
+				"\" z=\"" <<
+				keyframe.translation.z <<
+				"\" />\n";
+		}
+		if (keyframe.hasRotation)
+		{
+			//keyframe.rotation = Ogre::Quaternion::IDENTITY; // TEST
+			keyframe.rotation.ToAngleAxis(angle, axis);
+			dst << TABx7 << "<rotate angle=\"" <<
+				angle.valueRadians() <<
+				"\">\n";
+			dst << TABx8 << "<axis x=\"" <<
+				axis.x <<
+				"\" y=\"" <<
+				axis.y <<
+				"\" z=\"" <<
+				axis.z <<
+				"\" />\n";
+			dst << TABx7 << "</rotate>\n";
+		}
+		if (keyframe.hasScale)
+		{
+			//keyframe.scale = Ogre::Vector3(1, 1, 1); // TEST
+			dst << TABx7 << "<scale x=\"" <<
+				keyframe.scale.x <<
+				"\" y=\"" <<
+				keyframe.scale.y <<
+				"\" z=\"" <<
+				keyframe.scale.z <<
+				"\" />\n";
+		}
+		dst << TABx6 << "</keyframe>\n";
+	}
 
 	return true;
 }
@@ -1480,6 +1555,16 @@ bool gLTFImportOgreMeshCreator::isGenerateAnimationProperty (Ogre::HlmsEditorPlu
 bool gLTFImportOgreMeshCreator::findAllUniqueOgreSkeletonAnimations (void)
 {
 	mOgreSkeletonAnimationsMap.clear();
-	mOgreSkeletonAnimationsMap[0] = "animate_" + generateRandomString();
+	mOgreSkeletonAnimationsMap[0] == ""; // Dummy entry
+	unsigned int index = 0;
+	std::map<int, std::string>::iterator it;
+	std::stringstream ss;
+	for (it = mOgreSkeletonAnimationsMap.begin(); it != mOgreSkeletonAnimationsMap.end(); it++)
+	{
+		ss.clear();
+		ss << "animation_" << index;
+		mOgreSkeletonAnimationsMap[0] = ss.str();
+		++index;
+	}
 	return true;
 }
