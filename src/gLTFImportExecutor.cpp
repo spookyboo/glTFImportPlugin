@@ -44,6 +44,7 @@ gLTFImportExecutor::gLTFImportExecutor(void)
 	mTexturesConfigFileName = "";
 
 	mAnimationsMap.clear();
+	mSkinsMap.clear();
 	mAccessorsMap.clear();
 	mMeshesMap.clear();
 	mMaterialsMap.clear();
@@ -100,6 +101,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 			mNodesMap, 
 			mMeshesMap, 
 			mAnimationsMap,
+			mSkinsMap,
 			mAccessorsMap, 
 			startBinaryBuffer,
 			mHasAnimations);
@@ -229,6 +231,11 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 			mAnimationsMap = mAnimationsParser.getParsedAnimations();
 			mHasAnimations = true;
 		}
+		if (it->value.IsArray() && name == "skins")
+		{
+			mSkinsParser.parseSkins(it); // Parse the skins
+			mSkinsMap = mSkinsParser.getParsedSkins();
+		}
 		if (it->value.IsArray() && name == "nodes")
 		{
 			mNodesParser.parseNodes(it); // Parse the nodes
@@ -297,6 +304,7 @@ bool gLTFImportExecutor::propagateData (Ogre::HlmsEditorPluginData* data, int st
 	propagateMeshes(data);
 	propagateNodes(data);
 	propagateAnimations(data);
+	propagateSkins(data);
 	return true;
 }
 
@@ -718,6 +726,43 @@ bool gLTFImportExecutor::propagateAnimations (Ogre::HlmsEditorPluginData* data)
 		}
 		++index;
 	}
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportExecutor::propagateSkins (Ogre::HlmsEditorPluginData* data)
+{
+	OUT << TABx3 << "Perform gLTFImportExecutor::propagateSkins\n";
+
+	// Propagate skin data
+	std::map<int, gLTFSkin>::iterator itSkin;
+	std::map<int, gLTFSkin>::iterator itSkinEnd = mSkinsMap.end();
+	std::map<int, int>::iterator itJoint;
+	std::map<int, int>::iterator itJointEnd;
+	gLTFSkin skin;
+	int nodeIndex;
+	int index;
+	gLTFNode* node;
+
+	// Iterate though the skins, propagate nodes
+	for (itSkin = mSkinsMap.begin(); itSkin != itSkinEnd; itSkin++)
+	{
+		skin = itSkin->second;
+		itJointEnd = (skin.mJoints).end();
+		index = 0;
+		for (itJoint = (skin.mJoints).begin(); itJoint != itJointEnd; itJoint++)
+		{
+			nodeIndex = itJoint->second; // node index is joint
+			node = findNodeByIndex(nodeIndex);
+			if (node)
+			{
+				// Assign the node to the same index as the joint
+				(itSkin->second).mNodesDerived[index] = *node;
+			}
+			++index;
+		}
+	}
+
+	return true;
 }
 
 //---------------------------------------------------------------------

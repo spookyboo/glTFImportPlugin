@@ -72,6 +72,7 @@ bool gLTFImportMeshesParser::parseMeshes (rapidjson::Value::ConstMemberIterator 
 			mesh.mName = "Mesh_" + generateRandomString();
 		}
 
+		mesh.mMeshIndex = index;
 		mMeshesMap[index] = mesh;
 		++index;
 	}

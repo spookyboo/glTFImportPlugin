@@ -73,6 +73,7 @@ class gLTFNode
 		Ogre::Matrix4 mOwnTransformation;
 		gLTFNode* mParentNode;
 		std::vector<gLTFAnimation> mAnimationVector;
+		int mNodeIndex;
 
 };
 

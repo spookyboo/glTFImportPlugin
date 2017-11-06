@@ -41,7 +41,8 @@ gLTFPrimitive::gLTFPrimitive(void) :
 	mTexcoord_1AccessorDerived(-1),
 	mColor_0AccessorDerived(-1),
 	mJoints_0AccessorDerived(-1),
-	mWeights_0AccessorDerived(-1)
+	mWeights_0AccessorDerived(-1),
+	mPrimitiveIndex(-1)
 {
 	mMaterialNameDerived = "";
 	mAttributes.clear();

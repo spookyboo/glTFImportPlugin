@@ -74,6 +74,7 @@ class gLTFPrimitive
 		int mColor_0AccessorDerived;
 		int mJoints_0AccessorDerived;
 		int mWeights_0AccessorDerived;
+		int mPrimitiveIndex;
 };
 
 #endif

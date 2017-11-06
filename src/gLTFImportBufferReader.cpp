@@ -312,6 +312,32 @@ const Ogre::Vector4& gLTFImportBufferReader::skipAndReadVec4FromFloatBuffer (cha
 }
 
 //---------------------------------------------------------------------
+const Ogre::Matrix4& gLTFImportBufferReader::readMatrix4FromFloatBuffer (char* buffer, 
+	int count, 
+	gLTFAccessor accessor, 
+	bool applyMinMax)
+{
+	float raw;
+	int floatSize = sizeof(float);
+	int stride = accessor.mByteStrideDerived > 0 ? accessor.mByteStrideDerived : 16 * floatSize;
+	unsigned short index = 0;
+	for (unsigned short c1 = 0; c1 < 4; ++c1)
+	{
+		for (unsigned short c2 = 0; c2 < 4; ++c2)
+		{
+			memcpy(&raw, &buffer[count * stride + index * floatSize], floatSize);
+			mHelperMat4[c1][c2] = raw;
+			++index;
+		}
+	}
+
+	// Correct with min/max
+	// TODO: Pfff. Is this really needed?
+
+	return mHelperMat4;
+}
+
+//---------------------------------------------------------------------
 const Ogre::Vector4& gLTFImportBufferReader::readVec4FromUnsignedByteBuffer(char* buffer,
 	int count,
 	gLTFAccessor accessor,

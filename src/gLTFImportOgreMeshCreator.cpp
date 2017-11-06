@@ -50,7 +50,7 @@ gLTFImportOgreMeshCreator::gLTFImportOgreMeshCreator (void)
 	mMeshesMap.clear();
 	mAnimationsMap.clear();
 	mAccessorMap.clear();
-	mOgreSkeletonAnimationsMap.clear();
+	//mOgreSkeletonAnimationsMap.clear();
 }
 
 //---------------------------------------------------------------------
@@ -58,6 +58,7 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 	std::map<int, gLTFNode> nodesMap,
 	std::map<int, gLTFMesh> meshesMap,
 	std::map<int, gLTFAnimation> animationsMap,
+	std::map<int, gLTFSkin> skinsMap,
 	std::map<int, gLTFAccessor> accessorMap,
 	int startBinaryBuffer,
 	bool hasAnimations)
@@ -69,6 +70,7 @@ bool gLTFImportOgreMeshCreator::createOgreMeshFiles (Ogre::HlmsEditorPluginData*
 	mMeshesMap = meshesMap;
 	mAnimationsMap = animationsMap;
 	mAccessorMap = accessorMap;
+	mSkinsMap = skinsMap;
 
 	// First get the property value (from the HLMS Editor)
 	std::map<std::string, Ogre::HlmsEditorPluginData::PLUGIN_PROPERTY> properties = data->mInPropertiesMap;
@@ -106,6 +108,7 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 	gLTFMesh mesh;
 	std::string ogreFullyQualifiedMeshXmlFileName;
 	std::string ogreFullyQualifiedMeshMeshFileName;
+	unsigned int meshIndex = 0;
 	for (it = mMeshesMap.begin(); it != mMeshesMap.end(); it++)
 	{
 		mesh = it->second;
@@ -120,13 +123,16 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 		dst << "<mesh>\n";
 		dst << TAB << "<submeshes>\n";
 
-		writeSubmeshToMesh(dst, mesh, data, startBinaryBuffer); // Do not perform any transformation
+		gLTFNode dummyNode;
+		writeSubmeshToMesh(dst, dummyNode, mesh, data, startBinaryBuffer); // Do not perform any transformation
 		
 		dst << TAB << "</submeshes>\n";
 		dst << "</mesh>\n";
 
 		dst.close();
 		OUT << TABx2 << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+
+		++meshIndex;
 	}
 
 	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
@@ -170,7 +176,8 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 			mesh = node.mMeshDerived;
 			Ogre::Matrix4 matrix = node.mCalculatedTransformation;
 			writeSubmeshToMesh(dst,
-				mesh, 
+				node,
+				mesh,
 				data, 
 				startBinaryBuffer, 
 				matrix,
@@ -232,28 +239,17 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 	// 1. Add bones (=joints; a joint is an index to a node)
 	dst << TAB << "<bones>\n";
 	
-	/* Iterate through all nodes and write the bone info. Each joint is a bone. Each joint refers to a node.
+	/* Write the bone info. Each joint is a bone. Each joint refers to a node.
 	 */
-	unsigned int index = 0;
-	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
-	{
-		node = it->second;
-		writeBoneToSkeleton(dst,
-			index,
-			&node,
-			data,
-			startBinaryBuffer);
-		++index;
-	}
-	dst << TAB << "</bones>\n";
+	writeBonesToSkeleton(dst,
+		data,
+		startBinaryBuffer);
+	
+		dst << TAB << "</bones>\n";
 
 	// 2. Add bones hierarchy
 	dst << TAB << "<bonehierarchy>\n";
-	for (it = mNodesMap.begin(); it != mNodesMap.end(); it++)
-	{
-		node = it->second;
-		writeBoneHierarchyToSkeleton(dst, &node);
-	}
+	writeBoneHierarchyToSkeleton(dst);
 	dst << TAB << "</bonehierarchy>\n";
 
 	// 3. Add animations
@@ -275,7 +271,8 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
+bool gLTFImportOgreMeshCreator::writeSubmeshToMesh (std::ofstream& dst,
+	gLTFNode node,
 	gLTFMesh mesh,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer,
@@ -287,6 +284,7 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 	std::string materialName;
 
 	// Iterate through primitives (each primitive is a submesh)
+	unsigned int primitiveIndex = 0;
 	for (itPrimitives = mesh.mPrimitiveMap.begin(); itPrimitives != mesh.mPrimitiveMap.end(); itPrimitives++)
 	{
 		primitive = itPrimitives->second;
@@ -397,13 +395,14 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh(std::ofstream& dst,
 				dst << TABx3 << "<boneassignments>\n";
 
 				// Write bone assignments
-				writeBoneAssignmentsToMesh(dst, primitive, data, startBinaryBuffer);
+				writeBoneAssignmentsToMesh(dst, node, primitive, data, startBinaryBuffer);
 
 				dst << TABx3 << "</boneassignments>\n";
 			}
 		}
 
 		dst << TABx2 << "</submesh>\n";
+		++primitiveIndex;
 	}
 
 	return true;
@@ -526,7 +525,8 @@ bool gLTFImportOgreMeshCreator::writeVerticesToMesh(std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
+bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh (std::ofstream& dst,
+	gLTFNode node,
 	const gLTFPrimitive& primitive,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
@@ -592,13 +592,14 @@ bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
 				getCorrectForMinMaxPropertyValue(data));
 		}
 
-		// Write the xml entry. A vertex can be influenced by max. 4 bones/joints
-		unsigned short joints[4];
+		// Write the xml entry. A vertex can be influenced by max. 4 bones/joints. Note that a gLTF file may contains
+		// multiple skins. The relation between the joint and the skin may not dissapear
+		unsigned int joints[4];
 		float weights[4];
-		joints[0] = joint.x;
-		joints[1] = joint.y;
-		joints[2] = joint.z;
-		joints[3] = joint.w;
+		joints[0] = getBoneId(joint.x, findSkinIndexByNodeIndex(node.mNodeIndex));
+		joints[1] = getBoneId(joint.y, findSkinIndexByNodeIndex(node.mNodeIndex));
+		joints[2] = getBoneId(joint.z, findSkinIndexByNodeIndex(node.mNodeIndex));
+		joints[3] = getBoneId(joint.w, findSkinIndexByNodeIndex(node.mNodeIndex));
 		weights[0] = weight.x;
 		weights[1] = weight.y;
 		weights[2] = weight.z;
@@ -625,145 +626,205 @@ bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh(std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeBoneToSkeleton (std::ofstream& dst,
-	unsigned int index,
-	gLTFNode* node,
+bool gLTFImportOgreMeshCreator::writeBonesToSkeleton (std::ofstream& dst,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
-	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeBoneToSkeleton\n";
+	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeBonesToSkeleton\n";
 
 	/* Each bone is a joint in the skin object, A joint refers to a node.
 	 * Iterate through the joints and get the node.
 	 */
-	// TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Change code below, use joints
-	if (node->mName != "")
+	std::map<int, gLTFSkin>::iterator itSkin;
+	std::map<int, gLTFSkin>::iterator itSkinEnd = mSkinsMap.end();
+	std::map<int, gLTFNode>::iterator itNode;
+	std::map<int, gLTFNode>::iterator itNodeEnd;
+	gLTFSkin skin;
+	gLTFNode node;
+
+	// Iterate through all skins, get the nodes that correspond to the joints
+	unsigned int skinIndex = 0;
+	unsigned int jointIndex = 0;
+	for (itSkin = mSkinsMap.begin(); itSkin != itSkinEnd; itSkin++)
 	{
-		// Get the translation, rotation, scale of the node. If not present, return and don't write this bone to skeleton file
-		//std::vector<gLTFAnimationChannel> vec = getAnimationChannelsByNode(index);
-		//if (vec.empty())
-			//return true;
+		skin = itSkin->second;
+		itNodeEnd = skin.mNodesDerived.end();
+		for (itNode = skin.mNodesDerived.begin(); itNode != itNodeEnd; itNode++)
+		{
+			node = itNode->second;
+			dst << TABx2 <<
+				"<bone id=\"" <<
+				getBoneId(jointIndex, skinIndex) <<
+				"\" name=\"" <<
+				getBoneName(jointIndex, skinIndex) <<
+				"\">\n";
 
-		dst << TABx2 << "<bone id=\"" <<
-			index <<
-			"\" name=\"" <<
-			node->mName <<
-			"\">\n";
+			Ogre::Matrix4 matrix4;
+			Ogre::Vector3 position;
+			Ogre::Quaternion orientation;
+			Ogre::Vector3 axis;
+			Ogre::Radian angle;
+			Ogre::Vector3 scale;
 
-		Ogre::Matrix4 matrix4;
-		Ogre::Vector3 position;
-		Ogre::Quaternion orientation;
-		Ogre::Vector3 axis;
-		Ogre::Radian angle;
-		Ogre::Vector3 scale;
-		matrix4 = node->mCalculatedTransformation;
-		//matrix4 = node->mOwnTransformation; // TODO: TESTTESTTESTTESTTEST
-		matrix4.decomposition(position, scale, orientation);
+			// TODO: Do not use the node TRS values, but use the mInverseBindMatrices of the skin
+			//matrix4 = node.mCalculatedTransformation;
+			matrix4 = getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
+			matrix4.decomposition(position, scale, orientation);
 
-		// Position
-		dst << TABx3 << "<position x= \"" <<
-			position.x <<
-			"\" y=\"" <<
-			position.y <<
-			"\" z=\"" <<
-			position.z <<
-			"\" />\n";
+			// Position
+			dst << TABx3 << "<position x= \"" <<
+				position.x <<
+				"\" y=\"" <<
+				position.y <<
+				"\" z=\"" <<
+				position.z <<
+				"\" />\n";
 
-		// Orientation
-		orientation.ToAngleAxis(angle, axis);
-		dst << TABx3 << "<rotation angle=\"" <<
-			angle.valueRadians() <<
-			"\">\n";
-		dst << TABx4 << "<axis x= \"" <<
-			axis.x <<
-			"\" y=\"" <<
-			axis.y <<
-			"\" z=\"" <<
-			axis.z <<
-			"\" />\n";
-		dst << TABx3 << "</rotation>\n";
+			// Orientation
+			orientation.ToAngleAxis(angle, axis);
+			dst << TABx3 << "<rotation angle=\"" <<
+				angle.valueRadians() <<
+				"\">\n";
+			dst << TABx4 << "<axis x= \"" <<
+				axis.x <<
+				"\" y=\"" <<
+				axis.y <<
+				"\" z=\"" <<
+				axis.z <<
+				"\" />\n";
+			dst << TABx3 << "</rotation>\n";
 
-		// Scale
-		dst << TABx3 << "<scale x= \"" <<
-			scale.x <<
-			"\" y=\"" <<
-			scale.y <<
-			"\" z=\"" <<
-			scale.z <<
-			"\" />\n";
+			// Scale
+			dst << TABx3 << "<scale x= \"" <<
+				scale.x <<
+				"\" y=\"" <<
+				scale.y <<
+				"\" z=\"" <<
+				scale.z <<
+				"\" />\n";
 
-		dst << TABx2 << "</bone>\n";
+			dst << TABx2 << "</bone>\n";
+			++jointIndex;
+		}
+		
+		++skinIndex;
 	}
 
 	return true;
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton (std::ofstream& dst, gLTFNode* node)
+bool gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton (std::ofstream& dst)
 {
 	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeBoneHierarchyToSkeleton\n";
 
 	/* Iterate trough all joints, search its node and determine the parentnode of the node.
 	 * Search the joint index of the parent node.
-	 * TODO!!!!!!!!!!!!!!!!!
 	 */
+	std::map<int, gLTFSkin>::iterator itSkin;
+	std::map<int, gLTFSkin>::iterator itSkinEnd = mSkinsMap.end();
+	std::map<int, gLTFNode>::iterator itNode;
+	std::map<int, gLTFNode>::iterator itNodeEnd;
+	std::map<int, gLTFNode>::iterator itNodeParent;
+	std::map<int, gLTFNode>::iterator itNodeParentEnd;
+	gLTFSkin skin;
+	gLTFNode node;
+	gLTFNode* nodeParent;
 
-	std::string parentNodeName = "";
-	if (node->mParentNode)
-		parentNodeName = node->mParentNode->mName;
-
-	// TODO:
-	if (parentNodeName != "" && node->mName != "")
+	// Iterate through all skins, get the nodes that correspond to the joints
+	unsigned int skinIndex = 0;
+	unsigned int jointIndexChild = 0;
+	unsigned int jointIndexParent = 0;
+	std::string boneNameChild;
+	std::string boneNameParent;
+	for (itSkin = mSkinsMap.begin(); itSkin != itSkinEnd; itSkin++)
 	{
-		dst << TABx2 << "<boneparent bone=\"" <<
-			node->mName <<
-			"\" parent=\"" <<
-			parentNodeName <<
-			"\" />\n";
+		skin = itSkin->second;
+		itNodeEnd = skin.mNodesDerived.end();
+		for (itNode = skin.mNodesDerived.begin(); itNode != itNodeEnd; itNode++)
+		{
+			node = itNode->second;
+
+			// Determine the parent node and search it back in the node list
+			nodeParent = node.mParentNode;
+			itNodeParentEnd = skin.mNodesDerived.end();
+			jointIndexParent = 0;
+			for (itNodeParent = skin.mNodesDerived.begin(); itNodeParent != itNodeParentEnd; itNodeParent++)
+			{
+				// If node indices are equal, this must be the node
+				if (nodeParent->mNodeIndex == (itNodeParent->second).mNodeIndex)
+					break;
+				++jointIndexParent;
+			}
+			
+			if (jointIndexParent < skin.mNodesDerived.size())
+			{
+				// Use separate strings for the names and do not use getBoneName twice in the stream, because  it
+				// does not return the correct parent bone name
+				boneNameChild = getBoneName(jointIndexChild, skinIndex);
+				boneNameParent = getBoneName(jointIndexParent, skinIndex);
+				dst << TABx2 << "<boneparent bone=\"" <<
+					boneNameChild <<
+					"\" parent=\"" <<
+					boneNameParent <<
+					"\" />\n";
+			}
+
+			++jointIndexChild;
+		}
+
+		++skinIndex;
 	}
 
 	return true;
 }
 
 //---------------------------------------------------------------------
-bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst,
+bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton(std::ofstream& dst,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
 	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::writeAnimationsToSkeleton\n";
 
-	/* TODO: 
-	 * animationChannelsForNode must be animationChannelsForJoint, because not the node index, but the 
-	 * joint index must be used
-	 */
-
-
-	// TODO: findAllUniqueOgreSkeletonAnimations is currently a dummy function, because it in unclear how
-	// gLTF animations are grouped together
-	findAllUniqueOgreSkeletonAnimations (); // Group gLTF animations into one or multiple Ogre animations
 	dst << TAB << "<animations>\n";
+
+
+	/* Iterate through all skins and joints (use nodes instead of joints for convenience).
+	 * Assume, that each gLTF skin represents an Ogre3d animation (not sure whether this is true, but it seems
+	 * logical).
+	 */
 	std::map<int, std::string>::iterator it;
-	for (it = mOgreSkeletonAnimationsMap.begin(); it != mOgreSkeletonAnimationsMap.end(); it++)
+	std::map<int, gLTFSkin>::iterator itSkin;
+	std::map<int, gLTFSkin>::iterator itSkinEnd = mSkinsMap.end();
+	gLTFSkin skin;
+	for (itSkin = mSkinsMap.begin(); itSkin != itSkinEnd; itSkin++)
 	{
+		skin = itSkin->second;
 		dst << TABx2 << "<animation name=\"" <<
-			it->second <<
+			skin.mName <<
 			"\" length=\"" <<
 			getMaxTimeOfAnimation(it->second, data, startBinaryBuffer) <<
 			"\">\n";
 		dst << TABx3 << "<tracks>\n";
 
-		// Iterate through all bones (nodes) within this animation
+		std::vector<gLTFAnimationChannel> animationChannelsForNode; // All the animation channels in this animation for this node
 		std::map<int, gLTFNode>::iterator itNode;
+		std::map<int, gLTFNode>::iterator itNodeEnd;
+		std::map<int, gLTFNode>::iterator itNodeJoint;
+		std::map<int, gLTFNode>::iterator itNodeJointEnd;
 		std::map<int, gLTFAnimation>::iterator itAnimation;
 		std::map<int, gLTFAnimationChannel>::iterator itAnimationChannel;
-		std::vector<gLTFAnimationChannel> animationChannelsForNode; // All the animation channels in this animation for this node
 		gLTFNode node;
 		gLTFAnimation animation;
 		gLTFAnimationChannel animationChannel;
-		unsigned int nodeIndex = 0;
 		bool hasKeyframeHeader = false;
 		bool hasTrackAndKeyframesHeader = false;
-		for (itNode = mNodesMap.begin(); itNode != mNodesMap.end(); itNode++)
+		unsigned int skinIndex = 0;
+		unsigned int jointIndex = 0;
+		itNodeEnd = skin.mNodesDerived.end();
+		itNodeJointEnd = skin.mNodesDerived.end();
+		
+		for (itNode = skin.mNodesDerived.begin(); itNode != itNodeEnd; itNode++)
 		{
 			node = itNode->second;
 			hasTrackAndKeyframesHeader = false;
@@ -775,19 +836,18 @@ bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst,
 				animationChannelsForNode.clear();
 
 				// Iterate through all animations channels within the animation
-				for (itAnimationChannel = animation.mAnimationChannelsMap.begin(); 
-					itAnimationChannel != animation.mAnimationChannelsMap.end(); 
+				for (itAnimationChannel = animation.mAnimationChannelsMap.begin();
+					itAnimationChannel != animation.mAnimationChannelsMap.end();
 					itAnimationChannel++)
 				{
 					animationChannel = itAnimationChannel->second;
-					if (animationChannel.mTargetNode == nodeIndex)
+					if (animationChannel.mTargetNode == node.mNodeIndex)
 					{
-						// The node (bone) is defined in this channel; include it in the animation
 						if (!hasTrackAndKeyframesHeader)
 						{
 							dst << TABx4 <<
 								"<track bone=\"" <<
-								node.mName <<
+								getBoneName(jointIndex, skinIndex) <<
 								"\">\n";
 							dst << TABx5 <<
 								"<keyframes>\n";
@@ -798,7 +858,7 @@ bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst,
 					}
 				}
 
-				// Now we know which channels refer to this node. Write the keyframes
+				// Now we know which channels refer to this bone. Write the keyframes
 				if (!animationChannelsForNode.empty())
 					writeKeyframesToSkeleton(dst, &animationChannelsForNode, data, startBinaryBuffer);
 			}
@@ -809,13 +869,17 @@ bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton (std::ofstream& dst,
 				dst << TABx4 << "</track>\n";
 			}
 
-			++nodeIndex;
+			++jointIndex;
 		}
+
+		++skinIndex;
+	
 		dst << TABx3 << "</tracks>\n";
 		dst << TABx2 << "</animation>\n";
 	}
+	
 	dst << TAB << "</animations>\n";
-
+	
 	return true;
 }
 
@@ -1552,6 +1616,7 @@ bool gLTFImportOgreMeshCreator::isGenerateAnimationProperty (Ogre::HlmsEditorPlu
 }
 
 //---------------------------------------------------------------------
+/*
 bool gLTFImportOgreMeshCreator::findAllUniqueOgreSkeletonAnimations (void)
 {
 	mOgreSkeletonAnimationsMap.clear();
@@ -1567,4 +1632,60 @@ bool gLTFImportOgreMeshCreator::findAllUniqueOgreSkeletonAnimations (void)
 		++index;
 	}
 	return true;
+}
+*/
+
+//---------------------------------------------------------------------
+int gLTFImportOgreMeshCreator::findSkinIndexByNodeIndex (unsigned int nodeIndex)
+{
+	std::map<int, gLTFNode>::iterator itNode;
+	gLTFNode node;
+	for (itNode = mNodesMap.begin(); itNode != mNodesMap.end(); itNode++)
+	{
+		node = itNode->second;
+		if (node.mNodeIndex == nodeIndex)
+		{
+			return node.mSkin;
+		}
+	}
+
+	return 0; // Use default skin
+}
+
+
+//---------------------------------------------------------------------
+unsigned int gLTFImportOgreMeshCreator::getBoneId (unsigned int jointIndex, unsigned int skinIndex)
+{
+	return jointIndex + MAX_JOINTS_PER_SKIN * skinIndex; // Must be a unique id over all the skins
+}
+
+//---------------------------------------------------------------------
+const std::string& gLTFImportOgreMeshCreator::getBoneName (unsigned int jointIndex, unsigned int skinIndex)
+{
+	unsigned int indexForName = getBoneId(jointIndex, skinIndex);
+	std::stringstream ss;
+	ss << "Bone_" << indexForName;
+	mHelperString = ss.str();
+	return mHelperString;
+}
+
+//---------------------------------------------------------------------
+const Ogre::Matrix4& gLTFImportOgreMeshCreator::getInverseBindMatrix (unsigned int inverseBindMatricesAccessorIndex,
+	unsigned int jointIndex,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
+	mHelperMatrix4 = Ogre::Matrix4();
+	gLTFAccessor  inverseBindMatricesAccessor;
+	inverseBindMatricesAccessor = mAccessorMap[inverseBindMatricesAccessorIndex];
+	char* buffer = getBufferChunk(inverseBindMatricesAccessor.mUriDerived, data, inverseBindMatricesAccessor, startBinaryBuffer);
+
+	// Assume that jointIndex also represents the index of the matrix4 in this buffer
+	mHelperMatrix4 = mBufferReader.readMatrix4FromFloatBuffer(buffer,
+		jointIndex,
+		inverseBindMatricesAccessor,
+		getCorrectForMinMaxPropertyValue(data));
+	
+	delete[] buffer;
+	return mHelperMatrix4;
 }

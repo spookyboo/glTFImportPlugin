@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include "gLTFNode.h"
 #include "gLTFAnimation.h"
 #include "gLTFAccessor.h"
+#include "gLTFSkin.h"
 #include "hlms_editor_plugin.h"
 #include "gLTFImportBufferReader.h"
 #include "gLTFAnimationChannel.h" 
@@ -55,6 +56,7 @@ class gLTFImportOgreMeshCreator
 			std::map<int, gLTFNode> nodesMap,
 			std::map<int, gLTFMesh> meshesMap,
 			std::map<int, gLTFAnimation> animationsMap,
+			std::map<int, gLTFSkin> skinsMap,
 			std::map<int, gLTFAccessor> accessorMap,
 			int startBinaryBuffer,
 			bool hasAnimations); // Creates *.xml and .mesh files
@@ -84,6 +86,7 @@ class gLTFImportOgreMeshCreator
 
 		// Write to mesh .xml file
 		bool writeSubmeshToMesh (std::ofstream& dst,
+			gLTFNode node,
 			gLTFMesh mesh,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer,
@@ -102,19 +105,18 @@ class gLTFImportOgreMeshCreator
 			Ogre::Matrix4 matrix = Ogre::Matrix4()); // Write all vertices of a submesh
 
 		bool writeBoneAssignmentsToMesh(std::ofstream& dst,
+			gLTFNode node,
 			const gLTFPrimitive& primitive,
 			Ogre::HlmsEditorPluginData* data, 
 			int startBinaryBuffer); // Write all bone assignments of a submesh
 
-		// Write bone to skeleton.xml file
-		bool writeBoneToSkeleton(std::ofstream& dst,
-			unsigned int index,
-			gLTFNode* node,
+		// Write bones to skeleton.xml file
+		bool writeBonesToSkeleton(std::ofstream& dst,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
 
 		// Write bone hierarchy to skeleton.xml file
-		bool writeBoneHierarchyToSkeleton (std::ofstream& dst, gLTFNode* node);
+		bool writeBoneHierarchyToSkeleton (std::ofstream& dst);
 
 		// Write animation to skeleton.xml file
 		bool writeAnimationsToSkeleton (std::ofstream& dst,
@@ -204,6 +206,24 @@ class gLTFImportOgreMeshCreator
 		 */
 		bool findAllUniqueOgreSkeletonAnimations (void);
 
+		/* The primitives of a mesh refer to a joint index. To not forget the relation between the joint index and the 
+		 * skin, the skin must be determined by the node that also refers to the mesh
+		 */
+		int findSkinIndexByNodeIndex (unsigned int nodeIndex);
+
+		/* Because a gLTF model can have multiple skins, the model therefore has joints with the same index. This may give
+		 * an issue when the relation between a vertex and a joint (=bone) is made. The index of a joint alone cannot be used.
+		 * To identify a joint, a unique id must be given. This id is determined based on skin index and joint index.
+		 */
+		unsigned int getBoneId (unsigned int jointIndex, unsigned int skinIndex);
+		const std::string& getBoneName (unsigned int jointIndex, unsigned int skinIndex);
+
+		// Returns the InverseBindMatrix of a joint
+		const Ogre::Matrix4& getInverseBindMatrix (unsigned int inverseBindMatricesAccessorIndex,
+			unsigned int jointIndex,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer);
+
 	private:
 		std::string mHelperString;
 		std::string fileNameBufferHelper;
@@ -217,11 +237,13 @@ class gLTFImportOgreMeshCreator
 		std::map<int, gLTFNode> mNodesMap;
 		std::map<int, gLTFMesh> mMeshesMap;
 		std::map<int, gLTFAnimation> mAnimationsMap;
+		std::map<int, gLTFSkin> mSkinsMap;
 		std::map<int, gLTFAccessor> mAccessorMap;
 		std::map<int, std::string> mOgreSkeletonAnimationsMap; // Contains a list of all unique animations in Ogre
 		Ogre::Vector4 mHelperVec4Struct;
 		Ogre::Vector3 mHelperVec3Struct;
 		Ogre::Vector2 mHelperVec2Struct;
+		Ogre::Matrix4 mHelperMatrix4;
 		gLTFImportBufferReader mBufferReader;
 		gLTFAnimation mHelperAnimation;
 		gLTFAnimationChannel mHelperAnimationChannel;

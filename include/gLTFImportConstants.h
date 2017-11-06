@@ -61,6 +61,7 @@ static const std::string TABx10 = TAB + TABx9;
 
 static std::string gFileExtension = "";
 static std::string gJsonString = "";
+static const unsigned int MAX_JOINTS_PER_SKIN = 1000;
 
 //---------------------------------------------------------------------
 static const std::string& getFileExtension (const std::string& fileName)

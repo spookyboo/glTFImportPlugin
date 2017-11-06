@@ -42,6 +42,7 @@ THE SOFTWARE.
 #include "gLTFImportBufferViewsParser.h"
 #include "gLTFImportNodesParser.h"
 #include "gLTFImportAnimationsParser.h"
+#include "gLTFImportSkinsParser.h"
 #include "gLTFImportPbsMaterialsCreator.h"
 #include "gLTFImportOgreMeshCreator.h"
 #include "rapidjson/document.h"
@@ -91,6 +92,7 @@ class gLTFImportExecutor
 		bool propagateMeshes (Ogre::HlmsEditorPluginData* data); // Primitives are enriched with data from Materials and Accessors
 		bool propagateNodes(Ogre::HlmsEditorPluginData* data);
 		bool propagateAnimations (Ogre::HlmsEditorPluginData* data);
+		bool propagateSkins(Ogre::HlmsEditorPluginData* data);
 		gLTFNode* getTopLevelParentNode (gLTFNode* childNode); // Searches the highest parent in the tree
 		void propagateNodeTransformsToChildren (gLTFNode* node); // Transforms are inherited from the parent
 		
@@ -100,7 +102,6 @@ class gLTFImportExecutor
 		const std::string& getImageUriByTextureIndex (int index);
 		int getSamplerByTextureIndex (int index);
 		const std::string& getMaterialNameByIndex (int index);
-		//gLTFAnimation getAnimationByNodeIndex (int nodeIndex);
 		void addAnimationsToNode (gLTFNode* node, int nodeIndex); // Add all animations in which a node participates
 		const std::string& prepareUri(const std::string&  textureName,
 			Ogre::HlmsEditorPluginData* data,
@@ -161,6 +162,7 @@ class gLTFImportExecutor
 		std::map<int, gLTFBuffer> mBuffersMap;
 		std::map<int, gLTFNode> mNodesMap;
 		std::map<int, gLTFAnimation> mAnimationsMap;
+		std::map<int, gLTFSkin> mSkinsMap;
 
 		gLTFImportAccessorsParser mAccessorsParser;
 		gLTFImportMeshesParser mMeshesParser;
@@ -172,6 +174,7 @@ class gLTFImportExecutor
 		gLTFImportImagesParser mImagesParser;
 		gLTFImportNodesParser mNodesParser;
 		gLTFImportAnimationsParser mAnimationsParser;
+		gLTFImportSkinsParser mSkinsParser;
 		
 		// Creator classes
 		gLTFImportPbsMaterialsCreator mPbsMaterialsCreator;

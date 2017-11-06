@@ -52,6 +52,9 @@ class gLTFMesh
 		std::map<int, gLTFPrimitive> mPrimitiveMap;
 		int mWeight;
 		std::string mName;
+
+		// Derived members
+		int mMeshIndex;
 };
 
 #endif

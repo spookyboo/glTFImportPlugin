@@ -133,6 +133,7 @@ bool gLTFImportPrimitivesParser::parsePrimitives (rapidjson::Value::ConstMemberI
 			}
 		}
 		
+		primitive.mPrimitiveIndex = index;
 		mPrimitivesMap[index] = primitive;
 		++index;
 	}

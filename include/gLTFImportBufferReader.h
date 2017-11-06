@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include "OgreVector2.h"
 #include "OgreVector3.h"
 #include "OgreVector4.h"
+#include "OgreMatrix4.h"
 
 /** Class responsible for reading a gLTF (binary) Buffer */
 class gLTFImportBufferReader
@@ -98,6 +99,9 @@ class gLTFImportBufferReader
 		const Ogre::Vector4& readVec4FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
 		const Ogre::Vector4& skipAndReadVec4FromFloatBuffer (char* buffer, unsigned int skipBytes, gLTFAccessor accessor, bool applyMinMax = false);
 
+		// Read Matrix4
+		const Ogre::Matrix4& readMatrix4FromFloatBuffer (char* buffer, int count, gLTFAccessor accessor, bool applyMinMax = false);
+
 		// Min/Max corrections
 		void correctVec2WithMinMax (gLTFAccessor accessor, Ogre::Vector2* vec2);
 		void correctVec3WithMinMax (gLTFAccessor accessor, Ogre::Vector3* vec3);
@@ -106,6 +110,7 @@ class gLTFImportBufferReader
 	//protected:
 
 	private:
+		Ogre::Matrix4 mHelperMat4;
 		Ogre::Vector4 mHelperVec4;
 		Ogre::Vector3 mHelperVec3;
 		Ogre::Vector2 mHelperVec2;

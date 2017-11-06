@@ -31,7 +31,8 @@
 
 //---------------------------------------------------------------------
 gLTFMesh::gLTFMesh (void) :
-	mWeight(0)
+	mWeight(0),
+	mMeshIndex(-1)
 {
 	mName = "";
 	mPrimitiveMap.clear();
