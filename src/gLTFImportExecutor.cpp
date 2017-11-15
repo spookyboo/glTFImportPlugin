@@ -27,6 +27,7 @@
 */
 
 #include "gLTFImportExecutor.h"
+#include "gLTFImportBufferReader.h"
 #include "Ogre.h"
 #include "OgreImage.h"
 #include "base64.h"
@@ -220,7 +221,7 @@ bool gLTFImportExecutor::executeJson (const std::string& fileName,
 	rapidjson::Value::ConstMemberIterator itEnd = d.MemberEnd();
 	for (rapidjson::Value::ConstMemberIterator it = d.MemberBegin(); it != itEnd; ++it)
 	{
-		// TODO: Parse assets, scene, skins, ... ?????
+		// TODO: Parse assets, scene ... ?????
 
 		OUT << "-------------------------------- key gLTF ==> " << it->name.GetString() << " --------------------------------\n";
 		std::string name(it->name.GetString());
@@ -740,25 +741,27 @@ bool gLTFImportExecutor::propagateSkins (Ogre::HlmsEditorPluginData* data)
 	std::map<int, int>::iterator itJointEnd;
 	gLTFSkin skin;
 	int nodeIndex;
-	int index;
-	gLTFNode* node;
+	int jointIndex;
+	gLTFNode* pNode;
+	gLTFNode node;
 
 	// Iterate though the skins, propagate nodes
 	for (itSkin = mSkinsMap.begin(); itSkin != itSkinEnd; itSkin++)
 	{
 		skin = itSkin->second;
 		itJointEnd = (skin.mJoints).end();
-		index = 0;
+		jointIndex = 0;
 		for (itJoint = (skin.mJoints).begin(); itJoint != itJointEnd; itJoint++)
 		{
-			nodeIndex = itJoint->second; // node index is joint
-			node = findNodeByIndex(nodeIndex);
-			if (node)
+			nodeIndex = itJoint->second; // node index is value of joint
+			pNode = findNodeByIndex(nodeIndex);
+			if (pNode)
 			{
 				// Assign the node to the same index as the joint
-				(itSkin->second).mNodesDerived[index] = *node;
+				node = *pNode;
+				(itSkin->second).mNodesDerived[jointIndex] = node;
 			}
-			++index;
+			++jointIndex;
 		}
 	}
 
@@ -1313,3 +1316,27 @@ bool gLTFImportExecutor::setProjectFileNamePropertyValue (Ogre::HlmsEditorPlugin
 	data->mOutReferencesMap[property.propertyName] = property;
 	return true;
 }
+
+//---------------------------------------------------------------------
+/*
+const Ogre::Matrix4& gLTFImportExecutor::getInverseBindMatrix (unsigned int inverseBindMatricesAccessorIndex,
+	unsigned int jointIndex,
+	Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
+	mHelperMatrix4 = Ogre::Matrix4();
+	gLTFAccessor  inverseBindMatricesAccessor;
+	inverseBindMatricesAccessor = mAccessorsMap [inverseBindMatricesAccessorIndex];
+	char* buffer = mOgreMeshCreator.getBufferChunk(inverseBindMatricesAccessor.mUriDerived, data, inverseBindMatricesAccessor, startBinaryBuffer);
+
+	// Assume that jointIndex also represents the index of the matrix4 in this buffer
+	gLTFImportBufferReader bufferReader;
+	mHelperMatrix4 = bufferReader.readMatrix4FromFloatBuffer(buffer,
+		jointIndex,
+		inverseBindMatricesAccessor,
+		false);
+
+	delete[] buffer;
+	return mHelperMatrix4;
+}
+*/

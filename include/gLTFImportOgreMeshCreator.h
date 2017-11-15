@@ -71,6 +71,11 @@ class gLTFImportOgreMeshCreator
 		bool createCombinedOgreSkeletonFile (Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer,
 			bool hasAnimations);
+
+		char* getBufferChunk(const std::string& uri,
+			Ogre::HlmsEditorPluginData* data,
+			gLTFAccessor accessor,
+			int startBinaryBuffer);
 	
 	protected:
 		struct Keyframe
@@ -160,11 +165,6 @@ class gLTFImportOgreMeshCreator
 			int startBinaryBuffer); // Read the texcoords 1
 
 		// Utils
-		char* getBufferChunk (const std::string& uri, 
-			Ogre::HlmsEditorPluginData* data, 
-			gLTFAccessor accessor, 
-			int startBinaryBuffer);
-		
 		bool convertXmlFileToMesh (Ogre::HlmsEditorPluginData* data, 
 			const std::string& xmlFileName, 
 			const std::string& meshFileName);
@@ -186,8 +186,8 @@ class gLTFImportOgreMeshCreator
 		// Returns the property value to generate animations; returns false if the property isn't available
 		bool isGenerateAnimationProperty (Ogre::HlmsEditorPluginData* data);
 
-		// Determine the time of an animation
-		float getMaxTimeOfAnimation (const std::string& animationName,
+		// Determine the time of an animation (assume an animation is a skin)
+		float getMaxTimeOfAnimation (const gLTFSkin& skin,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
 
@@ -224,6 +224,18 @@ class gLTFImportOgreMeshCreator
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
 
+		// Returns true if this node is referred to as a joint in the given skin
+		bool isNodeAJointInThisSkin (const gLTFSkin& skin, const gLTFNode& node);
+
+		// TODO
+		/*
+		void calculateBoneWorldTransform(Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer);
+		gLTFNode* findNodeByIndex (int nodeIndex);
+		gLTFNode* getTopLevelParentNode(gLTFNode* childNode);
+		void propagateBoneWorldTransformsToChildren (gLTFNode* node);
+		*/
+
 	private:
 		std::string mHelperString;
 		std::string fileNameBufferHelper;
@@ -239,7 +251,6 @@ class gLTFImportOgreMeshCreator
 		std::map<int, gLTFAnimation> mAnimationsMap;
 		std::map<int, gLTFSkin> mSkinsMap;
 		std::map<int, gLTFAccessor> mAccessorMap;
-		std::map<int, std::string> mOgreSkeletonAnimationsMap; // Contains a list of all unique animations in Ogre
 		Ogre::Vector4 mHelperVec4Struct;
 		Ogre::Vector3 mHelperVec3Struct;
 		Ogre::Vector2 mHelperVec2Struct;

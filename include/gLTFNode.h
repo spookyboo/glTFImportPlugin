@@ -69,8 +69,10 @@ class gLTFNode
 		// Derived data
 		gLTFMesh mMeshDerived; // from mesh
 		bool mTransformationCalculated;
+		bool mWorldTransformationCalculated;
 		Ogre::Matrix4 mCalculatedTransformation;
-		Ogre::Matrix4 mOwnTransformation;
+		Ogre::Matrix4 mLocalTransformation;
+		Ogre::Matrix4 mCalculatedWorldTransformation; // Is local transformation * inverse bind matrix
 		gLTFNode* mParentNode;
 		std::vector<gLTFAnimation> mAnimationVector;
 		int mNodeIndex;

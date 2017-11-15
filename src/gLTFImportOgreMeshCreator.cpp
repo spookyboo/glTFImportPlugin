@@ -50,7 +50,6 @@ gLTFImportOgreMeshCreator::gLTFImportOgreMeshCreator (void)
 	mMeshesMap.clear();
 	mAnimationsMap.clear();
 	mAccessorMap.clear();
-	//mOgreSkeletonAnimationsMap.clear();
 }
 
 //---------------------------------------------------------------------
@@ -219,6 +218,9 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreSkeletonFile (Ogre::HlmsEditor
 	if (!hasAnimations)
 		return false;
 	
+	// First calculate the world transformations (only needed for animation)
+	//calculateBoneWorldTransform(data, startBinaryBuffer);
+
 	// Create the Ogre skeleton files (*.skeleton.xml/.skeleton)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
 
@@ -342,7 +344,6 @@ bool gLTFImportOgreMeshCreator::writeSubmeshToMesh (std::ofstream& dst,
 			std::string hasPositionsText = "\"true\""; // Assume there are always positions, right?
 			std::string hasNormalsText = "\"true\"";
 			std::string hasTangentsText = "\"true\"";
-			//std::string numTextCoordsText = "\"1\""; // Assume there is at least one
 			std::string numTextCoordsText = "\"0\"";
 			if (primitive.mNormalAccessorDerived < 0)
 				hasNormalsText = "\"false\"";
@@ -463,7 +464,6 @@ bool gLTFImportOgreMeshCreator::writeVerticesToMesh(std::ofstream& dst,
 	readTexCoords1FromUriOrFile(primitive, data, startBinaryBuffer); // Read the uv's set 1
 
 	// Write vertices; Assume that count of positions, texcoords, etc. is the same
-	// TODO: Verify !!!!!!!!!!
 	gLTFAccessor  positionAccessor = mAccessorMap[primitive.mPositionAccessorDerived];
 	for (int i = 0; i < positionAccessor.mCount; i++)
 	{
@@ -531,9 +531,9 @@ bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh (std::ofstream& dst,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
-	gLTFAccessor  positionAccessor = mAccessorMap[primitive.mPositionAccessorDerived]; // To determine number of vertices
-	gLTFAccessor  jointAccessor = mAccessorMap[primitive.mJoints_0AccessorDerived];
-	gLTFAccessor  weightAccessor = mAccessorMap[primitive.mWeights_0AccessorDerived];
+	gLTFAccessor positionAccessor = mAccessorMap[primitive.mPositionAccessorDerived]; // To determine number of vertices
+	gLTFAccessor jointAccessor = mAccessorMap[primitive.mJoints_0AccessorDerived];
+	gLTFAccessor weightAccessor = mAccessorMap[primitive.mWeights_0AccessorDerived];
 	Ogre::Vector4 joint;
 	Ogre::Vector4 weight;
 	unsigned short fCount;
@@ -649,6 +649,7 @@ bool gLTFImportOgreMeshCreator::writeBonesToSkeleton (std::ofstream& dst,
 	{
 		skin = itSkin->second;
 		itNodeEnd = skin.mNodesDerived.end();
+		jointIndex = 0;
 		for (itNode = skin.mNodesDerived.begin(); itNode != itNodeEnd; itNode++)
 		{
 			node = itNode->second;
@@ -666,9 +667,19 @@ bool gLTFImportOgreMeshCreator::writeBonesToSkeleton (std::ofstream& dst,
 			Ogre::Radian angle;
 			Ogre::Vector3 scale;
 
-			// TODO: Do not use the node TRS values, but use the mInverseBindMatrices of the skin
+			// TODO: Do not use the node TRS values, but use the mInverseBindMatrices of the skin. What is the math???
+			// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 			//matrix4 = node.mCalculatedTransformation;
+			//matrix4 = mNodesMap[skin.mSkeleton].mLocalTransformation * node.mLocalTransformation;
+			//matrix4 = node.mLocalTransformation + node.mParentNode->mLocalTransformation;
+			//matrix4 = mNodesMap[skin.mSkeleton].mLocalTransformation;
+			//matrix4 = node.mLocalTransformation;
+			//matrix4 = mNodesMap[skin.mSkeleton].mLocalTransformation * node.mLocalTransformation;
+			//matrix4 = node.mLocalTransformation * getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
 			matrix4 = getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
+			//matrix4 = getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
+			// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+
 			matrix4.decomposition(position, scale, orientation);
 
 			// Position
@@ -793,43 +804,42 @@ bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton(std::ofstream& dst,
 	 * Assume, that each gLTF skin represents an Ogre3d animation (not sure whether this is true, but it seems
 	 * logical).
 	 */
-	std::map<int, std::string>::iterator it;
 	std::map<int, gLTFSkin>::iterator itSkin;
 	std::map<int, gLTFSkin>::iterator itSkinEnd = mSkinsMap.end();
+	std::map<int, gLTFNode>::iterator itNode;
+	std::map<int, gLTFNode>::iterator itNodeEnd;
+	std::map<int, gLTFNode>::iterator itNodeJoint;
+	std::map<int, gLTFAnimation>::iterator itAnimation;
 	gLTFSkin skin;
+	unsigned int skinIndex = 0;
+	unsigned int jointIndex = 0;
+	bool hasTrackAndKeyframesHeader;
+	std::vector<gLTFAnimationChannel> animationChannelsForNode; // All the animation channels in this animation for this node
+	std::map<int, gLTFAnimationChannel>::iterator itAnimationChannel;
+	gLTFNode node;
+	gLTFAnimation animation;
+	gLTFAnimationChannel animationChannel;
+
 	for (itSkin = mSkinsMap.begin(); itSkin != itSkinEnd; itSkin++)
 	{
 		skin = itSkin->second;
 		dst << TABx2 << "<animation name=\"" <<
 			skin.mName <<
 			"\" length=\"" <<
-			getMaxTimeOfAnimation(it->second, data, startBinaryBuffer) <<
+			getMaxTimeOfAnimation(skin, data, startBinaryBuffer) <<
 			"\">\n";
 		dst << TABx3 << "<tracks>\n";
 
-		std::vector<gLTFAnimationChannel> animationChannelsForNode; // All the animation channels in this animation for this node
-		std::map<int, gLTFNode>::iterator itNode;
-		std::map<int, gLTFNode>::iterator itNodeEnd;
-		std::map<int, gLTFNode>::iterator itNodeJoint;
-		std::map<int, gLTFNode>::iterator itNodeJointEnd;
-		std::map<int, gLTFAnimation>::iterator itAnimation;
-		std::map<int, gLTFAnimationChannel>::iterator itAnimationChannel;
-		gLTFNode node;
-		gLTFAnimation animation;
-		gLTFAnimationChannel animationChannel;
-		bool hasKeyframeHeader = false;
-		bool hasTrackAndKeyframesHeader = false;
-		unsigned int skinIndex = 0;
-		unsigned int jointIndex = 0;
+		jointIndex = 0;
+		hasTrackAndKeyframesHeader = false;
 		itNodeEnd = skin.mNodesDerived.end();
-		itNodeJointEnd = skin.mNodesDerived.end();
 		
 		for (itNode = skin.mNodesDerived.begin(); itNode != itNodeEnd; itNode++)
 		{
 			node = itNode->second;
 			hasTrackAndKeyframesHeader = false;
 
-			// Iterate through all animations
+			// Iterate through all gLTF animations
 			for (itAnimation = mAnimationsMap.begin(); itAnimation != mAnimationsMap.end(); itAnimation++)
 			{
 				animation = itAnimation->second;
@@ -884,7 +894,7 @@ bool gLTFImportOgreMeshCreator::writeAnimationsToSkeleton(std::ofstream& dst,
 }
 
 //---------------------------------------------------------------------
-float gLTFImportOgreMeshCreator::getMaxTimeOfAnimation (const std::string& animationName,
+float gLTFImportOgreMeshCreator::getMaxTimeOfAnimation (const gLTFSkin& skin,
 	Ogre::HlmsEditorPluginData* data,
 	int startBinaryBuffer)
 {
@@ -906,23 +916,25 @@ float gLTFImportOgreMeshCreator::getMaxTimeOfAnimation (const std::string& anima
 	for (itNode = mNodesMap.begin(); itNode != mNodesMap.end(); itNode++)
 	{
 		node = itNode->second;
-
-		// Iterate through all animations
-		for (itAnimation = mAnimationsMap.begin(); itAnimation != mAnimationsMap.end(); itAnimation++)
+		if (isNodeAJointInThisSkin(skin, node))
 		{
-			animation = itAnimation->second;
-
-			// Iterate through all animations channels within the animation
-			for (itAnimationChannel = animation.mAnimationChannelsMap.begin();
-				itAnimationChannel != animation.mAnimationChannelsMap.end();
-				itAnimationChannel++)
+			// The node is a joint of this skin. Iterate through all animations
+			for (itAnimation = mAnimationsMap.begin(); itAnimation != mAnimationsMap.end(); itAnimation++)
 			{
-				animationChannel = itAnimationChannel->second;
-				if (animationChannel.mTargetNode == nodeIndex)
+				animation = itAnimation->second;
+
+				// Iterate through all animations channels within the animation
+				for (itAnimationChannel = animation.mAnimationChannelsMap.begin();
+					itAnimationChannel != animation.mAnimationChannelsMap.end();
+					itAnimationChannel++)
 				{
-					// The node (bone) is defined in this channel
-					time = getMaxTimeOfKeyframes (&animationChannel, data, startBinaryBuffer);
-					maxTime = std::max(time, maxTime);
+					animationChannel = itAnimationChannel->second;
+					if (animationChannel.mTargetNode == nodeIndex)
+					{
+						// The node (bone) is defined in this channel
+						time = getMaxTimeOfKeyframes(&animationChannel, data, startBinaryBuffer);
+						maxTime = std::max(time, maxTime);
+					}
 				}
 			}
 		}
@@ -932,6 +944,23 @@ float gLTFImportOgreMeshCreator::getMaxTimeOfAnimation (const std::string& anima
 	}
 
 	return maxTime;
+}
+
+//---------------------------------------------------------------------
+bool gLTFImportOgreMeshCreator::isNodeAJointInThisSkin (const gLTFSkin& skin, const gLTFNode& node)
+{
+	std::map<int, gLTFNode>::const_iterator itNode;
+	std::map<int, gLTFNode>::const_iterator itNodeEnd = skin.mNodesDerived.end();
+	gLTFNode nodeAsJoint;
+
+	for (itNode = skin.mNodesDerived.begin(); itNode != itNodeEnd; itNode++)
+	{
+		nodeAsJoint = itNode->second;
+		if (node.mNodeIndex == nodeAsJoint.mNodeIndex)
+			return true;
+	}
+
+	return false;
 }
 
 //---------------------------------------------------------------------
@@ -1616,26 +1645,6 @@ bool gLTFImportOgreMeshCreator::isGenerateAnimationProperty (Ogre::HlmsEditorPlu
 }
 
 //---------------------------------------------------------------------
-/*
-bool gLTFImportOgreMeshCreator::findAllUniqueOgreSkeletonAnimations (void)
-{
-	mOgreSkeletonAnimationsMap.clear();
-	mOgreSkeletonAnimationsMap[0] == ""; // Dummy entry
-	unsigned int index = 0;
-	std::map<int, std::string>::iterator it;
-	std::stringstream ss;
-	for (it = mOgreSkeletonAnimationsMap.begin(); it != mOgreSkeletonAnimationsMap.end(); it++)
-	{
-		ss.clear();
-		ss << "animation_" << index;
-		mOgreSkeletonAnimationsMap[0] = ss.str();
-		++index;
-	}
-	return true;
-}
-*/
-
-//---------------------------------------------------------------------
 int gLTFImportOgreMeshCreator::findSkinIndexByNodeIndex (unsigned int nodeIndex)
 {
 	std::map<int, gLTFNode>::iterator itNode;
@@ -1689,3 +1698,117 @@ const Ogre::Matrix4& gLTFImportOgreMeshCreator::getInverseBindMatrix (unsigned i
 	delete[] buffer;
 	return mHelperMatrix4;
 }
+
+
+//---------------------------------------------------------------------
+/*
+gLTFNode* gLTFImportOgreMeshCreator::findNodeByIndex (int nodeIndex)
+{
+	std::map<int, gLTFNode>::iterator it = mNodesMap.find(nodeIndex);
+	if (it != mNodesMap.end())
+	{
+		// Found the node
+		return &(it->second);
+	}
+
+	return 0;
+}
+
+//---------------------------------------------------------------------
+gLTFNode* gLTFImportOgreMeshCreator::getTopLevelParentNode (gLTFNode* childNode)
+{
+	OUT << TABx3 << "Perform gLTFImportExecutor::getTopLevelParentNode\n";
+
+	std::map<int, gLTFNode>::iterator itNode;
+	std::map<int, gLTFNode>::iterator itNodeEnd = mNodesMap.end();
+	std::vector<int>::iterator itChildNodes;
+	std::vector<int>::iterator itChildNodesEnd;
+	gLTFNode* node;
+	int count;
+
+	// Iterate trough all node to look for the parent of the childNode (there is only one parent according to the specs)
+	for (itNode = mNodesMap.begin(); itNode != itNodeEnd; itNode++)
+	{
+		node = &itNode->second;
+		itChildNodesEnd = node->mChildren.end();
+		count = 0;
+		for (itChildNodes = node->mChildren.begin(); itChildNodes != itChildNodesEnd; itChildNodes++)
+		{
+			if (childNode == findNodeByIndex(node->mChildren[count]))
+			{
+				// node is the parent of childNode, Search the parent of node recursive
+				node = getTopLevelParentNode(node);
+				return node;
+			}
+			count++;
+		}
+	}
+
+	return childNode; // There is no parent
+}
+
+//---------------------------------------------------------------------
+void gLTFImportOgreMeshCreator::calculateBoneWorldTransform (Ogre::HlmsEditorPluginData* data,
+	int startBinaryBuffer)
+{
+	std::map<int, gLTFSkin>::iterator itSkin;
+	std::map<int, gLTFSkin>::iterator itSkinEnd = mSkinsMap.end();
+	std::map<int, gLTFNode>::iterator itNode;
+	std::map<int, gLTFNode>::iterator itNodeEnd;
+	gLTFSkin skin;
+	gLTFNode node;
+	Ogre::Matrix4 matrix4;
+
+	// Iterate through all skins, get the nodes that correspond to the joints / bones
+	unsigned int skinIndex = 0;
+	unsigned int jointIndex = 0;
+	for (itSkin = mSkinsMap.begin(); itSkin != itSkinEnd; itSkin++)
+	{
+		skin = itSkin->second;
+		itNodeEnd = skin.mNodesDerived.end();
+		for (itNode = skin.mNodesDerived.begin(); itNode != itNodeEnd; itNode++)
+		{
+			node = itNode->second;
+			matrix4 = node.mCalculatedWorldTransformation;
+			matrix4 = matrix4 * getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
+			(itNode->second).mCalculatedWorldTransformation = matrix4;
+		}
+	}
+
+	// Iterate through all nodes and calculate the world transform, taking parents into account
+	// Iterate though the nodes, propagate transformation to childres and set the derived mesh object
+	itNodeEnd = mNodesMap.end();
+	for (itNode = mNodesMap.begin(); itNode != itNodeEnd; itNode++)
+	{
+		gLTFNode* node = &itNode->second;
+		node = getTopLevelParentNode (node); // Search for the toplevel node in the tree and start from there
+		if (!node->mWorldTransformationCalculated)
+			propagateBoneWorldTransformsToChildren (&(itNode->second));
+	}
+}
+
+//---------------------------------------------------------------------
+void gLTFImportOgreMeshCreator::propagateBoneWorldTransformsToChildren (gLTFNode* node)
+{
+	OUT << TABx3 << "Perform gLTFImportOgreMeshCreator::propagateBoneWorldTransformsToChildren\n";
+
+	std::vector<int>::iterator itChildNodes;
+	std::vector<int>::iterator itChildNodesEnd;
+	gLTFNode* childNode;
+	int count;
+
+	itChildNodesEnd = node->mChildren.end();
+	count = 0;
+	for (itChildNodes = node->mChildren.begin(); itChildNodes != itChildNodesEnd; itChildNodes++)
+	{
+		childNode = findNodeByIndex(node->mChildren[count]);
+		if (childNode && !childNode->mWorldTransformationCalculated)
+		{
+			childNode->mCalculatedWorldTransformation = node->mCalculatedWorldTransformation * childNode->mCalculatedWorldTransformation;
+			childNode->mWorldTransformationCalculated = true;
+			propagateBoneWorldTransformsToChildren(childNode); // Propagate to the lower tree
+		}
+		count++;
+	}
+}
+*/

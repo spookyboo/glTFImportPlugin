@@ -114,6 +114,14 @@ class gLTFImportExecutor
 		void writeTextureEntryToConfig (std::ofstream& texFile, const std::string& uriImage, int& texCount);
 		const std::string& getImageIndexAsString (int textureIndex);
 		gLTFAnimationSampler getAnimationSamplerByAnimationAndSamplerIndex (gLTFAnimation* animation, int samplerIndex);
+		
+		// TODO: TEST
+		/*
+		const Ogre::Matrix4& getInverseBindMatrix (unsigned int inverseBindMatricesAccessorIndex,
+			unsigned int jointIndex,
+			Ogre::HlmsEditorPluginData* data,
+			int startBinaryBuffer);
+		*/
 
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
@@ -147,6 +155,7 @@ class gLTFImportExecutor
 		bool mHasAnimations; // If true, the gLTF file has animations
 		std::string mHelperString;
 		std::string mHelperMaterialNameString;
+		Ogre::Matrix4 mHelperMatrix4;
 		gLTFImage mHelperImage;
 		std::string mHelperUri;
 		std::string mHelperOutputFile;

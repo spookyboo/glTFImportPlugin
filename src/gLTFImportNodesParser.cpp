@@ -223,7 +223,8 @@ bool gLTFImportNodesParser::parseNodes (rapidjson::Value::ConstMemberIterator js
 		}
 
 		node.mCalculatedTransformation = matrix;
-		node.mOwnTransformation = matrix;
+		node.mLocalTransformation = matrix;
+		node.mCalculatedWorldTransformation = matrix;
 		node.mNodeIndex = index;
 		mNodesMap[index] = node;
 		++index;
