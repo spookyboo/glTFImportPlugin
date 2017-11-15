@@ -673,10 +673,10 @@ bool gLTFImportOgreMeshCreator::writeBonesToSkeleton (std::ofstream& dst,
 			//matrix4 = mNodesMap[skin.mSkeleton].mLocalTransformation * node.mLocalTransformation;
 			//matrix4 = node.mLocalTransformation + node.mParentNode->mLocalTransformation;
 			//matrix4 = mNodesMap[skin.mSkeleton].mLocalTransformation;
-			//matrix4 = node.mLocalTransformation;
+			matrix4 = node.mLocalTransformation;
 			//matrix4 = mNodesMap[skin.mSkeleton].mLocalTransformation * node.mLocalTransformation;
 			//matrix4 = node.mLocalTransformation * getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
-			matrix4 = getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
+			//matrix4 = getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
 			//matrix4 = getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
 			// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 

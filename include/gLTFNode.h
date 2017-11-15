@@ -72,7 +72,7 @@ class gLTFNode
 		bool mWorldTransformationCalculated;
 		Ogre::Matrix4 mCalculatedTransformation;
 		Ogre::Matrix4 mLocalTransformation;
-		Ogre::Matrix4 mCalculatedWorldTransformation; // Is local transformation * inverse bind matrix
+		//Ogre::Matrix4 mCalculatedWorldTransformation; // Is local transformation * inverse bind matrix
 		gLTFNode* mParentNode;
 		std::vector<gLTFAnimation> mAnimationVector;
 		int mNodeIndex;
