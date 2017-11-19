@@ -153,7 +153,7 @@ namespace Ogre
 		property.labelName = "Always generate animation";
 		property.info = "";
 		property.type = HlmsEditorPluginData::BOOL;
-		property.boolValue = true;
+		property.boolValue = false;
 		mProperties[property.propertyName] = property;
 
 		// Correct for min/max
