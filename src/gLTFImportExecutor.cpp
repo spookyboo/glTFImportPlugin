@@ -763,6 +763,11 @@ bool gLTFImportExecutor::propagateSkins (Ogre::HlmsEditorPluginData* data)
 			}
 			++jointIndex;
 		}
+
+		// TEST
+		//pNode = findNodeByIndex (skin.mSkeleton);
+		//propagateBoneTransformsToChildren(pNode);
+		// TEST
 	}
 
 	return true;
@@ -1316,27 +1321,3 @@ bool gLTFImportExecutor::setProjectFileNamePropertyValue (Ogre::HlmsEditorPlugin
 	data->mOutReferencesMap[property.propertyName] = property;
 	return true;
 }
-
-//---------------------------------------------------------------------
-/*
-const Ogre::Matrix4& gLTFImportExecutor::getInverseBindMatrix (unsigned int inverseBindMatricesAccessorIndex,
-	unsigned int jointIndex,
-	Ogre::HlmsEditorPluginData* data,
-	int startBinaryBuffer)
-{
-	mHelperMatrix4 = Ogre::Matrix4();
-	gLTFAccessor  inverseBindMatricesAccessor;
-	inverseBindMatricesAccessor = mAccessorsMap [inverseBindMatricesAccessorIndex];
-	char* buffer = mOgreMeshCreator.getBufferChunk(inverseBindMatricesAccessor.mUriDerived, data, inverseBindMatricesAccessor, startBinaryBuffer);
-
-	// Assume that jointIndex also represents the index of the matrix4 in this buffer
-	gLTFImportBufferReader bufferReader;
-	mHelperMatrix4 = bufferReader.readMatrix4FromFloatBuffer(buffer,
-		jointIndex,
-		inverseBindMatricesAccessor,
-		false);
-
-	delete[] buffer;
-	return mHelperMatrix4;
-}
-*/

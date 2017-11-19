@@ -130,6 +130,8 @@ class gLTFImportOgreMeshCreator
 
 		// Write keyframe header to skeleton.xml file
 		bool writeKeyframesToSkeleton (std::ofstream& dst,
+			//const gLTFSkin& skin,
+			//unsigned int jointIndex,
 			std::vector<gLTFAnimationChannel>* animationChannelsForNode,
 			Ogre::HlmsEditorPluginData* data,
 			int startBinaryBuffer);
@@ -228,13 +230,7 @@ class gLTFImportOgreMeshCreator
 		bool isNodeAJointInThisSkin (const gLTFSkin& skin, const gLTFNode& node);
 
 		// TODO
-		/*
-		void calculateBoneWorldTransform(Ogre::HlmsEditorPluginData* data,
-			int startBinaryBuffer);
-		gLTFNode* findNodeByIndex (int nodeIndex);
-		gLTFNode* getTopLevelParentNode(gLTFNode* childNode);
-		void propagateBoneWorldTransformsToChildren (gLTFNode* node);
-		*/
+		// gLTFNode* findNodeByIndex (int nodeIndex);
 
 	private:
 		std::string mHelperString;

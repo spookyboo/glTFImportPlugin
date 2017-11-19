@@ -115,14 +115,6 @@ class gLTFImportExecutor
 		const std::string& getImageIndexAsString (int textureIndex);
 		gLTFAnimationSampler getAnimationSamplerByAnimationAndSamplerIndex (gLTFAnimation* animation, int samplerIndex);
 		
-		// TODO: TEST
-		/*
-		const Ogre::Matrix4& getInverseBindMatrix (unsigned int inverseBindMatricesAccessorIndex,
-			unsigned int jointIndex,
-			Ogre::HlmsEditorPluginData* data,
-			int startBinaryBuffer);
-		*/
-
 		// Copy / extract and texture conversion
 		const std::string& copyImageFile (const std::string& textureName,
 			Ogre::HlmsEditorPluginData* data, 
