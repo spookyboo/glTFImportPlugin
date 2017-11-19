@@ -727,6 +727,8 @@ bool gLTFImportExecutor::propagateAnimations (Ogre::HlmsEditorPluginData* data)
 		}
 		++index;
 	}
+
+	return true;
 }
 
 //---------------------------------------------------------------------

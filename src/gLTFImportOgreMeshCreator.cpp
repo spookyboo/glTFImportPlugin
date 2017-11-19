@@ -662,6 +662,7 @@ bool gLTFImportOgreMeshCreator::writeBonesToSkeleton (std::ofstream& dst,
 			/* Determine the bone pose matrix.
 			 * TODO: What is the math??? The line below isn'y correct, but it is unclear what it must be!!!
 			 */
+			//matrix4 = node.mLocalTransformation * getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
 			matrix4 = node.mLocalTransformation;
 			//TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
