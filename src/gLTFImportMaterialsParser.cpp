@@ -27,6 +27,7 @@
 */
 
 #include "gLTFImportMaterialsParser.h"
+#include <algorithm>
 
 //---------------------------------------------------------------------
 gLTFImportMaterialsParser::gLTFImportMaterialsParser(void)
@@ -120,6 +121,7 @@ bool gLTFImportMaterialsParser::parseMaterials (rapidjson::Value::ConstMemberIte
 			material.mName = name;
 		}
 		
+		std::replace(material.mName.begin(), material.mName.end(), ' ', '_');
 		mMaterialsMap[count] = material;
 		count++;
 	}

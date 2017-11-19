@@ -61,7 +61,7 @@ bool gLTFImportTexturesParser::parseTextures (rapidjson::Value::ConstMemberItera
 				OUT << TABx2 << "value ==> " << texture.mSource << "\n";
 			}
 		}
-		
+	
 		mTexturesMap[index] = texture;
 		++index;
 	}
