@@ -185,6 +185,7 @@ class gLTFImportExecutor
 		std::string mHlmsProjectFileName;
 		std::string mMaterialsConfigFileName;
 		std::string mTexturesConfigFileName;
+		std::string mMeshesConfigFileName;
 };
 
 #endif

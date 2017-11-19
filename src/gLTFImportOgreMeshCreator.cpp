@@ -101,6 +101,8 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 
 	// Create the Ogre mesh xml files (*.xml)
 	std::string fullyQualifiedImportPath = data->mInImportPath + data->mInFileDialogBaseName + "/";
+	std::string mMeshesConfigFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + "_meshes.cfg";
+	std::ofstream meshFile(mMeshesConfigFileName);
 
 	// Iterate through meshes and create for each mesh an Ogre .xml file
 	std::map<int, gLTFMesh>::iterator it;
@@ -111,31 +113,42 @@ bool gLTFImportOgreMeshCreator::createIndividualOgreMeshFiles (Ogre::HlmsEditorP
 	for (it = mMeshesMap.begin(); it != mMeshesMap.end(); it++)
 	{
 		mesh = it->second;
-		ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + mesh.mName + ".xml";
-		ogreFullyQualifiedMeshMeshFileName = fullyQualifiedImportPath + mesh.mName + ".mesh";
-		OUT << TABx2 << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+		if (!mesh.mName.empty())
+		{
+			ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + mesh.mName + ".xml";
+			ogreFullyQualifiedMeshMeshFileName = fullyQualifiedImportPath + mesh.mName + ".mesh";
+			OUT << TABx2 << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 
-		// Create the file
-		std::ofstream dst(ogreFullyQualifiedMeshXmlFileName);
+			// Add an entry in the _meshes.cfg file if it contains a valid value
+			meshFile << ogreFullyQualifiedMeshMeshFileName << "\n";
 
-		// Add xml content
-		dst << "<mesh>\n";
-		dst << TAB << "<submeshes>\n";
+			// Create the file
+			std::ofstream dst(ogreFullyQualifiedMeshXmlFileName);
 
-		gLTFNode dummyNode;
-		writeSubmeshToMesh(dst, dummyNode, mesh, data, startBinaryBuffer); // Do not perform any transformation
-		
-		dst << TAB << "</submeshes>\n";
-		dst << "</mesh>\n";
+			// Add xml content
+			dst << "<mesh>\n";
+			dst << TAB << "<submeshes>\n";
 
-		dst.close();
-		OUT << TABx2 << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+			gLTFNode dummyNode;
+			writeSubmeshToMesh(dst, dummyNode, mesh, data, startBinaryBuffer); // Do not perform any transformation
+
+			dst << TAB << "</submeshes>\n";
+			dst << "</mesh>\n";
+
+			dst.close();
+
+			// Use the OgreMeshTool to do the conversion
+			convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
+			setMeshFileNamePropertyValue(data, ogreFullyQualifiedMeshMeshFileName);
+			OUT << TABx2 << "Written mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
+			OUT << TABx2 << "Written mesh .mesh file " << ogreFullyQualifiedMeshMeshFileName << "\n";
+		}
 
 		++meshIndex;
 	}
 
-	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
-	setMeshFileNamePropertyValue(data, ogreFullyQualifiedMeshMeshFileName);
+	meshFile.close();
+
 	return true;
 }
 
@@ -157,6 +170,7 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 
 	std::string ogreFullyQualifiedMeshXmlFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".xml";
 	std::string ogreFullyQualifiedMeshMeshFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + ".mesh";
+	std::string mMeshesConfigFileName = fullyQualifiedImportPath + data->mInFileDialogBaseName + "_meshes.cfg";
 	OUT << TABx2 << "Create: mesh .xml file " << ogreFullyQualifiedMeshXmlFileName << "\n";
 
 	// Create the file
@@ -199,6 +213,10 @@ bool gLTFImportOgreMeshCreator::createCombinedOgreMeshFile (Ogre::HlmsEditorPlug
 	convertXmlFileToMesh(data, ogreFullyQualifiedMeshXmlFileName, ogreFullyQualifiedMeshMeshFileName);
 	setMeshFileNamePropertyValue(data, ogreFullyQualifiedMeshMeshFileName);
 
+	// Create the meshes config file and add the combined mesh file name
+	std::ofstream meshFile(mMeshesConfigFileName);
+	meshFile << ogreFullyQualifiedMeshMeshFileName << "\n";
+	meshFile.close();
 	return true;
 }
 

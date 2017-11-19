@@ -43,6 +43,7 @@ gLTFImportExecutor::gLTFImportExecutor(void)
 	mHlmsProjectFileName = "";
 	mMaterialsConfigFileName = "";
 	mTexturesConfigFileName = "";
+	mMeshesConfigFileName = "";
 
 	mAnimationsMap.clear();
 	mSkinsMap.clear();
@@ -70,6 +71,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	mHlmsProjectFileName = fullyQualifiedBaseName + ".hlmp";
 	mMaterialsConfigFileName = fullyQualifiedBaseName + "_materials.cfg";
 	mTexturesConfigFileName = fullyQualifiedBaseName + "_textures.cfg";
+	mMeshesConfigFileName = fullyQualifiedBaseName + "_meshes.cfg";
 
 	// Determine type of file
 	int startBinaryBuffer = 0;
@@ -113,6 +115,7 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	dst << "hlmsEditor v1.0\n";
 	dst << mMaterialsConfigFileName << "\n";
 	dst << mTexturesConfigFileName << "\n";
+	dst << mMeshesConfigFileName << "\n";
 	dst.close();
 	setProjectFileNamePropertyValue(data, mHlmsProjectFileName);
 	
@@ -669,7 +672,7 @@ bool gLTFImportExecutor::propagateMeshes (Ogre::HlmsEditorPluginData* data)
 			// TODO: Progagate more...
 		}
 	}
-		
+
 	return true;
 }
 
