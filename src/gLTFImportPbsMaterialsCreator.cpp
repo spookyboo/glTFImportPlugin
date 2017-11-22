@@ -513,30 +513,23 @@ bool gLTFImportPbsMaterialsCreator::createDetailNormalJsonBlock(std::ofstream* d
 //---------------------------------------------------------------------
 bool gLTFImportPbsMaterialsCreator::createEmissiveJsonBlock(std::ofstream* dst, const gLTFMaterial& material)
 {
-	/* This function is a placeholder for the future when Ogre does support emissive textures in PBS materials.
-	*  Currently it does not, so an emissiveTexture shows up as a (detailed) diffuse map, with some boosted weight value.
+	/* Since November 2017, Ogre 2.1 supports emissive maps.
 	*/
 	if (!material.mEmissiveTexture.isTextureAvailable())
 		return false;
 
-	if (!isDiffuseMapAvailable(material))
-	{
-		// There is no diffuse map at all, only an emissive texture. In that case, the emissive texture becomes
-		// a regular diffuse map
-		*dst << TABx3 << "\"diffuse\" :\n";
-		*dst << TABx3 << "{\n";
-	}
-	else
-	{
-		// The emissive texture becomes a detail diffuse map
-		*dst << "," << "\n";
-		*dst << TABx3 << "\"detail_diffuse" << mDetailedDiffuseMapCount << "\" :\n";
-		*dst << TABx3 << "{\n";
-		*dst << TABx4 << "\"value\" : 6,\n"; // Pump up the weight a bit
-		*dst << TABx4 << "\"mode\" : \"Add\",\n"; // Use additive blending
-
-		++mDetailedDiffuseMapCount;
-	}
+	*dst << "," << "\n";
+	*dst << TABx3 << "\"emissive\" :\n";
+	*dst << TABx3 << "{\n";
+	
+	// Emissive color
+	*dst << TABx4 << "\"value\" : [" <<
+		material.mEmissiveFactor.mRed <<
+		", " <<
+		material.mEmissiveFactor.mGreen <<
+		", " <<
+		material.mEmissiveFactor.mBlue <<
+		"],";
 
 	std::string baseImageName = getBaseFileNameWithExtension(material.mEmissiveTexture.mUri);
 	OUT << TABx4 << "baseImageName " << baseImageName << "\n";
