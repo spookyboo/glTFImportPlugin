@@ -79,8 +79,13 @@ bool gLTFImportExecutor::executeImport (Ogre::HlmsEditorPluginData* data)
 	std::string extension = getFileExtension(fileName);
 	if (extension == "glb")
 		result = executeBinary(fileName, data, startBinaryBuffer);
-	else
+	else if (extension == "gltf")
 		result = executeText(fileName, data);
+	else
+	{
+		data->mOutErrorText = "This is not a valid gLTF file (file must have .glb or .gltf extension)";
+		return false;
+	}
 
 	// Create Ogre Pbs material files if parsing was succesful
 	if (result)
