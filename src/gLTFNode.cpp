@@ -39,7 +39,6 @@ gLTFNode::gLTFNode(void) :
 	mHasScale(false),
 	mHasTranslation(false),
 	mTransformationCalculated(false),
-	mWorldTransformationCalculated(false),
 	mParentNode(0),
 	mNodeIndex(-1)
 {

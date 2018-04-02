@@ -618,14 +618,17 @@ bool gLTFImportOgreMeshCreator::writeBoneAssignmentsToMesh (std::ofstream& dst,
 		while (fCount < 4)
 		{
 			//weights[fCount] = weights[fCount] < 0.00000001f ? 1.0f : weights[fCount];
-			dst << TABx4 <<
-				"<vertexboneassignment vertexindex=\"" <<
-				i <<
-				"\" boneindex = \"" <<
-				joints[fCount] <<
-				"\" weight=\"" <<
-				weights[fCount] <<
-				"\" />\n";
+			if (weights[fCount] > 0.0f)
+			{
+				dst << TABx4 <<
+					"<vertexboneassignment vertexindex=\"" <<
+					i <<
+					"\" boneindex = \"" <<
+					joints[fCount] <<
+					"\" weight=\"" <<
+					weights[fCount] <<
+					"\" />\n";
+			}
 			++fCount;
 		}
 	}
@@ -676,11 +679,13 @@ bool gLTFImportOgreMeshCreator::writeBonesToSkeleton (std::ofstream& dst,
 			Ogre::Vector3 axis;
 			Ogre::Radian angle;
 			Ogre::Vector3 scale;
-
+			
 			/* Determine the bone pose matrix.
 			 * TODO: What is the math??? The line below isn'y correct, but it is unclear what it must be!!!
 			 */
 			//matrix4 = node.mLocalTransformation * getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
+			//matrix4 = node.mLocalTransformation * mNodesMap[skin.mSkeleton].mLocalTransformation.inverse();
+			//matrix4 = getInverseBindMatrix(skin.mInverseBindMatrices, jointIndex, data, startBinaryBuffer);
 			matrix4 = node.mLocalTransformation;
 			//TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
@@ -696,6 +701,11 @@ bool gLTFImportOgreMeshCreator::writeBonesToSkeleton (std::ofstream& dst,
 				"\" />\n";
 
 			// Orientation
+			orientation.normalise();
+			//orientation = Ogre::Quaternion(orientation.x, orientation.z, orientation.y, orientation.w); // TEST
+			//orientation = orientation * Ogre::Quaternion(Ogre::Degree(180), Ogre::Vector3::UNIT_Z);
+			//orientation = orientation * Ogre::Quaternion(Ogre::Degree(90), Ogre::Vector3::UNIT_X);
+			//orientation = orientation * Ogre::Quaternion(Ogre::Degree(-90), Ogre::Vector3::UNIT_Y);
 			orientation.ToAngleAxis(angle, axis);
 			dst << TABx3 << "<rotation angle=\"" <<
 				angle.valueRadians() <<
